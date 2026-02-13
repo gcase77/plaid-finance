@@ -1,0 +1,118 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model users {
+  id           String         @id
+  username     String?
+  
+  items        items[]
+  accounts     accounts[]
+  transactions transactions[]
+  tags         tags[]
+  system_logs  system_logs[]
+}
+
+model items {
+  id                      String         @id
+  user_id                 String
+  access_token            String?
+  transaction_cursor      String?
+  institution_id          String?
+  institution_name        String?
+  created_at              DateTime?
+  consented_products      Json?
+  consented_data_scopes   Json?
+  consented_use_cases     Json?
+  consent_expiration_time String?
+  available_products      Json?
+  billed_products         Json?
+  products                Json?
+  transactions_sync_lock_until DateTime?
+  
+  accounts                accounts[]
+  users                   users          @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  transactions            transactions[]
+}
+
+model accounts {
+  id              String         @id
+  item_id         String?
+  user_id         String
+  name            String?
+  official_name   String?
+  type            String?
+  subtype         String?
+  balances        Json?
+  mask            String?
+  holder_category String?
+  
+  items           items?         @relation(fields: [item_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users           users          @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  transactions    transactions[]
+}
+
+model transactions {
+  id                                 String   @id
+  user_id                            String
+  item_id                            String
+  account_id                         String
+  name                               String?
+  original_description               String?
+  merchant_name                      String?
+  amount                             Float?
+  iso_currency_code                  String?
+  counterparties                     Json?
+  datetime                           DateTime?
+  authorized_datetime                DateTime?
+  location                           Json?
+  pending                            Boolean?
+  personal_finance_category          Json?
+  personal_finance_category_icon_url String?
+  is_removed                         Boolean? @default(false)
+ 
+  accounts                           accounts @relation(fields: [account_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  items                              items    @relation(fields: [item_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  transaction_meta                   transaction_meta?
+  users                              users    @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model transaction_meta {
+  transaction_id          String  @id
+  account_transfer_group  String?
+  system_tag_id           Int?
+
+  transaction             transactions @relation(fields: [transaction_id], references: [id], onDelete: Cascade)
+  tag                     tags?        @relation(fields: [system_tag_id], references: [id])
+
+  @@index([account_transfer_group])
+}
+
+model tags {
+  id          Int                @id @default(autoincrement())
+  name        String             @unique
+  system_tag  Boolean            @default(false)
+  user_id     String?
+
+  meta        transaction_meta[]
+  users       users?             @relation(fields: [user_id], references: [id])
+}
+
+model system_logs {
+  id          Int      @id @default(autoincrement())
+  user_id     String
+  type        String
+  level       Int
+  metadata    Json?
+  raw_payload Json?
+  timestamp   DateTime @default(now())
+
+  users users @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([type, timestamp])
+}

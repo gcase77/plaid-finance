@@ -1,0 +1,102 @@
+/* Smooth transitions */
+.tab-content {
+  animation: fadeIn 0.2s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Loading pulse animation */
+.loading-pulse {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Enhanced dropdowns */
+.dropdown-menu {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  border: 1px solid rgba(0,0,0,0.1);
+}
+
+/* Button hover effects */
+.btn-outline-secondary:hover:not(:disabled),
+.btn-outline-primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  transition: all 0.15s ease;
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+/* Card depth */
+.card {
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  transition: box-shadow 0.2s ease;
+}
+
+.card:hover {
+  box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+}
+
+/* Better spacing */
+.form-label {
+  font-weight: 500;
+  font-size: 0.875rem;
+  color: #495057;
+}
+
+/* Status messages */
+.text-muted {
+  font-size: 0.875rem;
+}
+
+/* Transactions left rail filter layout */
+.transactions-filters-sidebar {
+  position: sticky;
+  top: 1rem;
+  max-height: calc(100vh - 7rem);
+  overflow-y: auto;
+}
+
+.transactions-filters-sidebar #filterContainer > [class*="col-"] {
+  width: 100%;
+}
+
+.transactions-filters-sidebar .dropdown-menu {
+  min-width: 100%;
+}
+
+.applied-filters-header {
+  font-weight: 600;
+}
+
+.applied-filters-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+}
+
+.applied-filter-chip {
+  display: inline-block;
+  border: 1px solid rgba(13, 110, 253, 0.35);
+  background: rgba(13, 110, 253, 0.08);
+  color: #0d6efd;
+  border-radius: 999px;
+  padding: 0.15rem 0.55rem;
+  font-size: 0.8rem;
+}

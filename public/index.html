@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Plaid App</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="https://cdn.plaid.com/link/v2/stable/link-initialize.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .nav-link { cursor: pointer; }
+  </style>
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container-fluid">
+      <span class="navbar-brand">G Case Financial Insights</span>
+      <ul class="navbar-nav">
+        <li class="nav-item">
+          <a class="nav-link" href="#main">Main</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#transactions">Transactions</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#visualize">Visualize</a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="container mt-4">
+    <!-- Main Tab -->
+    <div id="tab-main" class="tab-content">
+      <div class="row justify-content-center">
+        <div id="authColumn" class="col-md-5">
+          <div class="card mx-auto" style="max-width: 480px;">
+            <div class="card-body">
+              <h5 class="card-title">Authentication</h5>
+              <div id="authPanel">
+                <div id="loginForm">
+                  <div class="btn-group w-100 mb-3" role="group" aria-label="Auth mode">
+                    <button id="existingUserToggle" class="btn btn-outline-secondary active" type="button" data-action="setAuthModeExisting">Existing User</button>
+                    <button id="newUserToggle" class="btn btn-outline-secondary" type="button" data-action="setAuthModeNew">New User</button>
+                  </div>
+                  <form id="existingUserForm" onsubmit="handleSignIn(event)" class="mb-0">
+                    <div class="mb-2">
+                      <input id="signInEmail" class="form-control" type="email" placeholder="Email" required />
+                    </div>
+                    <div class="mb-2">
+                      <input id="signInPassword" class="form-control" type="password" placeholder="Password" minlength="6" required />
+                    </div>
+                    <button id="signInBtn" class="btn btn-outline-primary w-100" type="submit">Sign In</button>
+                  </form>
+                  <form id="newUserForm" onsubmit="handleSignUp(event)" class="mb-0" style="display:none;">
+                    <div class="mb-2">
+                      <input id="signUpEmail" class="form-control" type="email" placeholder="Email" required />
+                    </div>
+                    <div class="mb-2">
+                      <input id="signUpPassword" class="form-control" type="password" placeholder="Password" minlength="6" required />
+                    </div>
+                    <button id="signUpBtn" class="btn btn-primary w-100" type="submit">Create Account</button>
+                  </form>
+                  <small id="authStatus" class="text-muted d-block mt-2"></small>
+                </div>
+                <div id="userAuthInfo" style="display:none">
+                  <p class="mb-2">Signed in as: <strong id="userEmail"></strong></p>
+                  <button class="btn btn-outline-secondary w-100" data-action="signOut">Sign Out</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="userColumn" class="col-md-7" style="display:none;">
+          <div id="userPanel" style="display:none">
+            <div class="card">
+              <div class="card-body">
+                <h5 class="card-title">Your Banks</h5>
+                <button class="btn btn-success mb-3" data-action="linkBank">Link Bank</button>
+                <h6>Linked Banks:</h6>
+                <div id="itemsList"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Transactions Tab -->
+    <div id="tab-transactions" class="tab-content">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Transactions</h5>
+          <div class="row g-2 mb-3">
+            <div class="col-md-3">
+              <label class="form-label mb-1">&nbsp;</label>
+              <button class="btn btn-outline-primary w-100" data-action="syncTransactions">Fetch Transactions</button>
+            </div>
+            <div class="col-md-9">
+              <label class="form-label mb-1">Sync Status</label>
+              <div class="small text-muted" id="syncResult">No sync yet</div>
+            </div>
+          </div>
+          <div class="border rounded p-3 mb-3">
+            <div class="d-flex flex-wrap gap-2 align-items-end">
+              <div>
+                <label class="form-label mb-1">Transfer match start</label>
+                <input id="transferStartDate" class="form-control" type="date" />
+              </div>
+              <div>
+                <label class="form-label mb-1">Transfer match end</label>
+                <input id="transferEndDate" class="form-control" type="date" />
+              </div>
+              <div class="form-check mb-2">
+                <input id="transferOverwrite" class="form-check-input" type="checkbox" />
+                <label class="form-check-label" for="transferOverwrite">Overwrite existing groups</label>
+              </div>
+              <button class="btn btn-outline-primary mb-2" data-action="previewInternalTransfers">Find Internal Transfers</button>
+              <button class="btn btn-outline-secondary mb-2" data-action="approveAllTransferPairs">Approve All</button>
+              <button class="btn btn-outline-secondary mb-2" data-action="clearTransferPairSelection">Clear All</button>
+              <button class="btn btn-primary mb-2" data-action="applySelectedTransferPairs">Apply Selected</button>
+            </div>
+            <div id="transferPreviewStatus" class="small text-muted mt-2">No transfer preview yet</div>
+            <div id="transferPairsTable" class="table-responsive mt-2"></div>
+          </div>
+          <div class="row g-3 transactions-layout">
+            <div class="col-lg-4 col-xl-3">
+              <div class="border rounded p-3 transactions-filters-sidebar">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                  <h6 class="mb-0">Filters</h6>
+                  <button class="btn btn-primary btn-sm" data-action="clearAllFilters">Clear</button>
+                </div>
+                <div id="filterContainer" class="row g-2 mb-3"></div>
+                <div class="mb-3">
+                  <label class="form-label mb-1">Amount</label>
+                  <div class="dropdown">
+                    <button class="btn btn-outline-secondary dropdown-toggle w-100" data-bs-toggle="dropdown" data-bs-auto-close="outside" type="button">
+                      <span id="filterAmountSummary">Any</span>
+                    </button>
+                    <div class="dropdown-menu p-3 w-100">
+                      <div class="btn-group btn-group-sm mb-2" role="group">
+                        <button class="btn btn-outline-secondary active" id="amountModeAny" data-filter="amount" data-mode="">Any</button>
+                        <button class="btn btn-outline-secondary" id="amountModeGt" data-filter="amount" data-mode="gt">&gt; Than</button>
+                        <button class="btn btn-outline-secondary" id="amountModeLt" data-filter="amount" data-mode="lt">&lt; Than</button>
+                      </div>
+                      <input id="filterAmountValue" class="form-control mb-2" type="number" step="0.01" data-filter-input="amount" />
+                      <div class="btn-group btn-group-sm" role="group">
+                        <button class="btn btn-outline-secondary" data-action="setAmountPositive">Spending</button>
+                        <button class="btn btn-outline-secondary" data-action="setAmountNegative">Income</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="mb-0">
+                  <label class="form-label mb-1">Date range</label>
+                  <div class="dropdown">
+                    <button class="btn btn-outline-secondary dropdown-toggle w-100" data-bs-toggle="dropdown" data-bs-auto-close="outside" type="button">
+                      <span id="filterDateSummary">Any time</span>
+                    </button>
+                    <div class="dropdown-menu p-3 w-100">
+                      <div class="d-flex flex-wrap gap-2 mb-2">
+                        <button class="btn btn-outline-secondary btn-sm" data-action="datePresetAll">All time</button>
+                        <button class="btn btn-outline-secondary btn-sm" data-action="datePresetLast7">Last 7 days</button>
+                        <button class="btn btn-outline-secondary btn-sm" data-action="datePresetLast30">Last 30 days</button>
+                        <button class="btn btn-outline-secondary btn-sm" data-action="datePresetLast365">Last 365 days</button>
+                        <button class="btn btn-outline-secondary btn-sm" data-action="datePresetLastMonth">Last calendar month</button>
+                        <button class="btn btn-outline-secondary btn-sm" data-action="datePresetLastYear">Last calendar year</button>
+                      </div>
+                      <div class="input-group">
+                        <input id="filterDateStart" class="form-control" type="date" data-filter-date="start" />
+                        <input id="filterDateEnd" class="form-control" type="date" data-filter-date="end" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-lg-8 col-xl-9">
+              <div id="appliedFiltersPanel" class="border rounded p-3 mb-3"></div>
+              <div id="transactionsTable" class="table-responsive"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Visualize Tab -->
+    <div id="tab-visualize" class="tab-content">
+      <div class="card">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="card-title mb-0">Visualizations</h5>
+            <button class="btn btn-outline-secondary btn-sm" data-action="refreshVisualizations">Refresh</button>
+          </div>
+          <div class="row g-2 mb-3">
+            <div class="col-md-8">
+              <label class="form-label mb-1">Date range</label>
+              <div class="input-group">
+                <input id="visualizeDateStart" class="form-control" type="date" data-visualize-date="start" />
+                <input id="visualizeDateEnd" class="form-control" type="date" data-visualize-date="end" />
+              </div>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label mb-1">&nbsp;</label>
+              <div class="d-flex flex-wrap gap-2">
+                <button class="btn btn-outline-secondary btn-sm" data-action="visualizeDatePresetAll">All</button>
+                <button class="btn btn-outline-secondary btn-sm" data-action="visualizeDatePresetLast30">30d</button>
+                <button class="btn btn-outline-secondary btn-sm" data-action="visualizeDatePresetLast365">365d</button>
+              </div>
+            </div>
+          </div>
+          <div id="visualizeDateSummary" class="small text-muted mb-2">Any time</div>
+          <div id="visualizeStatus" class="small text-muted mb-3">No chart data loaded yet</div>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="border rounded p-2">
+                <h6 class="mb-2">Income by Primary Category</h6>
+                <canvas id="incomePieChart" height="220"></canvas>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="border rounded p-2">
+                <h6 class="mb-2">Spending by Primary Category</h6>
+                <canvas id="spendingPieChart" height="220"></canvas>
+              </div>
+            </div>
+          </div>
+          <div class="mt-3 border rounded p-2">
+            <h6 class="mb-2">Income/Spending Flow (Sankey)</h6>
+            <div id="cashflowSankey" style="height: 360px;"></div>
+          </div>
+          <div class="mt-3">
+            <h6 id="visualizeDetailsTitle" class="mb-2">Click a pie slice to view transactions</h6>
+            <div id="visualizeTransactionsTable" class="table-responsive"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="linkHistoryModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Transaction History Range</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <label class="form-label" for="linkHistoryDaysInput">Days requested (1-730)</label>
+          <input id="linkHistoryDaysSlider" class="form-range" type="range" min="1" max="730" step="1" value="730" />
+          <input id="linkHistoryDaysInput" class="form-control" type="number" min="1" max="730" step="1" value="730" />
+          <div id="linkHistoryConsentNote" class="form-text fw-semibold">Enable access to transactions up to 730 days ago.</div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" data-action="confirmLinkBank">Link Bank</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <script src="/js/config.js"></script>
+  <script src="/js/router.js?v=2"></script>
+  <script src="/js/app.js?v=8"></script>
+</body>
+</html>
