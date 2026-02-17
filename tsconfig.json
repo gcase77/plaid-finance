@@ -2,12 +2,14 @@
   "compilerOptions": {
     "target": "ES2020",
     "module": "commonjs",
-    "rootDir": "server",
+    "rootDir": ".",
     "outDir": "dist",
+    "lib": ["ES2020", "DOM"],
+    "jsx": "react-jsx",
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "strict": false
   },
-  "include": ["server/**/*.ts"]
+  "include": ["server/**/*.ts", "src/**/*.ts", "src/**/*.tsx"]
 }

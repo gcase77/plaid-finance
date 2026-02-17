@@ -1,6 +1,7 @@
 import "dotenv/config";
 import express from "express";
 import path from "path";
+import fs from "fs";
 import { Configuration, PlaidEnvironments, PlaidApi } from "plaid";
 import userRoutes from "./routes/users";
 import itemRoutes from "./routes/items";
@@ -27,14 +28,17 @@ const plaid = new PlaidApi(
 );
 
 const logger = new Logger(prisma);
-const publicDir = path.join(__dirname, "..", "public");
-
-app.get("/js/config.js", (req, res) => {
-  res.setHeader("Content-Type", "application/javascript");
-  res.send(`window.SUPABASE_URL = "${process.env.SUPABASE_URL || ""}";
-window.SUPABASE_ANON_KEY = "${process.env.SUPABASE_ANON_KEY || ""}";`);
+app.get("/api/config", (_req, res) => {
+  res.json({
+    supabaseUrl: process.env.SUPABASE_URL || "",
+    supabaseAnonKey: process.env.SUPABASE_ANON_KEY || ""
+  });
 });
-app.use(express.static(path.join(__dirname, "..", "public")));
+
+const distPath = path.join(__dirname, "..", "dist");
+if (fs.existsSync(distPath)) {
+  app.use(express.static(distPath));
+}
 
 app.use("/api", requireAuth);
 app.use("/api", userRoutes({ prisma }));
@@ -44,5 +48,12 @@ app.use("/api", linkRoutes({ plaid, prisma, logger }));
 const txRoutes = transactionRoutes({ plaid, prisma, logger });
 app.get("/api/transactions", txRoutes.getAllHandler);
 app.use("/api/transactions", txRoutes.router);
+
+if (fs.existsSync(distPath)) {
+  app.get("*", (req, res, next) => {
+    if (req.path.startsWith("/api")) return next();
+    res.sendFile(path.join(distPath, "index.html"));
+  });
+}
 
 app.listen(8000);
