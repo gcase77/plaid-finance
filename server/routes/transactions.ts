@@ -9,7 +9,8 @@ type Params = { plaid: PlaidApi; prisma: PrismaClient; logger: Logger };
 const PAGE_SIZE = 500;
 const LOCK_MINUTES = 5;
 const MAX_SAFETY_LIMIT = 20;
-const TRANSFER_DAY_WINDOW = 7;
+const DEFAULT_TRANSFER_DAY_WINDOW = 3;
+const MAX_TRANSFER_DAY_WINDOW = 30;
 
 const isoNow = () => new Date().toISOString();
 const addMinutes = (minutes: number) => new Date(Date.now() + minutes * 60_000).toISOString();
@@ -347,9 +348,9 @@ export default ({ plaid, prisma, logger }: Params) => {
     );
   });
 
-  const buildTransferCandidates = (txns: TransferTxn[]) => {
-    const outflows = txns.filter((t) => t.amount < 0);
-    const inflows = txns.filter((t) => t.amount > 0);
+const buildTransferCandidates = (txns: TransferTxn[], amountTolerance: number, dayRangeTolerance: number) => {
+    const outflows = txns.filter((t) => t.amount > 0);
+    const inflows = txns.filter((t) => t.amount < 0);
     const candidates: TransferCandidate[] = [];
     for (const outflow of outflows) {
       const outTs = txnTs(outflow);
@@ -362,10 +363,11 @@ export default ({ plaid, prisma, logger }: Params) => {
         if (inTs == null) continue;
         if (!inDate) continue;
         if (outflow.account_id === inflow.account_id) continue;
-        if (Math.abs(outflow.amount) !== Math.abs(inflow.amount)) continue;
+        const amountDiff = Math.abs(Math.abs(outflow.amount) - Math.abs(inflow.amount));
+        if (amountDiff > amountTolerance) continue;
         const diffMs = Math.abs(outTs - inTs);
         const dayGap = Math.abs(utcDayStamp(outDate) - utcDayStamp(inDate)) / msInDay;
-        if (dayGap > TRANSFER_DAY_WINDOW) continue;
+        if (dayGap > dayRangeTolerance) continue;
         candidates.push({
           pairId: pairIdFrom(outflow.id, inflow.id),
           outflow,
@@ -445,7 +447,7 @@ export default ({ plaid, prisma, logger }: Params) => {
       WHERE t.user_id = ${userId}
         AND COALESCE(t.is_removed, false) = false
         AND t.amount IS NOT NULL
-        AND tm.transaction_id IS NULL
+        AND tm.account_transfer_group IS NULL
         AND (${includePending}::boolean OR COALESCE(t.pending, false) = false)
     `;
     return txns
@@ -464,9 +466,17 @@ export default ({ plaid, prisma, logger }: Params) => {
     startDate?: string;
     endDate?: string;
     includePending?: boolean;
+    amountTolerance?: number;
+    dayRangeTolerance?: number;
   }) => {
     const txns = await fetchTransferTxns(args);
-    const candidates = buildTransferCandidates(txns);
+    const parsedAmountTolerance = Number(args.amountTolerance);
+    const amountTolerance = Math.max(0, Number.isFinite(parsedAmountTolerance) ? parsedAmountTolerance : 0);
+    const dayRangeTolerance = Math.min(
+      MAX_TRANSFER_DAY_WINDOW,
+      Math.max(0, Number.isFinite(Number(args.dayRangeTolerance)) ? Math.floor(Number(args.dayRangeTolerance)) : DEFAULT_TRANSFER_DAY_WINDOW)
+    );
+    const candidates = buildTransferCandidates(txns, amountTolerance, dayRangeTolerance);
     const { matched, ambiguousTxnIds, totalCandidates } = resolveTransferPairs(candidates);
     const ambiguousPairs = candidates
       .filter((c) => ambiguousTxnIds.has(c.outflow.id) || ambiguousTxnIds.has(c.inflow.id))
@@ -475,7 +485,9 @@ export default ({ plaid, prisma, logger }: Params) => {
       params: {
         startDate: args.startDate || null,
         endDate: args.endDate || null,
-        includePending: !!args.includePending
+        includePending: !!args.includePending,
+        amountTolerance,
+        dayRangeTolerance
       },
       summary: {
         scanned: txns.length,
@@ -506,8 +518,8 @@ export default ({ plaid, prisma, logger }: Params) => {
   router.post("/internal/preview", async (req, res) => {
     try {
       const userId = (req as any).user.id;
-      const { startDate, endDate, includePending } = req.body || {};
-      const preview = await transferPreview({ userId, startDate, endDate, includePending });
+      const { startDate, endDate, includePending, amountTolerance, dayRangeTolerance } = req.body || {};
+      const preview = await transferPreview({ userId, startDate, endDate, includePending, amountTolerance, dayRangeTolerance });
       await logger.to_db("INFO", userId, "TRANSFER PAIRS PREVIEW", {
         ...preview.summary,
         startDate: preview.params.startDate,
@@ -526,11 +538,11 @@ export default ({ plaid, prisma, logger }: Params) => {
   router.post("/internal/apply", async (req, res) => {
     try {
       const userId = (req as any).user.id;
-      const { pairIds, startDate, endDate, includePending, overwrite } = req.body || {};
+      const { pairIds, startDate, endDate, includePending, overwrite, amountTolerance, dayRangeTolerance } = req.body || {};
       if (!Array.isArray(pairIds) || pairIds.length === 0) {
         return res.status(400).json({ error: "pairIds is required" });
       }
-      const preview = await transferPreview({ userId, startDate, endDate, includePending });
+      const preview = await transferPreview({ userId, startDate, endDate, includePending, amountTolerance, dayRangeTolerance });
       const pairSet = new Set(pairIds);
       const selected = preview.pairs.filter((p) => pairSet.has(p.pairId));
       const selectedTxnIds = new Set(selected.flatMap((p) => [p.outflow.id, p.inflow.id]));
@@ -583,6 +595,103 @@ export default ({ plaid, prisma, logger }: Params) => {
       if (userId) {
         await logger.to_db("ERROR", userId, "TRANSFER PAIRS APPLY", { error_message: e.message });
       }
+      res.status(500).json({ error: e.message });
+    }
+  });
+
+  router.get("/internal/recognized", async (req, res) => {
+    try {
+      const userId = (req as any).user.id;
+      const dateRange = parseDateRange(req.query.startDate, req.query.endDate);
+      if ("error" in dateRange) return res.status(400).json({ error: dateRange.error });
+      const dateSql = dateFilterSql("t", dateRange.start, dateRange.end);
+      const rows = await prisma.$queryRaw<{
+        group_id: string;
+        id: string;
+        amount: number;
+        account_id: string;
+        datetime: Date | null;
+        authorized_datetime: Date | null;
+        name: string | null;
+        merchant_name: string | null;
+        iso_currency_code: string | null;
+        account_name: string | null;
+        account_official_name: string | null;
+      }[]>`
+        SELECT
+          tm.account_transfer_group AS group_id,
+          t.id,
+          t.amount,
+          t.account_id,
+          t.datetime,
+          t.authorized_datetime,
+          t.name,
+          t.merchant_name,
+          t.iso_currency_code,
+          a.name AS account_name,
+          a.official_name AS account_official_name
+        FROM transaction_meta tm
+        JOIN transactions t ON t.id = tm.transaction_id
+        LEFT JOIN accounts a ON a.id = t.account_id
+        WHERE t.user_id = ${userId}
+          AND tm.account_transfer_group IS NOT NULL
+          ${dateSql}
+        ORDER BY tm.account_transfer_group, COALESCE(t.datetime, t.authorized_datetime) DESC
+      `;
+      const byGroup = new Map<string, typeof rows>();
+      for (const row of rows) byGroup.set(row.group_id, [...(byGroup.get(row.group_id) || []), row]);
+      const groups = [...byGroup.entries()].map(([groupId, groupRows]) => {
+        const txns = groupRows.map((r) => ({
+          id: r.id,
+          amount: Number(r.amount),
+          account_id: r.account_id,
+          datetime: r.datetime,
+          authorized_datetime: r.authorized_datetime,
+          name: r.name,
+          merchant_name: r.merchant_name,
+          iso_currency_code: r.iso_currency_code,
+          account_name: r.account_name,
+          account_official_name: r.account_official_name
+        }));
+        const outflow = txns.find((t) => t.amount > 0) || null;
+        const inflow = txns.find((t) => t.amount < 0) || null;
+        const pair = txns.length === 2 && outflow && inflow ? {
+          pairId: pairIdFrom(outflow.id, inflow.id),
+          amount: Math.abs(outflow.amount),
+          dayGap: outflow.datetime && inflow.datetime
+            ? Math.abs(utcDayStamp(new Date(outflow.datetime)) - utcDayStamp(new Date(inflow.datetime))) / msInDay
+            : 0,
+          reason: "recognized_group",
+          outflow,
+          inflow
+        } : null;
+        return { groupId, rows: txns, pair };
+      });
+      res.json({ count: groups.length, groups });
+    } catch (e: any) {
+      res.status(500).json({ error: e.message });
+    }
+  });
+
+  router.post("/internal/unmark", async (req, res) => {
+    try {
+      const userId = (req as any).user.id;
+      const { groupIds } = req.body || {};
+      if (!Array.isArray(groupIds) || !groupIds.length) {
+        return res.status(400).json({ error: "groupIds is required" });
+      }
+      const ids = [...new Set(groupIds.map((x: unknown) => String(x || "").trim()).filter(Boolean))];
+      if (!ids.length) return res.status(400).json({ error: "groupIds is required" });
+      const cleared = await prisma.$executeRaw`
+        UPDATE transaction_meta tm
+        SET account_transfer_group = NULL
+        FROM transactions t
+        WHERE t.id = tm.transaction_id
+          AND t.user_id = ${userId}
+          AND tm.account_transfer_group = ANY(${ids}::text[])
+      `;
+      res.json({ cleared_rows: Number(cleared) || 0, cleared_groups: ids.length });
+    } catch (e: any) {
       res.status(500).json({ error: e.message });
     }
   });

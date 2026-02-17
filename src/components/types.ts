@@ -31,3 +31,55 @@ export type VisualizePayload = {
   spending?: { categories?: PieCategory[]; count?: number; total?: number };
   error?: string;
 };
+
+export type TransferTxn = {
+  id: string;
+  amount: number;
+  account_id: string;
+  datetime?: string | null;
+  authorized_datetime?: string | null;
+  name?: string | null;
+  merchant_name?: string | null;
+  iso_currency_code?: string | null;
+  account_name?: string | null;
+  account_official_name?: string | null;
+};
+
+export type TransferPair = {
+  pairId: string;
+  amount: number;
+  dayGap: number;
+  reason: string;
+  outflow: TransferTxn;
+  inflow: TransferTxn;
+};
+
+export type TransferPreviewResponse = {
+  params?: {
+    startDate?: string | null;
+    endDate?: string | null;
+    includePending?: boolean;
+    amountTolerance?: number;
+    dayRangeTolerance?: number;
+  };
+  summary?: {
+    scanned?: number;
+    candidates?: number;
+    predicted?: number;
+    ambiguous_transactions?: number;
+    ambiguous_pairs?: number;
+  };
+  pairs?: TransferPair[];
+  ambiguous_pairs?: TransferPair[];
+};
+
+export type RecognizedTransferGroup = {
+  groupId: string;
+  rows: TransferTxn[];
+  pair?: TransferPair | null;
+};
+
+export type RecognizedTransfersResponse = {
+  count?: number;
+  groups?: RecognizedTransferGroup[];
+};
