@@ -127,6 +127,11 @@ export default function AppShell() {
             categoryOptions={filters.categoryOptions}
             loadingTxns={plaidData.loadingTxns}
             filteredTransactions={filters.filteredTransactions}
+            previewTransferPairs={plaidData.previewTransferPairs}
+            applyTransferPairs={plaidData.applyTransferPairs}
+            getRecognizedTransfers={plaidData.getRecognizedTransfers}
+            unmarkTransferGroups={plaidData.unmarkTransferGroups}
+            loadTransactions={plaidData.loadTransactions}
           />
         )}
 
