@@ -118,6 +118,25 @@ class Logger {
 ```
 
 
+### Server endpoints
+
+| Method | Path | Description | Auth |
+|--------|------|-------------|------|
+| GET | `/api/config` | Returns `supabaseUrl` and `supabaseAnonKey` for frontend auth client; no body. | No |
+| GET | `/api/users` | Returns list of users from DB (id, username). | Yes |
+| POST | `/api/users` | Create user for current auth; body: `{ username }`. Returns `{ id, username }`. | Yes |
+| GET | `/api/items` | Returns Plaid items (linked institutions) for current user. | Yes |
+| DELETE | `/api/items/:id` | Deletes item and its accounts; returns `{ success: true }`. | Yes |
+| GET | `/api/accounts/:itemId` | Returns accounts (id, name, type, etc.) for the given item. | Yes |
+| POST | `/api/link-token` | Body: `{ daysRequested }`. Returns Plaid `link_token` for Link UI. | Yes |
+| POST | `/api/exchange` | Body: `{ publicToken }`. Exchanges with Plaid, persists item + accounts; returns `{ success: true }`. | Yes |
+| GET | `/api/transactions` | Returns all transactions for user; query `includeRemoved=true` to include removed. | Yes |
+| POST | `/api/transactions/sync` | Triggers Plaid sync for user’s items; returns `{ added, modified, removed, ... }`. | Yes |
+| GET | `/api/transactions/item/:itemId` | Returns transactions for one item; query `includeRemoved=true` optional. | Yes |
+| POST | `/api/transactions/internal/preview` | Body: `{ userId, startDate?, endDate?, includePending? }`. Returns `{ summary, pairs }` (no writes). | Yes |
+| POST | `/api/transactions/internal/apply` | Body: `{ pairIds, startDate?, endDate?, includePending?, overwrite? }`. Writes `account_transfer_group` for selected pairs. | Yes |
+| GET | `/api/transactions/visualize` | Query: `startDate`, `endDate`. Returns income/spending aggregates by category (excludes internal transfers). | Yes |
+| GET | `/api/transactions/visualize/details` | Query: `set=income|spending`, `category`, `startDate`, `endDate`. Returns transaction rows for that slice. | Yes |
 
 
 
@@ -125,7 +144,7 @@ class Logger {
 
 
 
-
+# Random
 
 ## Plaid transactions fetchers
 - https://github.com/plaid/pattern
@@ -139,30 +158,3 @@ Full apps:
 
 There's this too:
 - https://github.com/moyano83/Designing-Data-Intensive-Applications
-
-### Internal Transfer Pairing
-
-- UI flow is in the `Transactions` tab:
-  - Click `Find Internal Transfers` to preview predicted pairs (no writes).
-  - Review each pair and approve with row checkboxes or `Approve All`.
-  - Click `Apply Selected` to write `transaction_meta.account_transfer_group`.
-- Matching rules (strict mode):
-  - Same user, opposite signs, exact absolute amount, different accounts.
-  - Date proximity uses `datetime` fallback `authorized_datetime`, max `±2` days.
-  - Pending transactions are excluded by default.
-  - Pairing is one-to-one with deterministic tie-breaking; ambiguous top-score collisions are skipped.
-
-#### API
-
-- `POST /api/transactions/internal/preview`
-  - Body: `{ userId, startDate?, endDate?, includePending? }`
-  - Returns: `{ summary, pairs[] }`
-- `POST /api/transactions/internal/apply`
-  - Body: `{ userId, pairIds: string[], startDate?, endDate?, includePending?, overwrite? }`
-  - Revalidates selection, writes only approved pairs, and is idempotent by `transaction_id`.
-
-#### Quick validation checklist
-
-- Exact pair: one debit + one credit with same amount/date -> appears in preview and writes one shared group.
-- Ambiguous triple: one transaction has two equal-score candidates -> skipped from predicted pairs.
-- Rerun no-overwrite: applying the same pairs again with `overwrite=false` -> counted as skipped existing.
