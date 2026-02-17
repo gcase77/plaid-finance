@@ -2,6 +2,7 @@ import "dotenv/config";
 import express from "express";
 import path from "path";
 import fs from "fs";
+import { randomUUID } from "crypto";
 import { Configuration, PlaidEnvironments, PlaidApi } from "plaid";
 import userRoutes from "./routes/users";
 import itemRoutes from "./routes/items";
@@ -28,12 +29,30 @@ const plaid = new PlaidApi(
 );
 
 const logger = new Logger(prisma);
+const authMode = process.env.AUTH_MODE === "dev" ? "dev" : "supabase";
+
 app.get("/api/config", (_req, res) => {
   res.json({
-    supabaseUrl: process.env.SUPABASE_URL || "",
-    supabaseAnonKey: process.env.SUPABASE_ANON_KEY || ""
+    authMode,
+    supabaseUrl: authMode === "supabase" ? process.env.SUPABASE_URL || "" : "",
+    supabaseAnonKey: authMode === "supabase" ? process.env.SUPABASE_ANON_KEY || "" : ""
   });
 });
+
+if (authMode === "dev") {
+  app.get("/api/dev/users", async (_req, res) => {
+    const users = await prisma.users.findMany({ select: { id: true, username: true }, orderBy: { username: "asc" } });
+    res.json(users);
+  });
+
+  app.post("/api/dev/users", async (req, res) => {
+    const username = String(req.body?.username || "").trim();
+    if (!username) return res.status(400).json({ error: "username is required" });
+    const id = randomUUID();
+    const user = await prisma.users.create({ data: { id, username } });
+    res.json({ id: user.id, username: user.username });
+  });
+}
 
 const distPath = path.join(__dirname, "..", "dist");
 if (fs.existsSync(distPath)) {

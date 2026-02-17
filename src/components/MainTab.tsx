@@ -3,6 +3,7 @@ import type { Account, AuthMode, Item } from "./types";
 import LoadingSpinner from "./shared/LoadingSpinner";
 
 type MainTabProps = {
+  runtimeAuthMode: "supabase" | "dev";
   isAuthed: boolean;
   authMode: AuthMode;
   setAuthMode: (mode: AuthMode) => void;
@@ -26,18 +27,25 @@ type MainTabProps = {
   items: Item[];
   accountsByItem: Record<string, Account[]>;
   deleteItem: (id: string) => void;
+  devUsers: Array<{ id: string; username?: string | null }>;
+  selectedDevUserId: string;
+  setSelectedDevUserId: (v: string) => void;
+  createDevUser: (username: string) => Promise<void>;
 };
 
 export default function MainTab(props: MainTabProps) {
   const {
+    runtimeAuthMode,
     isAuthed, authMode, setAuthMode,
     signInEmail, setSignInEmail, signInPassword, setSignInPassword,
     signUpEmail, setSignUpEmail, signUpPassword, setSignUpPassword,
     busyAuth, signIn, signUp, authError, authStatus, userEmail, signOut,
-    linkBank, loadingItems, items, accountsByItem, deleteItem
+    linkBank, loadingItems, items, accountsByItem, deleteItem,
+    devUsers, selectedDevUserId, setSelectedDevUserId, createDevUser
   } = props;
   const [historyDays, setHistoryDays] = useState(730);
   const [showHistoryPicker, setShowHistoryPicker] = useState(false);
+  const [newDevUsername, setNewDevUsername] = useState("");
 
   return (
     <div className="row justify-content-center">
@@ -47,22 +55,63 @@ export default function MainTab(props: MainTabProps) {
             <h5 className="card-title">Authentication</h5>
             {!isAuthed ? (
               <div>
-                <div className="btn-group w-100 mb-3">
-                  <button className={`btn btn-outline-secondary ${authMode === "existing" ? "active" : ""}`} type="button" onClick={() => setAuthMode("existing")}>Existing User</button>
-                  <button className={`btn btn-outline-secondary ${authMode === "new" ? "active" : ""}`} type="button" onClick={() => setAuthMode("new")}>New User</button>
-                </div>
-                {authMode === "existing" ? (
-                  <form onSubmit={signIn}>
-                    <div className="mb-2"><input className="form-control" type="email" placeholder="Email" required value={signInEmail} onChange={(e) => setSignInEmail(e.target.value)} /></div>
-                    <div className="mb-2"><input className="form-control" type="password" placeholder="Password" minLength={6} required value={signInPassword} onChange={(e) => setSignInPassword(e.target.value)} /></div>
-                    <button className="btn btn-outline-primary w-100" type="submit" disabled={busyAuth}>Sign In</button>
-                  </form>
+                {runtimeAuthMode === "dev" ? (
+                  <div>
+                    <div className="mb-2">
+                      <label className="form-label">Select development user</label>
+                      <select
+                        className="form-select"
+                        value={selectedDevUserId}
+                        onChange={(e) => setSelectedDevUserId(e.target.value)}
+                      >
+                        <option value="">Choose user...</option>
+                        {devUsers.map((u) => (
+                          <option key={u.id} value={u.id}>
+                            {u.username || u.id} ({u.id})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="input-group">
+                      <input
+                        className="form-control"
+                        placeholder="New user name"
+                        value={newDevUsername}
+                        onChange={(e) => setNewDevUsername(e.target.value)}
+                      />
+                      <button
+                        className="btn btn-outline-primary"
+                        type="button"
+                        onClick={async () => {
+                          await createDevUser(newDevUsername);
+                          setNewDevUsername("");
+                        }}
+                      >
+                        Create User
+                      </button>
+                    </div>
+                    <small className="text-muted d-block mt-2">AUTH_MODE=dev bypasses Supabase authentication.</small>
+                  </div>
                 ) : (
-                  <form onSubmit={signUp}>
-                    <div className="mb-2"><input className="form-control" type="email" placeholder="Email" required value={signUpEmail} onChange={(e) => setSignUpEmail(e.target.value)} /></div>
-                    <div className="mb-2"><input className="form-control" type="password" placeholder="Password" minLength={6} required value={signUpPassword} onChange={(e) => setSignUpPassword(e.target.value)} /></div>
-                    <button className="btn btn-primary w-100" type="submit" disabled={busyAuth}>Create Account</button>
-                  </form>
+                  <>
+                    <div className="btn-group w-100 mb-3">
+                      <button className={`btn btn-outline-secondary ${authMode === "existing" ? "active" : ""}`} type="button" onClick={() => setAuthMode("existing")}>Existing User</button>
+                      <button className={`btn btn-outline-secondary ${authMode === "new" ? "active" : ""}`} type="button" onClick={() => setAuthMode("new")}>New User</button>
+                    </div>
+                    {authMode === "existing" ? (
+                      <form onSubmit={signIn}>
+                        <div className="mb-2"><input className="form-control" type="email" placeholder="Email" required value={signInEmail} onChange={(e) => setSignInEmail(e.target.value)} /></div>
+                        <div className="mb-2"><input className="form-control" type="password" placeholder="Password" minLength={6} required value={signInPassword} onChange={(e) => setSignInPassword(e.target.value)} /></div>
+                        <button className="btn btn-outline-primary w-100" type="submit" disabled={busyAuth}>Sign In</button>
+                      </form>
+                    ) : (
+                      <form onSubmit={signUp}>
+                        <div className="mb-2"><input className="form-control" type="email" placeholder="Email" required value={signUpEmail} onChange={(e) => setSignUpEmail(e.target.value)} /></div>
+                        <div className="mb-2"><input className="form-control" type="password" placeholder="Password" minLength={6} required value={signUpPassword} onChange={(e) => setSignUpPassword(e.target.value)} /></div>
+                        <button className="btn btn-primary w-100" type="submit" disabled={busyAuth}>Create Account</button>
+                      </form>
+                    )}
+                  </>
                 )}
                 <small className={`${authError ? "text-danger" : "text-muted"} d-block mt-2`}>{authStatus}</small>
               </div>
@@ -89,66 +138,33 @@ export default function MainTab(props: MainTabProps) {
                     <label className="form-label mb-1">Allow this app to access transactions up to <strong>{historyDays}</strong> days ago</label>
                     <div className="row g-2 align-items-center">
                       <div className="col-md-8">
-                        <input
-                          className="form-range"
-                          type="range"
-                          min={1}
-                          max={730}
-                          step={1}
-                          value={historyDays}
-                          onChange={(e) => setHistoryDays(Number(e.target.value))}
-                        />
+                        <input className="form-range" type="range" min={1} max={730} step={1} value={historyDays} onChange={(e) => setHistoryDays(Number(e.target.value))} />
                       </div>
                       <div className="col-md-4">
-                        <input
-                          className="form-control form-control-sm"
-                          type="number"
-                          min={1}
-                          max={730}
-                          value={historyDays}
-                          onChange={(e) => setHistoryDays(Math.min(730, Math.max(1, Number(e.target.value) || 1)))}
-                        />
+                        <input className="form-control form-control-sm" type="number" min={1} max={730} value={historyDays} onChange={(e) => setHistoryDays(Math.min(730, Math.max(1, Number(e.target.value) || 1)))} />
                       </div>
                     </div>
-                    <div className="d-flex justify-content-between small text-muted mb-2">
-                      <span>1</span>
-                      <span>730</span>
-                    </div>
+                    <div className="d-flex justify-content-between small text-muted mb-2"><span>1</span><span>730</span></div>
                     <div className="d-flex gap-2">
-                      <button className="btn btn-success btn-sm" onClick={() => { linkBank(historyDays); setShowHistoryPicker(false); }}>
-                        Continue to Login
-                      </button>
-                      <button className="btn btn-outline-secondary btn-sm" onClick={() => setShowHistoryPicker(false)}>
-                        Cancel
-                      </button>
+                      <button className="btn btn-success btn-sm" onClick={() => { linkBank(historyDays); setShowHistoryPicker(false); }}>Continue to Plaid</button>
+                      <button className="btn btn-outline-secondary btn-sm" onClick={() => setShowHistoryPicker(false)}>Cancel</button>
                     </div>
                   </div>
                 )}
               </div>
-              <h6>Linked Banks:</h6>
-              {loadingItems ? (
-                <LoadingSpinner message="Loading banks..." />
-              ) : items.length === 0 ? (
-                <div className="text-muted">No banks linked</div>
-              ) : (
-                items.map((item) => (
-                  <div key={item.id} className="border p-2 mb-2 rounded">
-                    <div className="d-flex justify-content-between align-items-center">
-                      <span><strong>{item.institution_name || "Unknown"}</strong> ({item.id.slice(0, 8)}...)</span>
-                      <button className="btn btn-sm btn-danger" onClick={() => deleteItem(item.id)}>Delete</button>
-                    </div>
-                    <div className="mt-2 ps-2">
-                      <small className="text-muted fw-bold">Connected Accounts</small>
-                      {(accountsByItem[item.id] || []).length ? (
-                        <ul className="mb-0 small">
-                          {(accountsByItem[item.id] || []).map((a) => <li key={a.id}>{a.name || a.official_name || a.id}{a.mask ? ` ···${a.mask}` : ""} ({a.type || "unknown"})</li>)}
-                        </ul>
-                      ) : (
-                        <p className="mb-0 small text-muted">None</p>
-                      )}
-                    </div>
-                  </div>
-                ))
+
+              {loadingItems ? <LoadingSpinner text="Loading items..." /> : (
+                <ul className="list-group">
+                  {items.map((item) => (
+                    <li key={item.id} className="list-group-item d-flex justify-content-between align-items-start">
+                      <div>
+                        <strong>{item.institution_name || item.id}</strong>
+                        <div className="small text-muted">{accountsByItem[item.id]?.length || 0} accounts</div>
+                      </div>
+                      <button className="btn btn-sm btn-outline-danger" onClick={() => deleteItem(item.id)}>Delete</button>
+                    </li>
+                  ))}
+                </ul>
               )}
             </div>
           </div>
