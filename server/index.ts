@@ -41,7 +41,7 @@ if (fs.existsSync(distPath)) {
 }
 
 app.use("/api", requireAuth);
-app.use("/api", userRoutes({ prisma }));
+app.use("/api", userRoutes({ prisma, logger }));
 app.use("/api", itemRoutes({ prisma }));
 app.use("/api", accountRoutes({ prisma }));
 app.use("/api", linkRoutes({ plaid, prisma, logger }));
