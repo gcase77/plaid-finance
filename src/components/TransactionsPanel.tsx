@@ -73,12 +73,15 @@ type TransactionsPanelProps = {
   setTagStateFilter: (v: TagStateFilter) => void;
   selectedTagIds: number[];
   setSelectedTagIds: (v: number[]) => void;
+  filterOperator: "and" | "or";
+  setFilterOperator: (v: "and" | "or") => void;
   rules: BudgetRule[];
   ruleStatuses: BudgetRuleStatus[];
   rulesLoading: boolean;
   rulesError: string | null;
   createRule: (args: CreateRuleArgs) => Promise<BudgetRule>;
   deleteRule: (id: number) => Promise<void>;
+  loadRules: () => Promise<void>;
 };
 
 export default function TransactionsPanel(props: TransactionsPanelProps) {
@@ -95,7 +98,8 @@ export default function TransactionsPanel(props: TransactionsPanelProps) {
     previewTransferPairs, applyTransferPairs, getRecognizedTransfers, unmarkTransferGroups, loadTransactions,
     tags, tagsLoading, createTag, renameTag, deleteTag, applyTags,
     tagStateFilter, setTagStateFilter, selectedTagIds, setSelectedTagIds,
-    rules, ruleStatuses, rulesLoading, rulesError, createRule, deleteRule
+    filterOperator, setFilterOperator,
+    rules, ruleStatuses, rulesLoading, rulesError, createRule, deleteRule, loadRules
   } = props;
   const [activeSubTab, setActiveSubTab] = useState<"transactions" | "buckets" | "rules">("transactions");
   const [taggingMode, setTaggingMode] = useState(false);
@@ -138,34 +142,36 @@ export default function TransactionsPanel(props: TransactionsPanelProps) {
   };
 
   const nameSummary = nameFilter.trim() ? `${nameMode === "not" ? "not" : "contains"} "${nameFilter}"` : "any";
-  const merchantSummary = merchantMode === "null" ? "is null" : merchantFilter.trim() ? `${merchantMode === "not" ? "not" : "contains"} "${merchantFilter}"` : "any";
+  const merchantSummary = merchantMode === "null" ? "unspecified" : merchantFilter.trim() ? `${merchantMode === "not" ? "not" : "contains"} "${merchantFilter}"` : "any";
+  const searchSummary = [nameSummary, merchantSummary].join(", ");
   const activePreset = matchPreset(dateStart, dateEnd);
   const dateSummary = activePreset ? PRESETS.find(p => p.value === activePreset)!.label : (dateStart || dateEnd) ? (dateStart && dateEnd ? `${dateStart} – ${dateEnd}` : dateStart ? `From ${dateStart}` : `Until ${dateEnd}`) : "All time";
   const amountSummary = amountMode && amountFilter.trim() ? `${amountMode === "gt" ? ">" : "<"} ${amountFilter}` : "any";
   const banksSummary = selectedBanks.length > 0 ? `${selectedBanks.length} selected` : "any";
   const accountsSummary = selectedAccounts.length > 0 ? `${selectedAccounts.length} selected` : "any";
+  const sourceSummary = [banksSummary, accountsSummary].join(", ");
   const categoriesSummary = selectedCategories.length > 0 ? `${selectedCategories.length} selected` : "any";
-  const tagStateLabel: Record<string, string> = { all: "All", untagged: "Untagged", transfer: "Transfer", tagged: "Tagged", meta_only: "Meta only" };
+  const tagStateLabel: Record<string, string> = { all: "All", untagged: "Untagged", tagged: "All" };
   const tagsSectionSummary = tagStateFilter !== "all"
     ? tagStateLabel[tagStateFilter] + (selectedTagIds.length ? `, ${selectedTagIds.length} tag${selectedTagIds.length > 1 ? "s" : ""}` : "")
     : selectedTagIds.length > 0 ? `${selectedTagIds.length} tag${selectedTagIds.length > 1 ? "s" : ""}` : "any";
+  const labelsSummary = [categoriesSummary, tagsSectionSummary].join(", ");
 
-  const handleTagStateChange = (s: TagStateFilter) => {
+  const handleTagStateChange = (s: "tagged" | "untagged") => {
     setTagStateFilter(s);
-    if (s === "meta_only") setSelectedTagIds(tags.filter((t) => t.type === "meta").map((t) => t.id));
-    else if (s === "tagged") setSelectedTagIds(tags.filter((t) => t.type !== "meta").map((t) => t.id));
+    if (s === "tagged") setSelectedTagIds(tags.filter((t) => t.type !== "meta").map((t) => t.id));
     else setSelectedTagIds([]);
   };
 
   const filterChips = [
     nameFilter.trim() && { id: "name", label: `Name ${nameMode === "not" ? "≠" : "∋"} "${nameFilter}"`, onClear: () => { setNameFilter(""); setNameMode("contains"); } },
-    merchantMode === "null" && { id: "merchant-null", label: "Merchant is null", onClear: () => setMerchantMode("contains") },
+    merchantMode === "null" && { id: "merchant-null", label: "Merchant unspecified", onClear: () => setMerchantMode("contains") },
     merchantFilter.trim() && merchantMode !== "null" && { id: "merchant", label: `Merchant ${merchantMode === "not" ? "≠" : "∋"} "${merchantFilter}"`, onClear: () => { setMerchantFilter(""); setMerchantMode("contains"); } },
     amountMode && amountFilter.trim() && { id: "amount", label: `Amount ${amountMode === "gt" ? ">" : "<"} ${amountFilter}`, onClear: () => { setAmountMode(""); setAmountFilter(""); } },
     (dateStart || dateEnd) && { id: "date", label: dateStart && dateEnd ? `${dateStart} – ${dateEnd}` : dateStart ? `From ${dateStart}` : `Until ${dateEnd}`, onClear: () => { setDateStart(""); setDateEnd(""); } },
     selectedBanks.length > 0 && { id: "banks", label: `Banks: ${selectedBanks.length}`, onClear: () => setSelectedBanks([]) },
     selectedAccounts.length > 0 && { id: "accounts", label: `Accounts: ${selectedAccounts.length}`, onClear: () => setSelectedAccounts([]) },
-    selectedCategories.length > 0 && { id: "categories", label: `Categories: ${selectedCategories.length}`, onClear: () => setSelectedCategories([]) },
+    selectedCategories.length > 0 && { id: "categories", label: `Detected: ${selectedCategories.length}`, onClear: () => setSelectedCategories([]) },
     (tagStateFilter !== "all" || selectedTagIds.length > 0) && { id: "tags", label: `Tags: ${tagsSectionSummary}`, onClear: () => { setTagStateFilter("all"); setSelectedTagIds([]); } }
   ].filter(Boolean) as { id: string; label: string; onClear: () => void }[];
 
@@ -342,6 +348,7 @@ export default function TransactionsPanel(props: TransactionsPanelProps) {
             error={rulesError}
             createRule={createRule}
             deleteRule={deleteRule}
+            loadRules={loadRules}
           />
         ) : (
         <>
@@ -352,21 +359,26 @@ export default function TransactionsPanel(props: TransactionsPanelProps) {
         <div className="row g-3">
           <div className="col-md-4 col-lg-3">
             <div className="border rounded p-3" style={{ maxHeight: "calc(100vh - 220px)", overflowY: "auto" }}>
-              <h6 className="mb-3 fs-5">Filters</h6>
+              <div className="d-flex justify-content-between align-items-center mb-3">
+                <h6 className="mb-0 fs-5">Filters</h6>
+                <div className="btn-group btn-group-sm">
+                  <button className={`btn btn-outline-secondary ${filterOperator === "and" ? "active" : ""}`} onClick={() => setFilterOperator("and")}>AND</button>
+                  <button className={`btn btn-outline-secondary ${filterOperator === "or" ? "active" : ""}`} onClick={() => setFilterOperator("or")}>OR</button>
+                </div>
+              </div>
               
-              <FilterSection label="Name" summary={nameSummary}>
+              <FilterSection label="Search" summary={searchSummary}>
+                <div className="small fw-semibold mb-1">Name</div>
                 <div className="btn-group btn-group-sm w-100 mb-2">
                   <button className={`btn btn-outline-secondary ${nameMode === "contains" ? "active" : ""}`} onClick={() => setNameMode("contains")}>Contains</button>
                   <button className={`btn btn-outline-secondary ${nameMode === "not" ? "active" : ""}`} onClick={() => setNameMode("not")}>Not</button>
                 </div>
-                <input className="form-control form-control-sm" value={nameFilter} onChange={e => setNameFilter(e.target.value)} placeholder="Search name" />
-              </FilterSection>
-
-              <FilterSection label="Merchant" summary={merchantSummary}>
+                <input className="form-control form-control-sm mb-2" value={nameFilter} onChange={e => setNameFilter(e.target.value)} placeholder="Search name" />
+                <div className="small fw-semibold mb-1">Merchant</div>
                 <div className="btn-group btn-group-sm w-100 mb-2">
                   <button className={`btn btn-outline-secondary ${merchantMode === "contains" ? "active" : ""}`} onClick={() => setMerchantMode("contains")}>Contains</button>
                   <button className={`btn btn-outline-secondary ${merchantMode === "not" ? "active" : ""}`} onClick={() => setMerchantMode("not")}>Not</button>
-                  <button className={`btn btn-outline-secondary ${merchantMode === "null" ? "active" : ""}`} onClick={() => setMerchantMode("null")}>Is null</button>
+                  <button className={`btn btn-outline-secondary ${merchantMode === "null" ? "active" : ""}`} onClick={() => setMerchantMode("null")}>Unspecified</button>
                 </div>
                 <input className="form-control form-control-sm" value={merchantFilter} onChange={e => setMerchantFilter(e.target.value)} disabled={merchantMode === "null"} placeholder="Search merchant" />
               </FilterSection>
@@ -388,25 +400,20 @@ export default function TransactionsPanel(props: TransactionsPanelProps) {
                 </div>
               </FilterSection>
 
-              <FilterSection label="Banks" summary={banksSummary}>
+              <FilterSection label="Source" summary={sourceSummary}>
+                <div className="small fw-semibold mb-1">Banks</div>
                 <CheckboxFilter options={bankOptions} selected={selectedBanks} onChange={setSelectedBanks} />
-              </FilterSection>
-
-              <FilterSection label="Accounts" summary={accountsSummary}>
+                <div className="small fw-semibold mb-1 mt-2">Accounts</div>
                 <CheckboxFilter options={accountOptions} selected={selectedAccounts} onChange={setSelectedAccounts} />
               </FilterSection>
 
-              <FilterSection label="Categories" summary={categoriesSummary}>
+              <FilterSection label="Category" summary={labelsSummary}>
+                <div className="small fw-semibold mb-1">Detected</div>
                 <CheckboxFilter options={categoryOptions} selected={selectedCategories} onChange={setSelectedCategories} />
-              </FilterSection>
-
-              <FilterSection label="Tags" summary={tagsSectionSummary}>
+                <div className="small fw-semibold mb-1 mt-2">Tags</div>
                 <div className="d-flex flex-wrap gap-1 mb-2">
-                  {(["all", "untagged", "transfer", "tagged", "meta_only"] as TagStateFilter[]).map((s) => (
-                    <button key={s} className={`btn btn-outline-secondary btn-sm ${tagStateFilter === s ? "active" : ""}`} onClick={() => handleTagStateChange(s)}>
-                      {s === "all" ? "All" : s === "meta_only" ? "Meta only" : s.charAt(0).toUpperCase() + s.slice(1)}
-                    </button>
-                  ))}
+                  <button className={`btn btn-outline-secondary btn-sm ${tagStateFilter !== "untagged" ? "active" : ""}`} onClick={() => handleTagStateChange("tagged")}>All</button>
+                  <button className={`btn btn-outline-secondary btn-sm ${tagStateFilter === "untagged" ? "active" : ""}`} onClick={() => handleTagStateChange("untagged")}>Untagged</button>
                 </div>
                 {tags.length > 0 && (
                   <CheckboxFilter
@@ -457,7 +464,7 @@ export default function TransactionsPanel(props: TransactionsPanelProps) {
           </div>
           <div className="col-md-8 col-lg-9">
             <div className="d-flex justify-content-between align-items-start mb-1">
-              <div className="flex-grow-1"><AppliedFiltersBar chips={filterChips} onClearAll={clearAllFilters} /></div>
+              <div className="flex-grow-1"><AppliedFiltersBar chips={filterChips} onClearAll={clearAllFilters} operator={filterOperator} /></div>
               {transferView === "all" && (
                 <button className={`btn btn-sm ms-2 ${taggingMode ? "btn-primary" : "btn-outline-primary"}`} onClick={toggleTaggingMode}>
                   {taggingMode ? "Done Tagging" : "Tag Transactions"}

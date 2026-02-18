@@ -49,7 +49,7 @@ async function getPeriodIncome(prisma: PrismaClient, userId: string, start: Date
       amount: { lt: 0 },
       is_removed: false,
       datetime: { gte: start, lt: end },
-      transaction_meta: { account_transfer_group: null }
+      NOT: { transaction_meta: { account_transfer_group: { not: null } } }
     },
     select: { amount: true }
   });
@@ -105,21 +105,21 @@ async function evaluateRule(
   const periods = generatePeriods(rule.start_date, rule.calendar_window, now);
 
   let carry = 0;
-  const periodHistory: { start: string; end: string; budget: number; spending: number; delta: number; carry_after: number }[] = [];
+  const periodHistory: { start: string; end: string; budget: number; spending: number; delta: number; carry_after: number; income?: number }[] = [];
 
   for (let i = 0; i < periods.length; i++) {
     const period = periods[i];
     const isCurrentPeriod = i === periods.length - 1;
 
     let budget = 0;
+    let income: number | undefined;
     if (rule.type === "flat_rate") {
       budget = rule.flat_amount ?? 0;
     } else {
-      if (i > 0) {
-        const prev = periods[i - 1];
-        budget = (await getPeriodIncome(prisma, rule.user_id, prev.start, prev.end)) * (rule.percent ?? 0);
-      }
-      // if i === 0 (no previous period), budget stays 0
+      // Use previous period's income, or current period as fallback for first period
+      const incomePeriod = i > 0 ? periods[i - 1] : period;
+      income = await getPeriodIncome(prisma, rule.user_id, incomePeriod.start, incomePeriod.end);
+      budget = income * (rule.percent ?? 0);
     }
 
     const spending = await getPeriodSpending(prisma, rule.user_id, rule.tag_id, isBucket2, period.start, period.end);
@@ -127,11 +127,10 @@ async function evaluateRule(
     const delta = effectiveBudget - spending;
 
     if (!isCurrentPeriod) {
-      // Update carry for completed periods
       if (rule.rollover_options === "none") carry = 0;
       else if (rule.rollover_options === "surplus") carry = Math.max(0, delta);
       else if (rule.rollover_options === "deficit") carry = Math.min(0, delta);
-      else carry = delta; // both
+      else carry = delta;
     }
 
     periodHistory.push({
@@ -139,8 +138,9 @@ async function evaluateRule(
       end: period.end.toISOString(),
       budget,
       spending,
-      delta: isCurrentPeriod ? delta : delta,
-      carry_after: isCurrentPeriod ? carry : carry
+      delta,
+      carry_after: carry,
+      ...(income !== undefined ? { income } : {})
     });
   }
 

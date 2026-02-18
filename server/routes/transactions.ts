@@ -793,6 +793,7 @@ const buildTransferCandidates = (txns: TransferTxn[], amountTolerance: number, d
         account_id: string;
         account_name: string | null;
         account_official_name: string | null;
+        institution_name: string | null;
         personal_finance_category_icon_url: string | null;
         primary_category: string | null;
         detailed_category: string | null;
@@ -810,11 +811,13 @@ const buildTransferCandidates = (txns: TransferTxn[], amountTolerance: number, d
           t.account_id,
           a.name AS account_name,
           a.official_name AS account_official_name,
+          i.institution_name,
           t.personal_finance_category_icon_url,
           COALESCE(t.personal_finance_category->>'primary', 'Uncategorized') AS primary_category,
           t.personal_finance_category->>'detailed' AS detailed_category
         FROM transactions t
         JOIN accounts a ON a.id = t.account_id
+        LEFT JOIN items i ON i.id = a.item_id
         LEFT JOIN transaction_meta tm ON tm.transaction_id = t.id
         WHERE t.user_id = ${userId}
           AND COALESCE(t.is_removed, false) = false
@@ -842,6 +845,7 @@ const buildTransferCandidates = (txns: TransferTxn[], amountTolerance: number, d
           merchant_name: row.merchant_name,
           amount: row.amount,
           iso_currency_code: row.iso_currency_code,
+          institution_name: row.institution_name,
           account_name: row.account_name,
           account_official_name: row.account_official_name,
           personal_finance_category_icon_url: row.personal_finance_category_icon_url,

@@ -158,12 +158,15 @@ export default function AppShell() {
             setTagStateFilter={filters.setTagStateFilter}
             selectedTagIds={filters.selectedTagIds}
             setSelectedTagIds={filters.setSelectedTagIds}
+            filterOperator={filters.filterOperator}
+            setFilterOperator={filters.setFilterOperator}
             rules={rulesData.rules}
             ruleStatuses={rulesData.statuses}
             rulesLoading={rulesData.loading}
             rulesError={rulesData.error}
             createRule={rulesData.createRule}
             deleteRule={rulesData.deleteRule}
+            loadRules={rulesData.loadRules}
           />
         )}
 
