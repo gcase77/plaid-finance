@@ -83,24 +83,40 @@ model transactions {
 }
 
 model transaction_meta {
-  transaction_id          String  @id
-  account_transfer_group  String?
-  system_tag_id           Int?
+  transaction_id         String  @id
+  account_transfer_group String?
+  bucket_1_tag_id        Int?
+  bucket_2_tag_id        Int?
+  meta_tag_id            Int?
 
-  transaction             transactions @relation(fields: [transaction_id], references: [id], onDelete: Cascade)
-  tag                     tags?        @relation(fields: [system_tag_id], references: [id])
+  transaction  transactions @relation(fields: [transaction_id], references: [id], onDelete: Cascade)
+  bucket_1_tag tags?        @relation("Bucket1Tag", fields: [bucket_1_tag_id], references: [id])
+  bucket_2_tag tags?        @relation("Bucket2Tag", fields: [bucket_2_tag_id], references: [id])
+  meta_tag     tags?        @relation("MetaTag", fields: [meta_tag_id], references: [id])
 
   @@index([account_transfer_group])
 }
 
-model tags {
-  id          Int                @id @default(autoincrement())
-  name        String             @unique
-  system_tag  Boolean            @default(false)
-  user_id     String?
+enum TagType {
+  income_bucket_1
+  income_bucket_2
+  spending_bucket_1
+  spending_bucket_2
+  meta
+}
 
-  meta        transaction_meta[]
-  users       users?             @relation(fields: [user_id], references: [id])
+model tags {
+  id      Int     @id @default(autoincrement())
+  name    String
+  type    TagType
+  user_id String
+
+  bucket_1_meta transaction_meta[] @relation("Bucket1Tag")
+  bucket_2_meta transaction_meta[] @relation("Bucket2Tag")
+  meta_meta     transaction_meta[] @relation("MetaTag")
+  users         users              @relation(fields: [user_id], references: [id])
+
+  @@unique([name, user_id])
 }
 
 model system_logs {

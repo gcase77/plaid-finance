@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { usePlaidData } from "../hooks/usePlaidData";
 import { useTransactionFilters } from "../hooks/useTransactionFilters";
+import { useTags } from "../hooks/useTags";
 import { useVisualizations } from "../hooks/useVisualizations";
 import { buildDatePreset } from "../utils/datePresets";
 import MainTab from "./MainTab";
@@ -14,6 +15,7 @@ export default function AppShell() {
   const auth = useAuth();
   const plaidData = usePlaidData(auth.userId, auth.token, auth.runtimeAuthMode);
   const filters = useTransactionFilters(plaidData.transactions);
+  const tagsData = useTags(auth.token, auth.runtimeAuthMode, plaidData.loadTransactions);
   const visualizations = useVisualizations(auth.token, auth.isAuthed);
 
   useEffect(() => {
@@ -42,6 +44,10 @@ export default function AppShell() {
   useEffect(() => {
     if (activeTab === "visualize" && auth.isAuthed) void visualizations.refreshVisualizations();
   }, [activeTab, auth.isAuthed, visualizations.visualizeDateStart, visualizations.visualizeDateEnd]);
+
+  useEffect(() => {
+    if (activeTab === "transactions" && auth.isAuthed) void tagsData.loadTags();
+  }, [activeTab, auth.isAuthed]);
 
   const handleSignOut = async () => {
     await auth.signOut();
@@ -137,6 +143,16 @@ export default function AppShell() {
             getRecognizedTransfers={plaidData.getRecognizedTransfers}
             unmarkTransferGroups={plaidData.unmarkTransferGroups}
             loadTransactions={plaidData.loadTransactions}
+            tags={tagsData.tags}
+            tagsLoading={tagsData.loading}
+            createTag={tagsData.createTag}
+            renameTag={tagsData.renameTag}
+            deleteTag={tagsData.deleteTag}
+            applyTags={tagsData.applyTags}
+            tagStateFilter={filters.tagStateFilter}
+            setTagStateFilter={filters.setTagStateFilter}
+            selectedTagIds={filters.selectedTagIds}
+            setSelectedTagIds={filters.setSelectedTagIds}
           />
         )}
 

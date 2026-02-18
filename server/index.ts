@@ -9,6 +9,7 @@ import itemRoutes from "./routes/items";
 import accountRoutes from "./routes/accounts";
 import linkRoutes from "./routes/link";
 import transactionRoutes from "./routes/transactions";
+import tagRoutes from "./routes/tags";
 import { prisma } from "./prisma";
 import { Logger } from "./logger";
 import { requireAuth } from "./middleware/auth";
@@ -67,6 +68,7 @@ app.use("/api", linkRoutes({ plaid, prisma, logger }));
 const txRoutes = transactionRoutes({ plaid, prisma, logger });
 app.get("/api/transactions", txRoutes.getAllHandler);
 app.use("/api/transactions", txRoutes.router);
+app.use("/api/tags", tagRoutes({ prisma }));
 
 if (fs.existsSync(distPath)) {
   app.get("*", (req, res, next) => {

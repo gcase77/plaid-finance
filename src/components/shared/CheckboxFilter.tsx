@@ -3,9 +3,10 @@ type CheckboxFilterProps<T extends string> = {
   options: T[] | Array<[T, string]>;
   selected: T[];
   onChange: (selected: T[]) => void;
+  showSelectAll?: boolean;
 };
 
-export default function CheckboxFilter<T extends string>({ label, options, selected, onChange }: CheckboxFilterProps<T>) {
+export default function CheckboxFilter<T extends string>({ label, options, selected, onChange, showSelectAll = true }: CheckboxFilterProps<T>) {
   const normalizedOptions: Array<[T, string]> = options.map(opt => 
     Array.isArray(opt) ? opt : [opt, opt]
   );
@@ -20,10 +21,12 @@ export default function CheckboxFilter<T extends string>({ label, options, selec
     <div>
       {label && <label className="form-label mb-1">{label} ({selected.length})</label>}
       <div className="border rounded p-2" style={{ maxHeight: 150, overflowY: "auto" }}>
-        <div className="d-flex gap-2 mb-1">
-          <button className="btn btn-outline-secondary btn-sm" onClick={handleSelectAll}>All</button>
-          <button className="btn btn-outline-secondary btn-sm" onClick={handleSelectNone}>None</button>
-        </div>
+        {showSelectAll && (
+          <div className="d-flex gap-2 mb-1">
+            <button className="btn btn-outline-secondary btn-sm" onClick={handleSelectAll}>All</button>
+            <button className="btn btn-outline-secondary btn-sm" onClick={handleSelectNone}>None</button>
+          </div>
+        )}
         {normalizedOptions.map(([id, displayLabel]) => (
           <label className="form-check d-block" key={id}>
             <input 

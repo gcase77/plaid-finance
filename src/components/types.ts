@@ -2,6 +2,9 @@ export type AuthMode = "existing" | "new";
 export type TabKey = "main" | "transactions" | "visualize";
 export type TextMode = "contains" | "not" | "null";
 export type AmountMode = "" | "gt" | "lt";
+export type TagType = "income_bucket_1" | "income_bucket_2" | "spending_bucket_1" | "spending_bucket_2" | "meta";
+export type TagStateFilter = "all" | "untagged" | "transfer" | "tagged" | "meta_only";
+export type Tag = { id: number; name: string; type: TagType; user_id: string };
 
 export type Item = { id: string; institution_name?: string | null };
 export type Account = { id: string; name?: string | null; official_name?: string | null; mask?: string | null; type?: string | null };
@@ -23,6 +26,10 @@ export type Txn = {
   datetime?: string | null;
   authorized_datetime?: string | null;
   personal_finance_category?: { primary?: string | null; detailed?: string | null } | null;
+  account_transfer_group?: string | null;
+  bucket_1_tag_id?: number | null;
+  bucket_2_tag_id?: number | null;
+  meta_tag_id?: number | null;
 };
 
 export type PieCategory = { category: string; amount: number };
