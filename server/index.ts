@@ -11,6 +11,7 @@ import linkRoutes from "./routes/link";
 import transactionRoutes from "./routes/transactions";
 import tagRoutes from "./routes/tags";
 import budgetRulesRoutes from "./routes/budgetRules";
+import { createTransactionService } from "./services/transactionsService";
 import { prisma } from "./prisma";
 import { Logger } from "./logger";
 import { requireAuth } from "./middleware/auth";
@@ -32,6 +33,7 @@ const plaid = new PlaidApi(
 
 const logger = new Logger(prisma);
 const authMode = process.env.AUTH_MODE === "dev" ? "dev" : "supabase";
+const transactionService = createTransactionService(prisma);
 
 app.get("/api/config", (_req, res) => {
   res.json({
@@ -66,11 +68,11 @@ app.use("/api", userRoutes({ prisma, logger }));
 app.use("/api", itemRoutes({ prisma }));
 app.use("/api", accountRoutes({ prisma }));
 app.use("/api", linkRoutes({ plaid, prisma, logger }));
-const txRoutes = transactionRoutes({ plaid, prisma, logger });
+const txRoutes = transactionRoutes({ plaid, prisma, logger, transactionService });
 app.get("/api/transactions", txRoutes.getAllHandler);
 app.use("/api/transactions", txRoutes.router);
 app.use("/api/tags", tagRoutes({ prisma }));
-app.use("/api/budget-rules", budgetRulesRoutes({ prisma }));
+app.use("/api/budget-rules", budgetRulesRoutes({ prisma, transactionService }));
 
 if (fs.existsSync(distPath)) {
   app.get("*", (req, res, next) => {

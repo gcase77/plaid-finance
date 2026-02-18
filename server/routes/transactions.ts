@@ -2,9 +2,10 @@ import express from "express";
 import { createHash, randomUUID } from "crypto";
 import type { PlaidApi } from "plaid";
 import type { Logger } from "../logger";
-import { Prisma, type PrismaClient } from "../../generated/prisma/client";
+import { type PrismaClient } from "../../generated/prisma/client";
+import type { TransactionService } from "../services/transactionsService";
 
-type Params = { plaid: PlaidApi; prisma: PrismaClient; logger: Logger };
+type Params = { plaid: PlaidApi; prisma: PrismaClient; logger: Logger; transactionService: TransactionService };
 
 const PAGE_SIZE = 500;
 const LOCK_MINUTES = 5;
@@ -64,19 +65,8 @@ const parseDateRange = (startDateRaw: unknown, endDateRaw: unknown) => {
   return { startDate, endDate, start, end };
 };
 
-const dateFilterSql = (alias: string, start: Date | null, end: Date | null) => {
-  const col = Prisma.raw(`COALESCE(${alias}.datetime, ${alias}.authorized_datetime)`);
-  return Prisma.sql`
-    ${start ? Prisma.sql`AND ${col} >= ${start}` : Prisma.empty}
-    ${end ? Prisma.sql`AND ${col} <= ${end}` : Prisma.empty}
-  `;
-};
-
-export default ({ plaid, prisma, logger }: Params) => {
+export default ({ plaid, prisma, logger, transactionService }: Params) => {
   const router = express.Router();
-  const transactionsCache = new Map<string, { rows: unknown[] }>();
-
-  const invalidateTransactionsCache = (userId: string) => { transactionsCache.delete(userId); };
 
   const syncItemTransactions = async (userId: string, itemId: string) => {
     const item = await prisma.items.findFirst({
@@ -117,117 +107,12 @@ export default ({ plaid, prisma, logger }: Params) => {
           throw new Error("Sync returned no transaction updates.");
         }
 
-        const lockUntil = addMinutes(LOCK_MINUTES);
-        const txResult = await prisma.$transaction(async (tx) => {
-          const addedIds = data.added.map((t: any) => t.transaction_id);
-          const modifiedIds = data.modified.map((t: any) => t.transaction_id);
-          const removedIds = data.removed.map((t: any) => t.transaction_id);
-
-          const existingAdded = await tx.transactions.findMany({ where: { id: { in: addedIds } }, select: { id: true } });
-          const existingModified = await tx.transactions.findMany({ where: { id: { in: modifiedIds } }, select: { id: true } });
-          const existingRemoved = await tx.transactions.findMany({ where: { id: { in: removedIds } }, select: { id: true } });
-
-          const already_added = existingAdded.map((r) => r.id);
-          const modified_existing = existingModified.map((r) => r.id);
-          const removed_existing = existingRemoved.map((r) => r.id);
-
-          const modified_not_included = modifiedIds.filter((id: string) => !modified_existing.includes(id));
-          const removed_not_included = removedIds.filter((id: string) => !removed_existing.includes(id));
-
-          const mapTxn = (t: any, isRemoved: boolean) => ({
-            id: t.transaction_id,
-            user_id: userId,
-            item_id: itemId,
-            account_id: t.account_id ?? "",
-            name: t.name ?? null,
-            original_description: t.original_description ?? null,
-            merchant_name: t.merchant_name ?? null,
-            amount: t.amount ?? null,
-            iso_currency_code: t.iso_currency_code ?? null,
-            counterparties: t.counterparties ?? null,
-            datetime: t.datetime ? new Date(t.datetime) : t.date ? new Date(`${t.date}T00:00:00Z`) : null,
-            authorized_datetime: t.authorized_datetime ? new Date(t.authorized_datetime) : null,
-            location: t.location ?? null,
-            pending: t.pending ?? null,
-            personal_finance_category: t.personal_finance_category ?? null,
-            personal_finance_category_icon_url: t.personal_finance_category_icon_url ?? null,
-            is_removed: isRemoved
-          });
-          const toJson = (value: unknown) => (value == null ? null : JSON.stringify(value));
-
-          const rows = [
-            ...data.added.map((t: any) => mapTxn(t, false)),
-            ...data.modified.map((t: any) => mapTxn(t, false)),
-            ...data.removed.map((t: any) => mapTxn(t, true))
-          ];
-          if (rows.length) {
-            const values = rows.map((r) => Prisma.sql`(
-              ${r.id},
-              ${r.user_id},
-              ${r.item_id},
-              ${r.account_id},
-              ${r.name},
-              ${r.original_description},
-              ${r.merchant_name},
-              ${r.amount},
-              ${r.iso_currency_code},
-              ${toJson(r.counterparties)}::jsonb,
-              ${r.datetime},
-              ${r.authorized_datetime},
-              ${toJson(r.location)}::jsonb,
-              ${r.pending},
-              ${toJson(r.personal_finance_category)}::jsonb,
-              ${r.personal_finance_category_icon_url},
-              ${r.is_removed}
-            )`);
-
-            await tx.$executeRaw(Prisma.sql`
-              INSERT INTO "transactions" (
-                "id",
-                "user_id",
-                "item_id",
-                "account_id",
-                "name",
-                "original_description",
-                "merchant_name",
-                "amount",
-                "iso_currency_code",
-                "counterparties",
-                "datetime",
-                "authorized_datetime",
-                "location",
-                "pending",
-                "personal_finance_category",
-                "personal_finance_category_icon_url",
-                "is_removed"
-              )
-              VALUES ${Prisma.join(values)}
-              ON CONFLICT ("id") DO UPDATE SET
-                "user_id" = EXCLUDED."user_id",
-                "item_id" = EXCLUDED."item_id",
-                "account_id" = EXCLUDED."account_id",
-                "name" = EXCLUDED."name",
-                "original_description" = EXCLUDED."original_description",
-                "merchant_name" = EXCLUDED."merchant_name",
-                "amount" = EXCLUDED."amount",
-                "iso_currency_code" = EXCLUDED."iso_currency_code",
-                "counterparties" = EXCLUDED."counterparties",
-                "datetime" = EXCLUDED."datetime",
-                "authorized_datetime" = EXCLUDED."authorized_datetime",
-                "location" = EXCLUDED."location",
-                "pending" = EXCLUDED."pending",
-                "personal_finance_category" = EXCLUDED."personal_finance_category",
-                "personal_finance_category_icon_url" = EXCLUDED."personal_finance_category_icon_url",
-                "is_removed" = EXCLUDED."is_removed"
-            `);
-          }
-
-          await tx.items.update({
-            where: { id: itemId },
-            data: { transaction_cursor: data.next_cursor, transactions_sync_lock_until: new Date(lockUntil) }
-          });
-
-          return { successful_update: true, already_added, modified_not_included, removed_not_included };
+        const txResult = await transactionService.applySyncDelta(userId, itemId, {
+          added: data.added,
+          modified: data.modified,
+          removed: data.removed,
+          nextCursor: data.next_cursor,
+          lockUntil: new Date(addMinutes(LOCK_MINUTES))
         });
 
         await logger.to_db(
@@ -296,7 +181,7 @@ export default ({ plaid, prisma, logger }: Params) => {
     try {
       const userId = (req as any).user.id;
       const result = await scheduleSyncForUser(userId);
-      invalidateTransactionsCache(userId);
+      transactionService.invalidateUser(userId);
       res.json({ success: true, ...result });
     } catch (e: any) {
       logger.log("error", "sync transactions", { err: e, userId: (req as any).user?.id });
@@ -307,30 +192,7 @@ export default ({ plaid, prisma, logger }: Params) => {
   const getAllHandler = async (req: express.Request, res: express.Response) => {
     try {
       const userId = (req as any).user.id;
-      const includeRemoved = req.query.includeRemoved === "true";
-      const cached = transactionsCache.get(userId);
-      if (cached) return res.json(cached.rows);
-      const rows = await prisma.transactions.findMany({
-        where: { user_id: userId, ...(includeRemoved ? {} : { is_removed: false }) },
-        orderBy: [{ datetime: "desc" }, { authorized_datetime: "desc" }],
-        include: {
-          accounts: { select: { name: true, official_name: true } },
-          items: { select: { institution_name: true } },
-          transaction_meta: { select: { account_transfer_group: true, bucket_1_tag_id: true, bucket_2_tag_id: true, meta_tag_id: true } }
-        }
-      });
-      const out = rows.map((row) => ({
-        ...row,
-        transaction_id: row.id,
-        account_name: row.accounts?.name ?? null,
-        account_official_name: row.accounts?.official_name ?? null,
-        institution_name: row.items?.institution_name ?? null,
-        account_transfer_group: row.transaction_meta?.account_transfer_group ?? null,
-        bucket_1_tag_id: row.transaction_meta?.bucket_1_tag_id ?? null,
-        bucket_2_tag_id: row.transaction_meta?.bucket_2_tag_id ?? null,
-        meta_tag_id: row.transaction_meta?.meta_tag_id ?? null
-      }));
-      transactionsCache.set(userId, { rows: out });
+      const out = await transactionService.getAllActiveTransactions(userId);
       res.json(out);
     } catch (e: any) {
       res.status(500).json({ error: e.message });
@@ -402,52 +264,14 @@ export default ({ plaid, prisma, logger }: Params) => {
     endDate?: string;
     includePending?: boolean;
   }) => {
-    const { userId, startDate, endDate, includePending } = args;
-    const start = startDate ? new Date(`${startDate}T00:00:00.000Z`) : null;
-    const end = endDate ? new Date(`${endDate}T23:59:59.999Z`) : null;
-    const txns = await prisma.$queryRaw<{
-      id: string;
-      amount: number;
-      account_id: string;
-      datetime: Date | null;
-      authorized_datetime: Date | null;
-      name: string | null;
-      merchant_name: string | null;
-      iso_currency_code: string | null;
-      pending: boolean | null;
-      account_name: string | null;
-      account_official_name: string | null;
-    }[]>`
-      SELECT
-        t.id,
-        t.amount,
-        t.account_id,
-        t.datetime,
-        t.authorized_datetime,
-        t.name,
-        t.merchant_name,
-        t.iso_currency_code,
-        t.pending,
-        a.name AS account_name,
-        a.official_name AS account_official_name
-      FROM transactions t
-      JOIN accounts a ON a.id = t.account_id
-      LEFT JOIN transaction_meta tm ON tm.transaction_id = t.id
-      WHERE t.user_id = ${userId}
-        AND COALESCE(t.is_removed, false) = false
-        AND t.amount IS NOT NULL
-        AND tm.account_transfer_group IS NULL
-        AND (${includePending}::boolean OR COALESCE(t.pending, false) = false)
-    `;
-    return txns
-      .filter((t) => !!t.account_id && txnTs(t) != null)
-      .filter((t) => {
-        const ts = txnTs(t);
-        if (ts == null) return false;
-        if (start && ts < start.getTime()) return false;
-        if (end && ts > end.getTime()) return false;
-        return true;
-      });
+    const start = args.startDate ? new Date(`${args.startDate}T00:00:00.000Z`) : null;
+    const end = args.endDate ? new Date(`${args.endDate}T23:59:59.999Z`) : null;
+    return transactionService.getTransferTransactions({
+      userId: args.userId,
+      start,
+      end,
+      includePending: args.includePending
+    });
   };
 
   const transferPreview = async (args: {
@@ -459,11 +283,10 @@ export default ({ plaid, prisma, logger }: Params) => {
     dayRangeTolerance?: number;
   }) => {
     const txns = await fetchTransferTxns(args);
-    const parsedAmountTolerance = Number(args.amountTolerance);
-    const amountTolerance = Math.max(0, Number.isFinite(parsedAmountTolerance) ? parsedAmountTolerance : 0);
+    const amountTolerance = Math.max(0, Number.isFinite(Number(args.amountTolerance)) ? Number(args.amountTolerance) : 0);
     const dayRangeTolerance = Math.min(
       MAX_TRANSFER_DAY_WINDOW,
-      Math.max(0, Number.isFinite(Number(args.dayRangeTolerance)) ? Math.floor(Number(args.dayRangeTolerance)) : DEFAULT_TRANSFER_DAY_WINDOW)
+      Math.max(0, Number.isFinite(Number(args.dayRangeTolerance)) ? Number(args.dayRangeTolerance) : DEFAULT_TRANSFER_DAY_WINDOW)
     );
     const candidates = buildTransferCandidates(txns, amountTolerance, dayRangeTolerance);
     const { matched, ambiguousTxnIds, totalCandidates } = resolveTransferPairs(candidates);
@@ -536,13 +359,7 @@ export default ({ plaid, prisma, logger }: Params) => {
       const selected = preview.pairs.filter((p) => pairSet.has(p.pairId));
       const selectedTxnIds = new Set(selected.flatMap((p) => [p.outflow.id, p.inflow.id]));
       const selectedIdList = [...selectedTxnIds];
-      const existing = selectedIdList.length
-        ? await prisma.$queryRaw<{ transaction_id: string; account_transfer_group: string | null }[]>`
-            SELECT transaction_id, account_transfer_group
-            FROM transaction_meta
-            WHERE transaction_id = ANY(${selectedIdList}::text[])
-          `
-        : [];
+      const existing = await transactionService.getExistingTransferGroupAssignments(selectedIdList);
       const existingByTxn = new Map(existing.map((e) => [e.transaction_id, e.account_transfer_group]));
       const writable = selected.filter((p) => {
         if (overwrite) return true;
@@ -550,19 +367,10 @@ export default ({ plaid, prisma, logger }: Params) => {
         const b = existingByTxn.get(p.inflow.id);
         return !a && !b;
       });
-      if (writable.length) {
-        await prisma.$transaction(async (tx) => {
-          for (const p of writable) {
-            const group = randomUUID();
-            await tx.$executeRaw`
-              INSERT INTO transaction_meta (transaction_id, account_transfer_group)
-              VALUES (${p.outflow.id}, ${group}), (${p.inflow.id}, ${group})
-              ON CONFLICT (transaction_id) DO UPDATE
-              SET account_transfer_group = EXCLUDED.account_transfer_group
-            `;
-          }
-        });
-      }
+      await transactionService.upsertTransferGroups(
+        userId,
+        writable.map((p) => ({ outflowId: p.outflow.id, inflowId: p.inflow.id, groupId: randomUUID() }))
+      );
       const result = {
         summary: {
           scanned: preview.summary.scanned,
@@ -593,40 +401,7 @@ export default ({ plaid, prisma, logger }: Params) => {
       const userId = (req as any).user.id;
       const dateRange = parseDateRange(req.query.startDate, req.query.endDate);
       if ("error" in dateRange) return res.status(400).json({ error: dateRange.error });
-      const dateSql = dateFilterSql("t", dateRange.start, dateRange.end);
-      const rows = await prisma.$queryRaw<{
-        group_id: string;
-        id: string;
-        amount: number;
-        account_id: string;
-        datetime: Date | null;
-        authorized_datetime: Date | null;
-        name: string | null;
-        merchant_name: string | null;
-        iso_currency_code: string | null;
-        account_name: string | null;
-        account_official_name: string | null;
-      }[]>`
-        SELECT
-          tm.account_transfer_group AS group_id,
-          t.id,
-          t.amount,
-          t.account_id,
-          t.datetime,
-          t.authorized_datetime,
-          t.name,
-          t.merchant_name,
-          t.iso_currency_code,
-          a.name AS account_name,
-          a.official_name AS account_official_name
-        FROM transaction_meta tm
-        JOIN transactions t ON t.id = tm.transaction_id
-        LEFT JOIN accounts a ON a.id = t.account_id
-        WHERE t.user_id = ${userId}
-          AND tm.account_transfer_group IS NOT NULL
-          ${dateSql}
-        ORDER BY tm.account_transfer_group, COALESCE(t.datetime, t.authorized_datetime) DESC
-      `;
+      const rows = await transactionService.getRecognizedTransferRows(userId, dateRange.start, dateRange.end);
       const byGroup = new Map<string, typeof rows>();
       for (const row of rows) byGroup.set(row.group_id, [...(byGroup.get(row.group_id) || []), row]);
       const groups = [...byGroup.entries()].map(([groupId, groupRows]) => {
@@ -671,14 +446,7 @@ export default ({ plaid, prisma, logger }: Params) => {
       }
       const ids = [...new Set(groupIds.map((x: unknown) => String(x || "").trim()).filter(Boolean))];
       if (!ids.length) return res.status(400).json({ error: "groupIds is required" });
-      const cleared = await prisma.$executeRaw`
-        UPDATE transaction_meta tm
-        SET account_transfer_group = NULL
-        FROM transactions t
-        WHERE t.id = tm.transaction_id
-          AND t.user_id = ${userId}
-          AND tm.account_transfer_group = ANY(${ids}::text[])
-      `;
+      const cleared = await transactionService.clearTransferGroups(userId, ids);
       res.json({ cleared_rows: Number(cleared) || 0, cleared_groups: ids.length });
     } catch (e: any) {
       res.status(500).json({ error: e.message });
@@ -690,24 +458,7 @@ export default ({ plaid, prisma, logger }: Params) => {
       const userId = (req as any).user.id;
       const dateRange = parseDateRange(req.query.startDate, req.query.endDate);
       if ("error" in dateRange) return res.status(400).json({ error: dateRange.error });
-      const dateSql = dateFilterSql("t", dateRange.start, dateRange.end);
-      const rows = await prisma.$queryRaw<{
-        id: string;
-        amount: number | null;
-        primary_category: string | null;
-      }[]>`
-        SELECT
-          t.id,
-          t.amount,
-          COALESCE(t.personal_finance_category->>'primary', 'Uncategorized') AS primary_category
-        FROM transactions t
-        LEFT JOIN transaction_meta tm ON tm.transaction_id = t.id
-        WHERE t.user_id = ${userId}
-          AND COALESCE(t.is_removed, false) = false
-          AND t.amount IS NOT NULL
-          AND tm.account_transfer_group IS NULL
-          ${dateSql}
-      `;
+      const rows = await transactionService.getVisualizationRows(userId, dateRange.start, dateRange.end);
 
       const incomeList: { id: string; value: number; category: string }[] = [];
       const spendingList: { id: string; value: number; category: string }[] = [];
@@ -759,57 +510,11 @@ export default ({ plaid, prisma, logger }: Params) => {
       const category = String(req.query.category || "");
       const dateRange = parseDateRange(req.query.startDate, req.query.endDate);
       if ("error" in dateRange) return res.status(400).json({ error: dateRange.error });
-      const dateSql = dateFilterSql("t", dateRange.start, dateRange.end);
       if (setType !== "income" && setType !== "spending") {
         return res.status(400).json({ error: "set must be income or spending" });
       }
-      const rows = await prisma.$queryRaw<{
-        id: string;
-        amount: number | null;
-        account_type: string | null;
-        datetime: Date | null;
-        authorized_datetime: Date | null;
-        name: string | null;
-        original_description: string | null;
-        merchant_name: string | null;
-        iso_currency_code: string | null;
-        account_id: string;
-        account_name: string | null;
-        account_official_name: string | null;
-        institution_name: string | null;
-        personal_finance_category_icon_url: string | null;
-        primary_category: string | null;
-        detailed_category: string | null;
-      }[]>`
-        SELECT
-          t.id,
-          t.amount,
-          a.type AS account_type,
-          t.datetime,
-          t.authorized_datetime,
-          t.name,
-          t.original_description,
-          t.merchant_name,
-          t.iso_currency_code,
-          t.account_id,
-          a.name AS account_name,
-          a.official_name AS account_official_name,
-          i.institution_name,
-          t.personal_finance_category_icon_url,
-          COALESCE(t.personal_finance_category->>'primary', 'Uncategorized') AS primary_category,
-          t.personal_finance_category->>'detailed' AS detailed_category
-        FROM transactions t
-        JOIN accounts a ON a.id = t.account_id
-        LEFT JOIN items i ON i.id = a.item_id
-        LEFT JOIN transaction_meta tm ON tm.transaction_id = t.id
-        WHERE t.user_id = ${userId}
-          AND COALESCE(t.is_removed, false) = false
-          AND t.amount IS NOT NULL
-          AND tm.account_transfer_group IS NULL
-          AND COALESCE(t.personal_finance_category->>'primary', 'Uncategorized') = ${category}
-          ${dateSql}
-        ORDER BY COALESCE(t.datetime, t.authorized_datetime) DESC
-      `;
+
+      const rows = await transactionService.getVisualizationDetailsRows(userId, category, dateRange.start, dateRange.end);
       const list = rows.filter((row) => {
         if (row.amount == null) return false;
         const amount = Number(row.amount);
@@ -852,20 +557,13 @@ export default ({ plaid, prisma, logger }: Params) => {
       }
 
       const ids = [...new Set((transaction_ids as string[]).filter(Boolean))];
-
-      // Validate bucket_2 requires bucket_1
       if (bucket_2_tag_id != null && bucket_1_tag_id == null) {
         return res.status(400).json({ error: "bucket_2_tag_id requires bucket_1_tag_id" });
       }
 
-      // Always validate all transaction IDs exist and belong to this user
-      const txns = await prisma.transactions.findMany({
-        where: { id: { in: ids }, user_id: userId },
-        select: { id: true, amount: true, transaction_meta: { select: { account_transfer_group: true } } }
-      });
+      const txns = await transactionService.getTransactionsForTagging(userId, ids);
       if (txns.length !== ids.length) return res.status(400).json({ error: "One or more transactions not found" });
 
-      // Validate tags exist and belong to user; check direction rules
       const tagIds = [bucket_1_tag_id, bucket_2_tag_id, meta_tag_id].filter((id) => id != null) as number[];
       if (tagIds.length) {
         const tags = await prisma.tags.findMany({ where: { id: { in: tagIds }, user_id: userId } });
@@ -904,21 +602,12 @@ export default ({ plaid, prisma, logger }: Params) => {
         }
       }
 
-      // Upsert transaction_meta for each transaction
-      await prisma.$transaction(async (tx) => {
-        for (const txnId of ids) {
-          await tx.$executeRaw`
-            INSERT INTO transaction_meta (transaction_id, bucket_1_tag_id, bucket_2_tag_id, meta_tag_id)
-            VALUES (${txnId}, ${bucket_1_tag_id ?? null}, ${bucket_2_tag_id ?? null}, ${meta_tag_id ?? null})
-            ON CONFLICT (transaction_id) DO UPDATE SET
-              bucket_1_tag_id = EXCLUDED.bucket_1_tag_id,
-              bucket_2_tag_id = EXCLUDED.bucket_2_tag_id,
-              meta_tag_id = EXCLUDED.meta_tag_id
-          `;
-        }
+      await transactionService.upsertTransactionTags(userId, ids, {
+        bucket_1_tag_id: bucket_1_tag_id ?? null,
+        bucket_2_tag_id: bucket_2_tag_id ?? null,
+        meta_tag_id: meta_tag_id ?? null
       });
 
-      invalidateTransactionsCache(userId);
       res.json({ success: true, updated: ids.length });
     } catch (e: any) {
       res.status(500).json({ error: e.message });

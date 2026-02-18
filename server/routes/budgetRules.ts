@@ -1,17 +1,15 @@
 import express from "express";
-import type { PrismaClient } from "../../generated/prisma/client";
-import { BudgetRuleType, CalendarWindow, RolloverOption } from "../../generated/prisma/client";
+import { BudgetRuleType, CalendarWindow, RolloverOption, type PrismaClient } from "../../generated/prisma/client";
+import type { TransactionService } from "../services/transactionsService";
 
-type Params = { prisma: PrismaClient };
-
-// --- Period helpers (ISO: week starts Monday) ---
+type Params = { prisma: PrismaClient; transactionService: TransactionService };
 
 function startOfMonth(d: Date): Date {
   return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1));
 }
 
 function startOfISOWeek(d: Date): Date {
-  const day = d.getUTCDay(); // 0=Sun
+  const day = d.getUTCDay();
   const diff = (day === 0 ? -6 : 1 - day);
   const out = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() + diff));
   return out;
@@ -40,53 +38,8 @@ function generatePeriods(startDate: Date, window: CalendarWindow, now: Date): Pe
   return periods;
 }
 
-// --- Income query helper ---
-
-async function getPeriodIncome(prisma: PrismaClient, userId: string, start: Date, end: Date): Promise<number> {
-  const rows = await prisma.transactions.findMany({
-    where: {
-      user_id: userId,
-      amount: { lt: 0 },
-      is_removed: false,
-      datetime: { gte: start, lt: end },
-      NOT: { transaction_meta: { account_transfer_group: { not: null } } }
-    },
-    select: { amount: true }
-  });
-  return rows.reduce((sum, r) => sum + Math.abs(r.amount ?? 0), 0);
-}
-
-// --- Spending query helper ---
-
-async function getPeriodSpending(
-  prisma: PrismaClient,
-  userId: string,
-  tagId: number,
-  isBucket2: boolean,
-  start: Date,
-  end: Date
-): Promise<number> {
-  const where = isBucket2
-    ? { bucket_2_tag_id: tagId }
-    : { bucket_1_tag_id: tagId };
-
-  const rows = await prisma.transactions.findMany({
-    where: {
-      user_id: userId,
-      amount: { gt: 0 },
-      is_removed: false,
-      datetime: { gte: start, lt: end },
-      transaction_meta: { ...where, account_transfer_group: null }
-    },
-    select: { amount: true }
-  });
-  return rows.reduce((sum, r) => sum + (r.amount ?? 0), 0);
-}
-
-// --- Evaluate a rule against all periods up to now ---
-
 async function evaluateRule(
-  prisma: PrismaClient,
+  transactionService: TransactionService,
   rule: {
     id: number;
     user_id: string;
@@ -116,13 +69,12 @@ async function evaluateRule(
     if (rule.type === "flat_rate") {
       budget = rule.flat_amount ?? 0;
     } else {
-      // Use previous period's income, or current period as fallback for first period
       const incomePeriod = i > 0 ? periods[i - 1] : period;
-      income = await getPeriodIncome(prisma, rule.user_id, incomePeriod.start, incomePeriod.end);
+      income = await transactionService.getPeriodIncome(rule.user_id, incomePeriod.start, incomePeriod.end);
       budget = income * (rule.percent ?? 0);
     }
 
-    const spending = await getPeriodSpending(prisma, rule.user_id, rule.tag_id, isBucket2, period.start, period.end);
+    const spending = await transactionService.getPeriodSpending(rule.user_id, rule.tag_id, isBucket2, period.start, period.end);
     const effectiveBudget = budget + carry;
     const delta = effectiveBudget - spending;
 
@@ -160,9 +112,7 @@ async function evaluateRule(
   };
 }
 
-// --- Route factory ---
-
-export default ({ prisma }: Params) => {
+export default ({ prisma, transactionService }: Params) => {
   const router = express.Router();
 
   const VALID_SPENDING_TYPES = new Set(["spending_bucket_1", "spending_bucket_2"]);
@@ -175,7 +125,7 @@ export default ({ prisma }: Params) => {
         include: { tag: true },
         orderBy: { id: "asc" }
       });
-      const statuses = await Promise.all(rules.map((r) => evaluateRule(prisma, r)));
+      const statuses = await Promise.all(rules.map((r) => evaluateRule(transactionService, r)));
       res.json({ rules, statuses });
     } catch (e: any) {
       res.status(500).json({ error: e.message });
@@ -208,13 +158,8 @@ export default ({ prisma }: Params) => {
       let resolvedStartDate: Date;
       if (use_earliest_transaction) {
         const isBucket2 = tag.type === "spending_bucket_2";
-        const where = isBucket2 ? { bucket_2_tag_id: Number(tag_id) } : { bucket_1_tag_id: Number(tag_id) };
-        const earliest = await prisma.transactions.findFirst({
-          where: { user_id: userId, is_removed: false, transaction_meta: { ...where } },
-          orderBy: { datetime: "asc" },
-          select: { datetime: true }
-        });
-        resolvedStartDate = earliest?.datetime ?? new Date();
+        const earliest = await transactionService.getEarliestTaggedTransactionDate(userId, Number(tag_id), isBucket2);
+        resolvedStartDate = earliest ?? new Date();
       } else {
         if (!start_date) return res.status(400).json({ error: "start_date is required" });
         resolvedStartDate = new Date(start_date);
