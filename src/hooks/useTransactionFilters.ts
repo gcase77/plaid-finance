@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import type { TextMode, AmountMode, Txn } from "../components/types";
+import type { TextMode, AmountMode, TagStateFilter, Txn } from "../components/types";
 import { getTxnDateOnly } from "../utils/transactionUtils";
 
 type UseTransactionFiltersReturn = {
@@ -25,6 +25,10 @@ type UseTransactionFiltersReturn = {
   setDateStart: (v: string) => void;
   dateEnd: string;
   setDateEnd: (v: string) => void;
+  tagStateFilter: TagStateFilter;
+  setTagStateFilter: (v: TagStateFilter) => void;
+  selectedTagIds: number[];
+  setSelectedTagIds: (v: number[]) => void;
   filteredTransactions: Txn[];
   bankOptions: Array<[string, string]>;
   accountOptions: Array<[string, string]>;
@@ -44,6 +48,8 @@ export function useTransactionFilters(transactions: Txn[]): UseTransactionFilter
   const [amountFilter, setAmountFilter] = useState<string>("");
   const [dateStart, setDateStart] = useState("");
   const [dateEnd, setDateEnd] = useState("");
+  const [tagStateFilter, setTagStateFilter] = useState<TagStateFilter>("all");
+  const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
 
   const filteredTransactions = useMemo(() => {
     const minAmount = amountFilter.trim() ? Number(amountFilter) : null;
@@ -79,9 +85,24 @@ export function useTransactionFilters(transactions: Txn[]): UseTransactionFilter
         if (dateStart && d < new Date(`${dateStart}T00:00:00`)) return false;
         if (dateEnd && d > new Date(`${dateEnd}T23:59:59`)) return false;
       }
+      if (tagStateFilter !== "all") {
+        const isTransfer = !!t.account_transfer_group;
+        const hasBucket = t.bucket_1_tag_id != null;
+        const hasMeta = t.meta_tag_id != null;
+        if (tagStateFilter === "transfer" && !isTransfer) return false;
+        if (tagStateFilter === "untagged" && (isTransfer || hasBucket)) return false;
+        if (tagStateFilter === "tagged" && !hasBucket) return false;
+        if (tagStateFilter === "meta_only" && (hasBucket || isTransfer || !hasMeta)) return false;
+      }
+      if (selectedTagIds.length) {
+        const match = selectedTagIds.includes(t.bucket_1_tag_id ?? -1)
+          || selectedTagIds.includes(t.bucket_2_tag_id ?? -1)
+          || selectedTagIds.includes(t.meta_tag_id ?? -1);
+        if (!match) return false;
+      }
       return true;
     });
-  }, [transactions, nameFilter, nameMode, merchantFilter, merchantMode, selectedBanks, selectedAccounts, selectedCategories, amountFilter, amountMode, dateStart, dateEnd]);
+  }, [transactions, nameFilter, nameMode, merchantFilter, merchantMode, selectedBanks, selectedAccounts, selectedCategories, amountFilter, amountMode, dateStart, dateEnd, tagStateFilter, selectedTagIds]);
 
   const bankOptions = useMemo(() => {
     const m = new Map<string, string>();
@@ -124,6 +145,8 @@ export function useTransactionFilters(transactions: Txn[]): UseTransactionFilter
     setAmountFilter("");
     setDateStart("");
     setDateEnd("");
+    setTagStateFilter("all");
+    setSelectedTagIds([]);
   };
 
   return {
@@ -149,6 +172,10 @@ export function useTransactionFilters(transactions: Txn[]): UseTransactionFilter
     setDateStart,
     dateEnd,
     setDateEnd,
+    tagStateFilter,
+    setTagStateFilter,
+    selectedTagIds,
+    setSelectedTagIds,
     filteredTransactions,
     bankOptions,
     accountOptions,

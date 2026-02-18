@@ -1,3 +1,11 @@
+### AUTH_MODE
+
+- `AUTH_MODE=supabase` (default): existing Supabase auth behavior (prod-safe).
+- `AUTH_MODE=dev`: no Supabase auth calls; frontend uses a dev-user dropdown and backend accepts `x-dev-user-id` for auth.
+- In dev mode, users can be listed/created via:
+  - `GET /api/dev/users`
+  - `POST /api/dev/users` with `{ "username": "..." }`
+
 ### Supabase Email/Password Auth (POC)
 
 - Auth uses email/password with:

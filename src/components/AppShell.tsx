@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { usePlaidData } from "../hooks/usePlaidData";
 import { useTransactionFilters } from "../hooks/useTransactionFilters";
+import { useTags } from "../hooks/useTags";
+import { useRules } from "../hooks/useRules";
 import { useVisualizations } from "../hooks/useVisualizations";
 import { buildDatePreset } from "../utils/datePresets";
 import MainTab from "./MainTab";
@@ -12,8 +14,10 @@ import type { TabKey } from "./types";
 export default function AppShell() {
   const [activeTab, setActiveTab] = useState<TabKey>("main");
   const auth = useAuth();
-  const plaidData = usePlaidData(auth.userId, auth.token);
+  const plaidData = usePlaidData(auth.userId, auth.token, auth.runtimeAuthMode);
   const filters = useTransactionFilters(plaidData.transactions);
+  const tagsData = useTags(auth.token, auth.runtimeAuthMode, plaidData.loadTransactions);
+  const rulesData = useRules(auth.token, auth.runtimeAuthMode);
   const visualizations = useVisualizations(auth.token, auth.isAuthed);
 
   useEffect(() => {
@@ -43,6 +47,13 @@ export default function AppShell() {
     if (activeTab === "visualize" && auth.isAuthed) void visualizations.refreshVisualizations();
   }, [activeTab, auth.isAuthed, visualizations.visualizeDateStart, visualizations.visualizeDateEnd]);
 
+  useEffect(() => {
+    if (activeTab === "transactions" && auth.isAuthed) {
+      void tagsData.loadTags();
+      void rulesData.loadRules();
+    }
+  }, [activeTab, auth.isAuthed]);
+
   const handleSignOut = async () => {
     await auth.signOut();
     visualizations.clearVisualizations();
@@ -64,6 +75,7 @@ export default function AppShell() {
       <div className="container mt-4">
         {activeTab === "main" && (
           <MainTab
+            runtimeAuthMode={auth.runtimeAuthMode}
             isAuthed={auth.isAuthed}
             authMode={auth.authMode}
             setAuthMode={auth.setAuthMode}
@@ -87,6 +99,10 @@ export default function AppShell() {
             items={plaidData.items}
             accountsByItem={plaidData.accountsByItem}
             deleteItem={plaidData.deleteItem}
+            devUsers={auth.devUsers}
+            selectedDevUserId={auth.selectedDevUserId}
+            setSelectedDevUserId={auth.setSelectedDevUserId}
+            createDevUser={auth.createDevUser}
           />
         )}
 
@@ -132,6 +148,22 @@ export default function AppShell() {
             getRecognizedTransfers={plaidData.getRecognizedTransfers}
             unmarkTransferGroups={plaidData.unmarkTransferGroups}
             loadTransactions={plaidData.loadTransactions}
+            tags={tagsData.tags}
+            tagsLoading={tagsData.loading}
+            createTag={tagsData.createTag}
+            renameTag={tagsData.renameTag}
+            deleteTag={tagsData.deleteTag}
+            applyTags={tagsData.applyTags}
+            tagStateFilter={filters.tagStateFilter}
+            setTagStateFilter={filters.setTagStateFilter}
+            selectedTagIds={filters.selectedTagIds}
+            setSelectedTagIds={filters.setSelectedTagIds}
+            rules={rulesData.rules}
+            ruleStatuses={rulesData.statuses}
+            rulesLoading={rulesData.loading}
+            rulesError={rulesData.error}
+            createRule={rulesData.createRule}
+            deleteRule={rulesData.deleteRule}
           />
         )}
 

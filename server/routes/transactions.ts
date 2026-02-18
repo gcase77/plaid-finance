@@ -315,14 +315,20 @@ export default ({ plaid, prisma, logger }: Params) => {
         orderBy: [{ datetime: "desc" }, { authorized_datetime: "desc" }],
         include: {
           accounts: { select: { name: true, official_name: true } },
-          items: { select: { institution_name: true } }
+          items: { select: { institution_name: true } },
+          transaction_meta: { select: { account_transfer_group: true, bucket_1_tag_id: true, bucket_2_tag_id: true, meta_tag_id: true } }
         }
       });
       const out = rows.map((row) => ({
         ...row,
+        transaction_id: row.id,
         account_name: row.accounts?.name ?? null,
         account_official_name: row.accounts?.official_name ?? null,
-        institution_name: row.items?.institution_name ?? null
+        institution_name: row.items?.institution_name ?? null,
+        account_transfer_group: row.transaction_meta?.account_transfer_group ?? null,
+        bucket_1_tag_id: row.transaction_meta?.bucket_1_tag_id ?? null,
+        bucket_2_tag_id: row.transaction_meta?.bucket_2_tag_id ?? null,
+        meta_tag_id: row.transaction_meta?.meta_tag_id ?? null
       }));
       transactionsCache.set(userId, { rows: out });
       res.json(out);
@@ -845,6 +851,88 @@ const buildTransferCandidates = (txns: TransferTxn[], amountTolerance: number, d
           }
         }))
       });
+    } catch (e: any) {
+      res.status(500).json({ error: e.message });
+    }
+  });
+
+  router.put("/tag", async (req, res) => {
+    try {
+      const userId = (req as any).user.id;
+      const { transaction_ids, bucket_1_tag_id, bucket_2_tag_id, meta_tag_id } = req.body || {};
+      if (!Array.isArray(transaction_ids) || !transaction_ids.length) {
+        return res.status(400).json({ error: "transaction_ids is required" });
+      }
+
+      const ids = [...new Set((transaction_ids as string[]).filter(Boolean))];
+
+      // Validate bucket_2 requires bucket_1
+      if (bucket_2_tag_id != null && bucket_1_tag_id == null) {
+        return res.status(400).json({ error: "bucket_2_tag_id requires bucket_1_tag_id" });
+      }
+
+      // Always validate all transaction IDs exist and belong to this user
+      const txns = await prisma.transactions.findMany({
+        where: { id: { in: ids }, user_id: userId },
+        select: { id: true, amount: true, transaction_meta: { select: { account_transfer_group: true } } }
+      });
+      if (txns.length !== ids.length) return res.status(400).json({ error: "One or more transactions not found" });
+
+      // Validate tags exist and belong to user; check direction rules
+      const tagIds = [bucket_1_tag_id, bucket_2_tag_id, meta_tag_id].filter((id) => id != null) as number[];
+      if (tagIds.length) {
+        const tags = await prisma.tags.findMany({ where: { id: { in: tagIds }, user_id: userId } });
+        if (tags.length !== tagIds.length) return res.status(400).json({ error: "One or more tags not found" });
+
+        const tagMap = new Map(tags.map((t) => [t.id, t]));
+        const b1 = bucket_1_tag_id != null ? tagMap.get(bucket_1_tag_id) : null;
+        const b2 = bucket_2_tag_id != null ? tagMap.get(bucket_2_tag_id) : null;
+        const mt = meta_tag_id != null ? tagMap.get(meta_tag_id) : null;
+
+        if (b1 && b1.type !== "income_bucket_1" && b1.type !== "spending_bucket_1") {
+          return res.status(400).json({ error: "bucket_1 tag must be type income_bucket_1 or spending_bucket_1" });
+        }
+        if (b2 && b2.type !== "income_bucket_2" && b2.type !== "spending_bucket_2") {
+          return res.status(400).json({ error: "bucket_2 tag must be type income_bucket_2 or spending_bucket_2" });
+        }
+        if (b1 && b2) {
+          const b1Dir = b1.type.startsWith("income") ? "income" : "spending";
+          const b2Dir = b2.type.startsWith("income") ? "income" : "spending";
+          if (b1Dir !== b2Dir) return res.status(400).json({ error: "bucket_1 and bucket_2 must share the same direction (income/spending)" });
+        }
+        if (mt && mt.type !== "meta") {
+          return res.status(400).json({ error: "meta_tag must be type meta" });
+        }
+
+        if (b1) {
+          const b1Dir = b1.type.startsWith("income") ? "income" : "spending";
+          for (const t of txns) {
+            if (t.transaction_meta?.account_transfer_group) {
+              return res.status(400).json({ error: `Transaction ${t.id} is a transfer and cannot receive a bucket tag` });
+            }
+            const amt = Number(t.amount ?? 0);
+            if (b1Dir === "spending" && amt <= 0) return res.status(400).json({ error: `Transaction ${t.id} is not a spending transaction` });
+            if (b1Dir === "income" && amt >= 0) return res.status(400).json({ error: `Transaction ${t.id} is not an income transaction` });
+          }
+        }
+      }
+
+      // Upsert transaction_meta for each transaction
+      await prisma.$transaction(async (tx) => {
+        for (const txnId of ids) {
+          await tx.$executeRaw`
+            INSERT INTO transaction_meta (transaction_id, bucket_1_tag_id, bucket_2_tag_id, meta_tag_id)
+            VALUES (${txnId}, ${bucket_1_tag_id ?? null}, ${bucket_2_tag_id ?? null}, ${meta_tag_id ?? null})
+            ON CONFLICT (transaction_id) DO UPDATE SET
+              bucket_1_tag_id = EXCLUDED.bucket_1_tag_id,
+              bucket_2_tag_id = EXCLUDED.bucket_2_tag_id,
+              meta_tag_id = EXCLUDED.meta_tag_id
+          `;
+        }
+      });
+
+      invalidateTransactionsCache(userId);
+      res.json({ success: true, updated: ids.length });
     } catch (e: any) {
       res.status(500).json({ error: e.message });
     }
