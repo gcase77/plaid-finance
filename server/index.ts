@@ -14,6 +14,7 @@ import budgetRulesRoutes from "./routes/budgetRules";
 import { prisma } from "./prisma";
 import { Logger } from "./logger";
 import { requireAuth } from "./middleware/auth";
+import { runtimeAuthMode } from "./config/auth";
 const app = express();
 app.use(express.json());
 
@@ -31,17 +32,16 @@ const plaid = new PlaidApi(
 );
 
 const logger = new Logger(prisma);
-const authMode = process.env.AUTH_MODE === "dev" ? "dev" : "supabase";
 
 app.get("/api/config", (_req, res) => {
   res.json({
-    authMode,
-    supabaseUrl: authMode === "supabase" ? process.env.SUPABASE_URL || "" : "",
-    supabaseAnonKey: authMode === "supabase" ? process.env.SUPABASE_ANON_KEY || "" : ""
+    authMode: runtimeAuthMode,
+    supabaseUrl: runtimeAuthMode === "supabase" ? process.env.SUPABASE_URL || "" : "",
+    supabaseAnonKey: runtimeAuthMode === "supabase" ? process.env.SUPABASE_ANON_KEY || "" : ""
   });
 });
 
-if (authMode === "dev") {
+if (runtimeAuthMode === "dev") {
   app.get("/api/dev/users", async (_req, res) => {
     const users = await prisma.users.findMany({ select: { id: true, username: true }, orderBy: { username: "asc" } });
     res.json(users);

@@ -1,9 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import { createClient } from "@supabase/supabase-js";
+import { runtimeAuthMode } from "../config/auth";
 
-const authMode = process.env.AUTH_MODE === "dev" ? "dev" : "supabase";
-
-const supabase = authMode === "supabase"
+const supabase = runtimeAuthMode === "supabase"
   ? createClient(
       process.env.SUPABASE_URL!,
       process.env.SUPABASE_ANON_KEY!
@@ -11,7 +10,7 @@ const supabase = authMode === "supabase"
   : null;
 
 export const requireAuth = async (req: Request, res: Response, next: NextFunction) => {
-  if (authMode === "dev") {
+  if (runtimeAuthMode === "dev") {
     const authHeader = req.headers.authorization;
     const headerUserId = typeof req.headers["x-dev-user-id"] === "string" ? req.headers["x-dev-user-id"] : "";
     const bearerUserId = authHeader?.startsWith("Bearer ") ? authHeader.substring(7) : "";

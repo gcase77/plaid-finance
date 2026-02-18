@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import type { Tag, TagType } from "../components/types";
+import { buildAuthHeaders, type RuntimeAuthMode } from "../lib/auth";
 
 const parseErrorResponse = async (res: Response, fallback: string): Promise<string> => {
   try {
@@ -24,18 +25,11 @@ type UseTagsReturn = {
   }) => Promise<void>;
 };
 
-export function useTags(token: string | null, runtimeAuthMode: "supabase" | "dev", onTransactionsInvalidated?: () => void): UseTagsReturn {
-  const authHeaders = (token: string | null) =>
-    token
-      ? runtimeAuthMode === "dev"
-        ? { "x-dev-user-id": token }
-        : { Authorization: `Bearer ${token}` }
-      : {};
-
+export function useTags(token: string | null, runtimeAuthMode: RuntimeAuthMode, onTransactionsInvalidated?: () => void): UseTagsReturn {
   const apiFetch = (url: string, options?: RequestInit) =>
     fetch(url, {
       ...options,
-      headers: { "Content-Type": "application/json", ...authHeaders(token), ...options?.headers }
+      headers: { "Content-Type": "application/json", ...buildAuthHeaders(runtimeAuthMode, token), ...options?.headers }
     });
   const [tags, setTags] = useState<Tag[]>([]);
   const [loading, setLoading] = useState(false);
