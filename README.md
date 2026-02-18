@@ -140,11 +140,21 @@ class Logger {
 | POST | `/api/exchange` | Body: `{ publicToken }`. Exchanges with Plaid, persists item + accounts; returns `{ success: true }`. | Yes |
 | GET | `/api/transactions` | Returns all transactions for user; query `includeRemoved=true` to include removed. | Yes |
 | POST | `/api/transactions/sync` | Triggers Plaid sync for user’s items; returns `{ added, modified, removed, ... }`. | Yes |
-| GET | `/api/transactions/item/:itemId` | Returns transactions for one item; query `includeRemoved=true` optional. | Yes |
-| POST | `/api/transactions/internal/preview` | Body: `{ userId, startDate?, endDate?, includePending? }`. Returns `{ summary, pairs }` (no writes). | Yes |
-| POST | `/api/transactions/internal/apply` | Body: `{ pairIds, startDate?, endDate?, includePending?, overwrite? }`. Writes `account_transfer_group` for selected pairs. | Yes |
+| PUT | `/api/transactions/tag` | Body: `{ transaction_ids, bucket_1_tag_id?, bucket_2_tag_id?, meta_tag_id? }`. Applies tags to transactions. | Yes |
+| POST | `/api/transactions/internal/preview` | Body: `{ startDate?, endDate?, includePending?, amountTolerance?, dayRangeTolerance? }`. Returns `{ summary, pairs, ambiguous_pairs }` (no writes). | Yes |
+| POST | `/api/transactions/internal/apply` | Body: `{ pairIds, startDate?, endDate?, includePending?, overwrite?, amountTolerance?, dayRangeTolerance? }`. Writes `account_transfer_group` for selected pairs. | Yes |
+| GET | `/api/transactions/internal/recognized` | Query: `startDate?`, `endDate?`. Returns recognized transfer groups. | Yes |
+| POST | `/api/transactions/internal/unmark` | Body: `{ groupIds }`. Clears `account_transfer_group` for given groups. | Yes |
 | GET | `/api/transactions/visualize` | Query: `startDate`, `endDate`. Returns income/spending aggregates by category (excludes internal transfers). | Yes |
-| GET | `/api/transactions/visualize/details` | Query: `set=income|spending`, `category`, `startDate`, `endDate`. Returns transaction rows for that slice. | Yes |
+| GET | `/api/transactions/visualize/details` | Query: `set=income\|spending`, `category`, `startDate`, `endDate`. Returns transaction rows for that slice. | Yes |
+| GET | `/api/tags` | Returns all tags for user. | Yes |
+| POST | `/api/tags` | Body: `{ name, type }`. Creates tag. | Yes |
+| PATCH | `/api/tags/:id` | Body: `{ name }`. Renames tag. | Yes |
+| DELETE | `/api/tags/:id` | Deletes tag; fails if in use. | Yes |
+| GET | `/api/budget-rules` | Returns rules and statuses for user. | Yes |
+| POST | `/api/budget-rules` | Body: `{ tag_id, name, type, flat_amount? OR percent?, calendar_window, rollover_options, start_date? OR use_earliest_transaction? }`. Creates rule. | Yes |
+| PATCH | `/api/budget-rules/:id` | Body: `{ name?, flat_amount?, percent?, rollover_options?, start_date? }`. Updates rule. | Yes |
+| DELETE | `/api/budget-rules/:id` | Deletes rule. | Yes |
 
 
 
