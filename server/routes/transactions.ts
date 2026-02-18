@@ -864,10 +864,19 @@ const buildTransferCandidates = (txns: TransferTxn[], amountTolerance: number, d
         return res.status(400).json({ error: "transaction_ids is required" });
       }
 
+      const ids = [...new Set((transaction_ids as string[]).filter(Boolean))];
+
       // Validate bucket_2 requires bucket_1
       if (bucket_2_tag_id != null && bucket_1_tag_id == null) {
         return res.status(400).json({ error: "bucket_2_tag_id requires bucket_1_tag_id" });
       }
+
+      // Always validate all transaction IDs exist and belong to this user
+      const txns = await prisma.transactions.findMany({
+        where: { id: { in: ids }, user_id: userId },
+        select: { id: true, amount: true, transaction_meta: { select: { account_transfer_group: true } } }
+      });
+      if (txns.length !== ids.length) return res.status(400).json({ error: "One or more transactions not found" });
 
       // Validate tags exist and belong to user; check direction rules
       const tagIds = [bucket_1_tag_id, bucket_2_tag_id, meta_tag_id].filter((id) => id != null) as number[];
@@ -895,13 +904,8 @@ const buildTransferCandidates = (txns: TransferTxn[], amountTolerance: number, d
           return res.status(400).json({ error: "meta_tag must be type meta" });
         }
 
-        // Validate direction against transaction amounts
         if (b1) {
           const b1Dir = b1.type.startsWith("income") ? "income" : "spending";
-          const txns = await prisma.transactions.findMany({
-            where: { id: { in: transaction_ids }, user_id: userId },
-            select: { id: true, amount: true, transaction_meta: { select: { account_transfer_group: true } } }
-          });
           for (const t of txns) {
             if (t.transaction_meta?.account_transfer_group) {
               return res.status(400).json({ error: `Transaction ${t.id} is a transfer and cannot receive a bucket tag` });
@@ -915,7 +919,6 @@ const buildTransferCandidates = (txns: TransferTxn[], amountTolerance: number, d
 
       // Upsert transaction_meta for each transaction
       await prisma.$transaction(async (tx) => {
-        const ids = transaction_ids as string[];
         for (const txnId of ids) {
           await tx.$executeRaw`
             INSERT INTO transaction_meta (transaction_id, bucket_1_tag_id, bucket_2_tag_id, meta_tag_id)
@@ -929,7 +932,7 @@ const buildTransferCandidates = (txns: TransferTxn[], amountTolerance: number, d
       });
 
       invalidateTransactionsCache(userId);
-      res.json({ success: true, updated: transaction_ids.length });
+      res.json({ success: true, updated: ids.length });
     } catch (e: any) {
       res.status(500).json({ error: e.message });
     }
