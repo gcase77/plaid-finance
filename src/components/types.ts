@@ -90,3 +90,44 @@ export type RecognizedTransfersResponse = {
   count?: number;
   groups?: RecognizedTransferGroup[];
 };
+
+export type BudgetRuleType = "flat_rate" | "percent_of_income";
+export type CalendarWindow = "week" | "month";
+export type RolloverOption = "none" | "surplus" | "deficit" | "both";
+
+export type BudgetRule = {
+  id: number;
+  user_id: string;
+  tag_id: number;
+  name: string;
+  start_date: string;
+  type: BudgetRuleType;
+  flat_amount: number | null;
+  percent: number | null;
+  calendar_window: CalendarWindow;
+  rollover_options: RolloverOption;
+  tag: Tag;
+};
+
+export type PeriodHistory = {
+  start: string;
+  end: string;
+  budget: number;
+  spending: number;
+  delta: number;
+  carry_after: number;
+};
+
+export type BudgetRuleStatus = {
+  rule_id: number;
+  carry: number;
+  current_period: {
+    start: string | null;
+    end: string | null;
+    base_budget: number;
+    effective_budget: number;
+    spending: number;
+    remaining: number;
+  };
+  period_history: PeriodHistory[];
+};

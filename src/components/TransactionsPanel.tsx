@@ -1,8 +1,10 @@
 import { useMemo, useState } from "react";
-import type { AmountMode, RecognizedTransferGroup, Tag, TagStateFilter, TagType, TextMode, TransferPair, TransferTxn, Txn } from "./types";
+import type { AmountMode, BudgetRule, BudgetRuleStatus, RecognizedTransferGroup, Tag, TagStateFilter, TagType, TextMode, TransferPair, TransferTxn, Txn } from "./types";
+import type { CreateRuleArgs } from "../hooks/useRules";
 import TransactionTable from "./shared/TransactionTable";
 import TaggingActionBar from "./shared/TaggingActionBar";
 import BucketsTab from "./BucketsTab";
+import RulesTab from "./RulesTab";
 import CheckboxFilter from "./shared/CheckboxFilter";
 import DateRangeDropdown from "./shared/DateRangeDropdown";
 import AppliedFiltersBar from "./shared/AppliedFiltersBar";
@@ -71,6 +73,12 @@ type TransactionsPanelProps = {
   setTagStateFilter: (v: TagStateFilter) => void;
   selectedTagIds: number[];
   setSelectedTagIds: (v: number[]) => void;
+  rules: BudgetRule[];
+  ruleStatuses: BudgetRuleStatus[];
+  rulesLoading: boolean;
+  rulesError: string | null;
+  createRule: (args: CreateRuleArgs) => Promise<BudgetRule>;
+  deleteRule: (id: number) => Promise<void>;
 };
 
 export default function TransactionsPanel(props: TransactionsPanelProps) {
@@ -86,9 +94,10 @@ export default function TransactionsPanel(props: TransactionsPanelProps) {
     loadingTxns, filteredTransactions,
     previewTransferPairs, applyTransferPairs, getRecognizedTransfers, unmarkTransferGroups, loadTransactions,
     tags, tagsLoading, createTag, renameTag, deleteTag, applyTags,
-    tagStateFilter, setTagStateFilter, selectedTagIds, setSelectedTagIds
+    tagStateFilter, setTagStateFilter, selectedTagIds, setSelectedTagIds,
+    rules, ruleStatuses, rulesLoading, rulesError, createRule, deleteRule
   } = props;
-  const [activeSubTab, setActiveSubTab] = useState<"transactions" | "buckets">("transactions");
+  const [activeSubTab, setActiveSubTab] = useState<"transactions" | "buckets" | "rules">("transactions");
   const [taggingMode, setTaggingMode] = useState(false);
   const [selectedTxnIds, setSelectedTxnIds] = useState<Set<string>>(new Set());
   const [transferView, setTransferView] = useState<"all" | "potential" | "recognized">("all");
@@ -318,9 +327,22 @@ export default function TransactionsPanel(props: TransactionsPanelProps) {
           <li className="nav-item">
             <button className={`nav-link ${activeSubTab === "buckets" ? "active" : ""}`} onClick={() => setActiveSubTab("buckets")}>Buckets</button>
           </li>
+          <li className="nav-item">
+            <button className={`nav-link ${activeSubTab === "rules" ? "active" : ""}`} onClick={() => setActiveSubTab("rules")}>Rules</button>
+          </li>
         </ul>
         {activeSubTab === "buckets" ? (
           <BucketsTab tags={tags} loading={tagsLoading} createTag={createTag} renameTag={renameTag} deleteTag={deleteTag} />
+        ) : activeSubTab === "rules" ? (
+          <RulesTab
+            tags={tags}
+            rules={rules}
+            statuses={ruleStatuses}
+            loading={rulesLoading}
+            error={rulesError}
+            createRule={createRule}
+            deleteRule={deleteRule}
+          />
         ) : (
         <>
         <div className="row g-2 mb-3">

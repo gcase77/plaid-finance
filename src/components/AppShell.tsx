@@ -3,6 +3,7 @@ import { useAuth } from "../hooks/useAuth";
 import { usePlaidData } from "../hooks/usePlaidData";
 import { useTransactionFilters } from "../hooks/useTransactionFilters";
 import { useTags } from "../hooks/useTags";
+import { useRules } from "../hooks/useRules";
 import { useVisualizations } from "../hooks/useVisualizations";
 import { buildDatePreset } from "../utils/datePresets";
 import MainTab from "./MainTab";
@@ -16,6 +17,7 @@ export default function AppShell() {
   const plaidData = usePlaidData(auth.userId, auth.token, auth.runtimeAuthMode);
   const filters = useTransactionFilters(plaidData.transactions);
   const tagsData = useTags(auth.token, auth.runtimeAuthMode, plaidData.loadTransactions);
+  const rulesData = useRules(auth.token, auth.runtimeAuthMode);
   const visualizations = useVisualizations(auth.token, auth.isAuthed);
 
   useEffect(() => {
@@ -46,7 +48,10 @@ export default function AppShell() {
   }, [activeTab, auth.isAuthed, visualizations.visualizeDateStart, visualizations.visualizeDateEnd]);
 
   useEffect(() => {
-    if (activeTab === "transactions" && auth.isAuthed) void tagsData.loadTags();
+    if (activeTab === "transactions" && auth.isAuthed) {
+      void tagsData.loadTags();
+      void rulesData.loadRules();
+    }
   }, [activeTab, auth.isAuthed]);
 
   const handleSignOut = async () => {
@@ -153,6 +158,12 @@ export default function AppShell() {
             setTagStateFilter={filters.setTagStateFilter}
             selectedTagIds={filters.selectedTagIds}
             setSelectedTagIds={filters.setSelectedTagIds}
+            rules={rulesData.rules}
+            ruleStatuses={rulesData.statuses}
+            rulesLoading={rulesData.loading}
+            rulesError={rulesData.error}
+            createRule={rulesData.createRule}
+            deleteRule={rulesData.deleteRule}
           />
         )}
 

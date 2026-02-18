@@ -10,6 +10,7 @@ import accountRoutes from "./routes/accounts";
 import linkRoutes from "./routes/link";
 import transactionRoutes from "./routes/transactions";
 import tagRoutes from "./routes/tags";
+import budgetRulesRoutes from "./routes/budgetRules";
 import { prisma } from "./prisma";
 import { Logger } from "./logger";
 import { requireAuth } from "./middleware/auth";
@@ -69,6 +70,7 @@ const txRoutes = transactionRoutes({ plaid, prisma, logger });
 app.get("/api/transactions", txRoutes.getAllHandler);
 app.use("/api/transactions", txRoutes.router);
 app.use("/api/tags", tagRoutes({ prisma }));
+app.use("/api/budget-rules", budgetRulesRoutes({ prisma }));
 
 if (fs.existsSync(distPath)) {
   app.get("*", (req, res, next) => {

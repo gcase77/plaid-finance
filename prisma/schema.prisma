@@ -16,6 +16,7 @@ model users {
   transactions transactions[]
   tags         tags[]
   system_logs  system_logs[]
+  budget_rules budget_rules[]
 }
 
 model items {
@@ -105,6 +106,23 @@ enum TagType {
   meta
 }
 
+enum BudgetRuleType {
+  flat_rate
+  percent_of_income
+}
+
+enum CalendarWindow {
+  week
+  month
+}
+
+enum RolloverOption {
+  none
+  surplus
+  deficit
+  both
+}
+
 model tags {
   id      Int     @id @default(autoincrement())
   name    String
@@ -114,9 +132,26 @@ model tags {
   bucket_1_meta transaction_meta[] @relation("Bucket1Tag")
   bucket_2_meta transaction_meta[] @relation("Bucket2Tag")
   meta_meta     transaction_meta[] @relation("MetaTag")
+  budget_rules  budget_rules[]
   users         users              @relation(fields: [user_id], references: [id])
 
   @@unique([name, user_id])
+}
+
+model budget_rules {
+  id               Int            @id @default(autoincrement())
+  user_id          String
+  tag_id           Int
+  name             String
+  start_date       DateTime
+  type             BudgetRuleType
+  flat_amount      Float?
+  percent          Float?
+  calendar_window  CalendarWindow
+  rollover_options RolloverOption
+
+  users users @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  tag   tags  @relation(fields: [tag_id], references: [id], onDelete: Cascade)
 }
 
 model system_logs {
