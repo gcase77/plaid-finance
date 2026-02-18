@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import type { BudgetRule, BudgetRuleStatus, BudgetRuleType, CalendarWindow, RolloverOption } from "../components/types";
+import { buildAuthHeaders, type RuntimeAuthMode } from "../lib/auth";
 
 const parseError = async (res: Response, fallback: string): Promise<string> => {
   try {
@@ -30,18 +31,11 @@ type UseRulesReturn = {
   deleteRule: (id: number) => Promise<void>;
 };
 
-export function useRules(token: string | null, runtimeAuthMode: "supabase" | "dev"): UseRulesReturn {
-  const authHeaders = () =>
-    token
-      ? runtimeAuthMode === "dev"
-        ? { "x-dev-user-id": token }
-        : { Authorization: `Bearer ${token}` }
-      : {};
-
+export function useRules(token: string | null, runtimeAuthMode: RuntimeAuthMode): UseRulesReturn {
   const apiFetch = (url: string, options?: RequestInit) =>
     fetch(url, {
       ...options,
-      headers: { "Content-Type": "application/json", ...authHeaders(), ...options?.headers }
+      headers: { "Content-Type": "application/json", ...buildAuthHeaders(runtimeAuthMode, token), ...options?.headers }
     });
 
   const [rules, setRules] = useState<BudgetRule[]>([]);

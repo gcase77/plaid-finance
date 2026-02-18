@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { Item, Account, Txn, TransferPreviewResponse, RecognizedTransfersResponse } from "../components/types";
+import { buildAuthHeaders, type RuntimeAuthMode } from "../lib/auth";
 
 type UsePlaidDataReturn = {
   items: Item[];
@@ -34,7 +35,7 @@ type UsePlaidDataReturn = {
   ensureUserExists: (id: string, email: string, token: string) => Promise<void>;
 };
 
-export function usePlaidData(userId: string | null, token: string | null, runtimeAuthMode: "supabase" | "dev"): UsePlaidDataReturn {
+export function usePlaidData(userId: string | null, token: string | null, runtimeAuthMode: RuntimeAuthMode): UsePlaidDataReturn {
   const [items, setItems] = useState<Item[]>([]);
   const [accountsByItem, setAccountsByItem] = useState<Record<string, Account[]>>({});
   const [transactions, setTransactions] = useState<Txn[]>([]);
@@ -44,12 +45,10 @@ export function usePlaidData(userId: string | null, token: string | null, runtim
 
   const fetchWithAuth = async (url: string, options: RequestInit = {}, tokenOverride?: string | null) => {
     const resolvedToken = tokenOverride || token;
-    const headers = {
-      ...(options.headers || {}),
-      ...(runtimeAuthMode === "dev" && resolvedToken ? { "x-dev-user-id": resolvedToken } : {}),
-      ...(runtimeAuthMode === "supabase" && resolvedToken ? { Authorization: `Bearer ${resolvedToken}` } : {})
-    };
-    return fetch(url, { ...options, headers });
+    return fetch(url, {
+      ...options,
+      headers: { ...(options.headers || {}), ...buildAuthHeaders(runtimeAuthMode, resolvedToken) }
+    });
   };
 
   const loadTransactions = async (uid?: string | null, tk?: string | null) => {

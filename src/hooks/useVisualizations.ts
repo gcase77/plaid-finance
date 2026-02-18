@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import type { PieCategory, Txn } from "../components/types";
+import { buildAuthHeaders, type RuntimeAuthMode } from "../lib/auth";
 
 type UseVisualizationsReturn = {
   visualizeDateStart: string;
@@ -19,7 +20,7 @@ type UseVisualizationsReturn = {
 
 const palette = ["#2563eb", "#16a34a", "#dc2626", "#7c3aed", "#d97706", "#0891b2", "#be123c", "#0f766e", "#4f46e5", "#a16207", "#475569", "#ea580c"];
 
-export function useVisualizations(token: string | null, isAuthed: boolean): UseVisualizationsReturn {
+export function useVisualizations(token: string | null, runtimeAuthMode: RuntimeAuthMode, isAuthed: boolean): UseVisualizationsReturn {
   const [visualizeDateStart, setVisualizeDateStart] = useState("");
   const [visualizeDateEnd, setVisualizeDateEnd] = useState("");
   const [visualizeStatus, setVisualizeStatus] = useState("No chart data loaded yet");
@@ -33,10 +34,7 @@ export function useVisualizations(token: string | null, isAuthed: boolean): UseV
   const incomeChartRef = useRef<{ destroy: () => void } | null>(null);
   const spendingChartRef = useRef<{ destroy: () => void } | null>(null);
 
-  const fetchWithAuth = async (url: string) => {
-    const headers = token ? { Authorization: `Bearer ${token}` } : {};
-    return fetch(url, { headers });
-  };
+  const fetchWithAuth = async (url: string) => fetch(url, { headers: buildAuthHeaders(runtimeAuthMode, token) });
 
   const renderPie = (key: "income" | "spending", categories: PieCategory[]) => {
     if (!window.Chart) return;

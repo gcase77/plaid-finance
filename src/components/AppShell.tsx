@@ -18,7 +18,7 @@ export default function AppShell() {
   const filters = useTransactionFilters(plaidData.transactions);
   const tagsData = useTags(auth.token, auth.runtimeAuthMode, plaidData.loadTransactions);
   const rulesData = useRules(auth.token, auth.runtimeAuthMode);
-  const visualizations = useVisualizations(auth.token, auth.isAuthed);
+  const visualizations = useVisualizations(auth.token, auth.runtimeAuthMode, auth.isAuthed);
 
   useEffect(() => {
     auth.onAuthStateChange(async (userId, email, token) => {
