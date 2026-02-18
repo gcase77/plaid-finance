@@ -15,7 +15,7 @@ export default function FilterSection({ label, summary, children }: FilterSectio
         className="btn btn-sm w-100 text-start d-flex justify-content-between align-items-center"
         onClick={() => setOpen(o => !o)}
       >
-        <span className="fw-semibold">{label}</span>
+        <span className="fw-semibold fs-6">{label}</span>
         <span className="text-muted small">{summary}</span>
       </button>
       {open && <div className="p-2 border-top">{children}</div>}

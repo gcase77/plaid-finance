@@ -43,6 +43,18 @@ export default function TaggingActionBar({ selectedCount, tags, onApply, onClear
     }
   };
 
+  const handleRemoveTags = async () => {
+    setApplying(true);
+    setError(null);
+    try {
+      await onApply({ bucket_1_tag_id: null, bucket_2_tag_id: null, meta_tag_id: null });
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setApplying(false);
+    }
+  };
+
   return (
     <div className="border rounded p-2 mb-2 bg-body-secondary">
       <div className="d-flex flex-wrap align-items-center gap-2">
@@ -62,6 +74,7 @@ export default function TaggingActionBar({ selectedCount, tags, onApply, onClear
         <button className="btn btn-primary btn-sm" onClick={handleApply} disabled={applying || (!bucket1Id && !metaId)}>
           {applying ? "Applying..." : "Apply"}
         </button>
+        <button className="btn btn-outline-danger btn-sm" onClick={handleRemoveTags} disabled={applying}>Remove tags</button>
         <button className="btn btn-outline-secondary btn-sm" onClick={onClearSelection}>Clear selection</button>
       </div>
       {error && <div className="text-danger small mt-1">{error}</div>}

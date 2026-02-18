@@ -11,6 +11,7 @@ type Props = {
   error: string | null;
   createRule: (args: CreateRuleArgs) => Promise<BudgetRule>;
   deleteRule: (id: number) => Promise<void>;
+  loadRules: () => Promise<void>;
 };
 
 type Step = "bucket" | "type" | "window" | "rollover" | "value";
@@ -91,17 +92,30 @@ function RuleCard({
             </span>
             <span>Budget: <strong>{fmt(cp.effective_budget)}</strong></span>
           </div>
-          <div className="progress mb-1" style={{ height: 10 }}>
-            <div
-              className={`progress-bar ${over ? "bg-danger" : pct > 85 ? "bg-warning" : "bg-success"}`}
-              style={{ width: `${over ? 100 : pct}%` }}
-            />
+          <div className="progress mb-1 position-relative" style={{ height: 10 }}>
+            {over && cp.spending > 0 ? (
+              <>
+                <div className="progress-bar bg-success" style={{ width: `${Math.min(100, Math.max(0, (cp.effective_budget / cp.spending) * 100))}%` }} />
+                <div className="progress-bar bg-danger" style={{ width: `${100 - Math.min(100, Math.max(0, (cp.effective_budget / cp.spending) * 100))}%` }} />
+                <div
+                  className="position-absolute top-0 h-100"
+                  style={{
+                    left: `${Math.max(0, (cp.effective_budget / cp.spending) * 100)}%`,
+                    width: 2,
+                    background: "rgba(255,255,255,0.85)",
+                    transform: "translateX(-50%)"
+                  }}
+                />
+              </>
+            ) : (
+              <div className={`progress-bar ${pct > 85 ? "bg-warning" : "bg-success"}`} style={{ width: `${pct}%` }} />
+            )}
           </div>
           <div className={`small ${over ? "text-danger fw-semibold" : "text-muted"}`}>
             {over ? `Over by ${fmt(Math.abs(cp.remaining))}` : `${fmt(cp.remaining)} remaining`}
           </div>
 
-          {rule.rollover_options !== "none" && status && status.period_history.length > 1 && (
+          {(rule.rollover_options !== "none" || rule.type === "percent_of_income") && status && status.period_history.length > 1 && (
             <button className="btn btn-link btn-sm p-0 mt-1" onClick={() => setExpanded((v) => !v)}>
               {expanded ? "Hide history" : "Show history"}
             </button>
@@ -114,6 +128,7 @@ function RuleCard({
                 <thead>
                   <tr>
                     <th>Period</th>
+                    {rule.type === "percent_of_income" && <th className="text-end">Income</th>}
                     <th className="text-end">Budget</th>
                     <th className="text-end">Spent</th>
                     <th className="text-end">Delta</th>
@@ -122,7 +137,8 @@ function RuleCard({
                 <tbody>
                   {status.period_history.slice(0, -1).map((p, i) => (
                     <tr key={i}>
-                      <td>{new Date(p.start).toLocaleDateString()}</td>
+                      <td>{new Date(new Date(p.end).getTime() - 86400000).toLocaleDateString('en-US', { timeZone: 'UTC' })}</td>
+                      {rule.type === "percent_of_income" && <td className="text-end">{p.income != null ? fmt(p.income) : "—"}</td>}
                       <td className="text-end">{fmt(p.budget)}</td>
                       <td className="text-end">{fmt(p.spending)}</td>
                       <td className={`text-end ${p.delta >= 0 ? "text-success" : "text-danger"}`}>
@@ -339,21 +355,32 @@ function CreateRuleForm({
   );
 }
 
-export default function RulesTab({ tags, rules, statuses, loading, error, createRule, deleteRule }: Props) {
+export default function RulesTab({ tags, rules, statuses, loading, error, createRule, deleteRule, loadRules }: Props) {
   const [creating, setCreating] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const handleCreate = async (args: CreateRuleArgs) => {
     await createRule(args);
     setCreating(false);
   };
 
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try { await loadRules(); } finally { setRefreshing(false); }
+  };
+
   return (
     <div>
       <div className="d-flex justify-content-between align-items-center mb-3">
         <h6 className="mb-0">Budget Rules</h6>
-        {!creating && (
-          <button className="btn btn-outline-primary btn-sm" onClick={() => setCreating(true)}>+ New Rule</button>
-        )}
+        <div className="d-flex gap-2">
+          <button className="btn btn-outline-secondary btn-sm" onClick={handleRefresh} disabled={refreshing || loading}>
+            {refreshing ? "Refreshing..." : "Refresh"}
+          </button>
+          {!creating && (
+            <button className="btn btn-outline-primary btn-sm" onClick={() => setCreating(true)}>+ New Rule</button>
+          )}
+        </div>
       </div>
 
       {creating && (

@@ -29,6 +29,8 @@ type UseTransactionFiltersReturn = {
   setTagStateFilter: (v: TagStateFilter) => void;
   selectedTagIds: number[];
   setSelectedTagIds: (v: number[]) => void;
+  filterOperator: "and" | "or";
+  setFilterOperator: (v: "and" | "or") => void;
   filteredTransactions: Txn[];
   bankOptions: Array<[string, string]>;
   accountOptions: Array<[string, string]>;
@@ -50,59 +52,66 @@ export function useTransactionFilters(transactions: Txn[]): UseTransactionFilter
   const [dateEnd, setDateEnd] = useState("");
   const [tagStateFilter, setTagStateFilter] = useState<TagStateFilter>("all");
   const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
+  const [filterOperator, setFilterOperator] = useState<"and" | "or">("and");
 
   const filteredTransactions = useMemo(() => {
     const minAmount = amountFilter.trim() ? Number(amountFilter) : null;
-    return transactions.filter((t) => {
-      const name = (t.name || "").toLowerCase();
-      const merchant = (t.merchant_name || "").toLowerCase();
+    const predicates: Array<(t: Txn) => boolean> = [];
+
+    if (nameFilter.trim()) {
+      const q = nameFilter.toLowerCase().trim();
+      predicates.push((t) => nameMode === "not" ? !(t.name || "").toLowerCase().includes(q) : (t.name || "").toLowerCase().includes(q));
+    }
+    if (merchantMode === "null") {
+      predicates.push((t) => !t.merchant_name);
+    } else if (merchantFilter.trim()) {
+      const q = merchantFilter.toLowerCase().trim();
+      predicates.push((t) => merchantMode === "not" ? !(t.merchant_name || "").toLowerCase().includes(q) : (t.merchant_name || "").toLowerCase().includes(q));
+    }
+    if (selectedBanks.length) predicates.push((t) => selectedBanks.includes(String(t.item_id || "")));
+    if (selectedAccounts.length) predicates.push((t) => selectedAccounts.includes(String(t.account_id || "")));
+    if (selectedCategories.length) predicates.push((t) => {
       const cat = t.personal_finance_category?.detailed || t.personal_finance_category?.primary || "";
-      if (nameFilter.trim()) {
-        const q = nameFilter.toLowerCase().trim();
-        if (nameMode === "not" && name.includes(q)) return false;
-        if (nameMode !== "not" && !name.includes(q)) return false;
-      }
-      if (merchantMode === "null") {
-        if (t.merchant_name) return false;
-      } else if (merchantFilter.trim()) {
-        const q = merchantFilter.toLowerCase().trim();
-        if (merchantMode === "not" && merchant.includes(q)) return false;
-        if (merchantMode !== "not" && !merchant.includes(q)) return false;
-      }
-      if (selectedBanks.length && !selectedBanks.includes(String(t.item_id || ""))) return false;
-      if (selectedAccounts.length && !selectedAccounts.includes(String(t.account_id || ""))) return false;
-      if (selectedCategories.length && !selectedCategories.includes(cat)) return false;
-      if (amountMode && minAmount !== null && Number.isFinite(minAmount)) {
+      return selectedCategories.includes(cat);
+    });
+    if (amountMode && minAmount !== null && Number.isFinite(minAmount)) {
+      predicates.push((t) => {
         const amt = Number(t.amount || 0);
-        if (amountMode === "gt" && !(amt > minAmount)) return false;
-        if (amountMode === "lt" && !(amt < minAmount)) return false;
-      }
-      const rawDate = getTxnDateOnly(t);
-      if (dateStart || dateEnd) {
+        return amountMode === "gt" ? amt > minAmount : amt < minAmount;
+      });
+    }
+    if (dateStart || dateEnd) {
+      predicates.push((t) => {
+        const rawDate = getTxnDateOnly(t);
         if (!rawDate) return false;
         const d = new Date(`${rawDate}T00:00:00`);
         if (Number.isNaN(d.valueOf())) return false;
         if (dateStart && d < new Date(`${dateStart}T00:00:00`)) return false;
         if (dateEnd && d > new Date(`${dateEnd}T23:59:59`)) return false;
-      }
-      if (tagStateFilter !== "all") {
-        const isTransfer = !!t.account_transfer_group;
+        return true;
+      });
+    }
+    if (tagStateFilter !== "all") {
+      predicates.push((t) => {
         const hasBucket = t.bucket_1_tag_id != null;
-        const hasMeta = t.meta_tag_id != null;
-        if (tagStateFilter === "transfer" && !isTransfer) return false;
-        if (tagStateFilter === "untagged" && (isTransfer || hasBucket)) return false;
-        if (tagStateFilter === "tagged" && !hasBucket) return false;
-        if (tagStateFilter === "meta_only" && (hasBucket || isTransfer || !hasMeta)) return false;
-      }
-      if (selectedTagIds.length) {
-        const match = selectedTagIds.includes(t.bucket_1_tag_id ?? -1)
-          || selectedTagIds.includes(t.bucket_2_tag_id ?? -1)
-          || selectedTagIds.includes(t.meta_tag_id ?? -1);
-        if (!match) return false;
-      }
-      return true;
-    });
-  }, [transactions, nameFilter, nameMode, merchantFilter, merchantMode, selectedBanks, selectedAccounts, selectedCategories, amountFilter, amountMode, dateStart, dateEnd, tagStateFilter, selectedTagIds]);
+        if (tagStateFilter === "untagged") return !hasBucket;
+        if (tagStateFilter === "tagged") return hasBucket;
+        return true;
+      });
+    }
+    if (selectedTagIds.length) {
+      predicates.push((t) =>
+        selectedTagIds.includes(t.bucket_1_tag_id ?? -1)
+        || selectedTagIds.includes(t.bucket_2_tag_id ?? -1)
+        || selectedTagIds.includes(t.meta_tag_id ?? -1)
+      );
+    }
+
+    if (!predicates.length) return transactions;
+    return transactions.filter((t) =>
+      filterOperator === "or" ? predicates.some((p) => p(t)) : predicates.every((p) => p(t))
+    );
+  }, [transactions, filterOperator, nameFilter, nameMode, merchantFilter, merchantMode, selectedBanks, selectedAccounts, selectedCategories, amountFilter, amountMode, dateStart, dateEnd, tagStateFilter, selectedTagIds]);
 
   const bankOptions = useMemo(() => {
     const m = new Map<string, string>();
@@ -176,6 +185,8 @@ export function useTransactionFilters(transactions: Txn[]): UseTransactionFilter
     setTagStateFilter,
     selectedTagIds,
     setSelectedTagIds,
+    filterOperator,
+    setFilterOperator,
     filteredTransactions,
     bankOptions,
     accountOptions,
