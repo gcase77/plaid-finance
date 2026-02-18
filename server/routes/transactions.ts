@@ -337,24 +337,7 @@ export default ({ plaid, prisma, logger }: Params) => {
     }
   };
 
-  router.get("/item/:itemId", async (req, res) => {
-    const { itemId } = req.params;
-    const includeRemoved = req.query.includeRemoved === "true";
-    const rows = await prisma.transactions.findMany({
-      where: { item_id: itemId, ...(includeRemoved ? {} : { is_removed: false }) },
-      orderBy: [{ datetime: "desc" }, { authorized_datetime: "desc" }],
-      include: { accounts: { select: { name: true, official_name: true } } }
-    });
-    res.json(
-      rows.map((row) => ({
-        ...row,
-        account_name: row.accounts?.name ?? null,
-        account_official_name: row.accounts?.official_name ?? null
-      }))
-    );
-  });
-
-const buildTransferCandidates = (txns: TransferTxn[], amountTolerance: number, dayRangeTolerance: number) => {
+  const buildTransferCandidates = (txns: TransferTxn[], amountTolerance: number, dayRangeTolerance: number) => {
     const outflows = txns.filter((t) => t.amount > 0);
     const inflows = txns.filter((t) => t.amount < 0);
     const candidates: TransferCandidate[] = [];
