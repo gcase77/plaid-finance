@@ -1,6 +1,10 @@
 import { useMemo, useState } from "react";
-import type { AmountMode, RecognizedTransferGroup, TextMode, TransferPair, TransferTxn, Txn } from "./types";
+import type { AmountMode, BudgetRule, BudgetRuleStatus, RecognizedTransferGroup, Tag, TagStateFilter, TagType, TextMode, TransferPair, TransferTxn, Txn } from "./types";
+import type { CreateRuleArgs } from "../hooks/useRules";
 import TransactionTable from "./shared/TransactionTable";
+import TaggingActionBar from "./shared/TaggingActionBar";
+import BucketsTab from "./BucketsTab";
+import RulesTab from "./RulesTab";
 import CheckboxFilter from "./shared/CheckboxFilter";
 import DateRangeDropdown from "./shared/DateRangeDropdown";
 import AppliedFiltersBar from "./shared/AppliedFiltersBar";
@@ -59,6 +63,22 @@ type TransactionsPanelProps = {
   getRecognizedTransfers: (args: { startDate?: string; endDate?: string }) => Promise<{ groups?: RecognizedTransferGroup[]; count?: number }>;
   unmarkTransferGroups: (groupIds: string[]) => Promise<{ cleared_rows?: number; cleared_groups?: number }>;
   loadTransactions: () => Promise<void>;
+  tags: Tag[];
+  tagsLoading: boolean;
+  createTag: (name: string, type: TagType) => Promise<Tag>;
+  renameTag: (id: number, name: string) => Promise<Tag>;
+  deleteTag: (id: number) => Promise<void>;
+  applyTags: (args: { transaction_ids: string[]; bucket_1_tag_id?: number | null; bucket_2_tag_id?: number | null; meta_tag_id?: number | null }) => Promise<void>;
+  tagStateFilter: TagStateFilter;
+  setTagStateFilter: (v: TagStateFilter) => void;
+  selectedTagIds: number[];
+  setSelectedTagIds: (v: number[]) => void;
+  rules: BudgetRule[];
+  ruleStatuses: BudgetRuleStatus[];
+  rulesLoading: boolean;
+  rulesError: string | null;
+  createRule: (args: CreateRuleArgs) => Promise<BudgetRule>;
+  deleteRule: (id: number) => Promise<void>;
 };
 
 export default function TransactionsPanel(props: TransactionsPanelProps) {
@@ -72,8 +92,14 @@ export default function TransactionsPanel(props: TransactionsPanelProps) {
     selectedAccounts, setSelectedAccounts, accountOptions,
     selectedCategories, setSelectedCategories, categoryOptions,
     loadingTxns, filteredTransactions,
-    previewTransferPairs, applyTransferPairs, getRecognizedTransfers, unmarkTransferGroups, loadTransactions
+    previewTransferPairs, applyTransferPairs, getRecognizedTransfers, unmarkTransferGroups, loadTransactions,
+    tags, tagsLoading, createTag, renameTag, deleteTag, applyTags,
+    tagStateFilter, setTagStateFilter, selectedTagIds, setSelectedTagIds,
+    rules, ruleStatuses, rulesLoading, rulesError, createRule, deleteRule
   } = props;
+  const [activeSubTab, setActiveSubTab] = useState<"transactions" | "buckets" | "rules">("transactions");
+  const [taggingMode, setTaggingMode] = useState(false);
+  const [selectedTxnIds, setSelectedTxnIds] = useState<Set<string>>(new Set());
   const [transferView, setTransferView] = useState<"all" | "potential" | "recognized">("all");
   const [showFindControls, setShowFindControls] = useState(false);
   const [transferAmountTolerance, setTransferAmountTolerance] = useState("0");
@@ -119,6 +145,17 @@ export default function TransactionsPanel(props: TransactionsPanelProps) {
   const banksSummary = selectedBanks.length > 0 ? `${selectedBanks.length} selected` : "any";
   const accountsSummary = selectedAccounts.length > 0 ? `${selectedAccounts.length} selected` : "any";
   const categoriesSummary = selectedCategories.length > 0 ? `${selectedCategories.length} selected` : "any";
+  const tagStateLabel: Record<string, string> = { all: "All", untagged: "Untagged", transfer: "Transfer", tagged: "Tagged", meta_only: "Meta only" };
+  const tagsSectionSummary = tagStateFilter !== "all"
+    ? tagStateLabel[tagStateFilter] + (selectedTagIds.length ? `, ${selectedTagIds.length} tag${selectedTagIds.length > 1 ? "s" : ""}` : "")
+    : selectedTagIds.length > 0 ? `${selectedTagIds.length} tag${selectedTagIds.length > 1 ? "s" : ""}` : "any";
+
+  const handleTagStateChange = (s: TagStateFilter) => {
+    setTagStateFilter(s);
+    if (s === "meta_only") setSelectedTagIds(tags.filter((t) => t.type === "meta").map((t) => t.id));
+    else if (s === "tagged") setSelectedTagIds(tags.filter((t) => t.type !== "meta").map((t) => t.id));
+    else setSelectedTagIds([]);
+  };
 
   const filterChips = [
     nameFilter.trim() && { id: "name", label: `Name ${nameMode === "not" ? "≠" : "∋"} "${nameFilter}"`, onClear: () => { setNameFilter(""); setNameMode("contains"); } },
@@ -128,7 +165,8 @@ export default function TransactionsPanel(props: TransactionsPanelProps) {
     (dateStart || dateEnd) && { id: "date", label: dateStart && dateEnd ? `${dateStart} – ${dateEnd}` : dateStart ? `From ${dateStart}` : `Until ${dateEnd}`, onClear: () => { setDateStart(""); setDateEnd(""); } },
     selectedBanks.length > 0 && { id: "banks", label: `Banks: ${selectedBanks.length}`, onClear: () => setSelectedBanks([]) },
     selectedAccounts.length > 0 && { id: "accounts", label: `Accounts: ${selectedAccounts.length}`, onClear: () => setSelectedAccounts([]) },
-    selectedCategories.length > 0 && { id: "categories", label: `Categories: ${selectedCategories.length}`, onClear: () => setSelectedCategories([]) }
+    selectedCategories.length > 0 && { id: "categories", label: `Categories: ${selectedCategories.length}`, onClear: () => setSelectedCategories([]) },
+    (tagStateFilter !== "all" || selectedTagIds.length > 0) && { id: "tags", label: `Tags: ${tagsSectionSummary}`, onClear: () => { setTagStateFilter("all"); setSelectedTagIds([]); } }
   ].filter(Boolean) as { id: string; label: string; onClear: () => void }[];
 
   const parsedAmountTolerance = Math.max(0, Number.isFinite(Number(transferAmountTolerance)) ? Number(transferAmountTolerance) : 0);
@@ -272,12 +310,41 @@ export default function TransactionsPanel(props: TransactionsPanelProps) {
     setSelectedTransferPairIds([]);
     setSelectedRecognizedGroupIds([]);
     setRecognizedAmbiguousCount(0);
+    setTaggingMode(false);
+    setSelectedTxnIds(new Set());
   };
+
+  const toggleTaggingMode = () => { setTaggingMode((v) => !v); setSelectedTxnIds(new Set()); };
 
   return (
     <div className="card">
       <div className="card-body">
         <h5 className="card-title">Transactions</h5>
+        <ul className="nav nav-tabs mb-3">
+          <li className="nav-item">
+            <button className={`nav-link ${activeSubTab === "transactions" ? "active" : ""}`} onClick={() => setActiveSubTab("transactions")}>Transactions</button>
+          </li>
+          <li className="nav-item">
+            <button className={`nav-link ${activeSubTab === "buckets" ? "active" : ""}`} onClick={() => setActiveSubTab("buckets")}>Buckets</button>
+          </li>
+          <li className="nav-item">
+            <button className={`nav-link ${activeSubTab === "rules" ? "active" : ""}`} onClick={() => setActiveSubTab("rules")}>Rules</button>
+          </li>
+        </ul>
+        {activeSubTab === "buckets" ? (
+          <BucketsTab tags={tags} loading={tagsLoading} createTag={createTag} renameTag={renameTag} deleteTag={deleteTag} />
+        ) : activeSubTab === "rules" ? (
+          <RulesTab
+            tags={tags}
+            rules={rules}
+            statuses={ruleStatuses}
+            loading={rulesLoading}
+            error={rulesError}
+            createRule={createRule}
+            deleteRule={deleteRule}
+          />
+        ) : (
+        <>
         <div className="row g-2 mb-3">
           <div className="col-md-3"><button className="btn btn-outline-primary w-100" onClick={syncTransactions}>Fetch Transactions</button></div>
           <div className="col-md-9"><div className="small text-muted">{syncStatus}</div></div>
@@ -333,6 +400,25 @@ export default function TransactionsPanel(props: TransactionsPanelProps) {
                 <CheckboxFilter options={categoryOptions} selected={selectedCategories} onChange={setSelectedCategories} />
               </FilterSection>
 
+              <FilterSection label="Tags" summary={tagsSectionSummary}>
+                <div className="d-flex flex-wrap gap-1 mb-2">
+                  {(["all", "untagged", "transfer", "tagged", "meta_only"] as TagStateFilter[]).map((s) => (
+                    <button key={s} className={`btn btn-outline-secondary btn-sm ${tagStateFilter === s ? "active" : ""}`} onClick={() => handleTagStateChange(s)}>
+                      {s === "all" ? "All" : s === "meta_only" ? "Meta only" : s.charAt(0).toUpperCase() + s.slice(1)}
+                    </button>
+                  ))}
+                </div>
+                {tags.length > 0 && (
+                  <CheckboxFilter
+                    options={tags.map((t) => [t.id.toString(), t.name] as [string, string])}
+                    selected={selectedTagIds.map(String)}
+                    onChange={(v) => setSelectedTagIds(v.map(Number))}
+                    showSelectAll={false}
+                    bare
+                  />
+                )}
+              </FilterSection>
+
               <button className="btn btn-outline-secondary btn-sm w-100 mt-2" onClick={clearAllFilters}>Clear all filters</button>
             </div>
             <div className="border rounded p-3 mt-3">
@@ -370,7 +456,22 @@ export default function TransactionsPanel(props: TransactionsPanelProps) {
             </div>
           </div>
           <div className="col-md-8 col-lg-9">
-            <AppliedFiltersBar chips={filterChips} onClearAll={clearAllFilters} />
+            <div className="d-flex justify-content-between align-items-start mb-1">
+              <div className="flex-grow-1"><AppliedFiltersBar chips={filterChips} onClearAll={clearAllFilters} /></div>
+              {transferView === "all" && (
+                <button className={`btn btn-sm ms-2 ${taggingMode ? "btn-primary" : "btn-outline-primary"}`} onClick={toggleTaggingMode}>
+                  {taggingMode ? "Done Tagging" : "Tag Transactions"}
+                </button>
+              )}
+            </div>
+            {taggingMode && selectedTxnIds.size > 0 && (
+              <TaggingActionBar
+                selectedCount={selectedTxnIds.size}
+                tags={tags}
+                onApply={async (tagArgs) => { await applyTags({ transaction_ids: [...selectedTxnIds], ...tagArgs }); setSelectedTxnIds(new Set()); await loadTransactions(); }}
+                onClearSelection={() => setSelectedTxnIds(new Set())}
+              />
+            )}
             {loadingTxns ? (
               <LoadingSpinner message="Loading transactions..." />
             ) : transferView === "potential" ? (
@@ -546,10 +647,19 @@ export default function TransactionsPanel(props: TransactionsPanelProps) {
                 )}
               </div>
             ) : (
-              <TransactionTable transactions={filteredTransactions} emptyMessage="No transactions match" />
+              <TransactionTable
+                transactions={filteredTransactions}
+                emptyMessage="No transactions match"
+                taggingMode={taggingMode}
+                selectedIds={selectedTxnIds}
+                onSelectionChange={setSelectedTxnIds}
+                tags={tags}
+              />
             )}
           </div>
         </div>
+        </>
+        )}
       </div>
     </div>
   );

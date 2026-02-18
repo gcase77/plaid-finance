@@ -34,7 +34,7 @@ type UsePlaidDataReturn = {
   ensureUserExists: (id: string, email: string, token: string) => Promise<void>;
 };
 
-export function usePlaidData(userId: string | null, token: string | null): UsePlaidDataReturn {
+export function usePlaidData(userId: string | null, token: string | null, runtimeAuthMode: "supabase" | "dev"): UsePlaidDataReturn {
   const [items, setItems] = useState<Item[]>([]);
   const [accountsByItem, setAccountsByItem] = useState<Record<string, Account[]>>({});
   const [transactions, setTransactions] = useState<Txn[]>([]);
@@ -43,9 +43,11 @@ export function usePlaidData(userId: string | null, token: string | null): UsePl
   const [loadingTxns, setLoadingTxns] = useState(false);
 
   const fetchWithAuth = async (url: string, options: RequestInit = {}, tokenOverride?: string | null) => {
+    const resolvedToken = tokenOverride || token;
     const headers = {
       ...(options.headers || {}),
-      ...(tokenOverride || token ? { Authorization: `Bearer ${tokenOverride || token}` } : {})
+      ...(runtimeAuthMode === "dev" && resolvedToken ? { "x-dev-user-id": resolvedToken } : {}),
+      ...(runtimeAuthMode === "supabase" && resolvedToken ? { Authorization: `Bearer ${resolvedToken}` } : {})
     };
     return fetch(url, { ...options, headers });
   };
