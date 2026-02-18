@@ -136,9 +136,10 @@ export default function TransactionsPanel(props: TransactionsPanelProps) {
   const banksSummary = selectedBanks.length > 0 ? `${selectedBanks.length} selected` : "any";
   const accountsSummary = selectedAccounts.length > 0 ? `${selectedAccounts.length} selected` : "any";
   const categoriesSummary = selectedCategories.length > 0 ? `${selectedCategories.length} selected` : "any";
-  const tagStateSummary = tagStateFilter !== "all" ? tagStateFilter.replace("_", " ") : "any";
-  const byTagSummary = selectedTagIds.length > 0 ? `${selectedTagIds.length} selected` : "any";
-  const tagsSectionSummary = tagStateFilter !== "all" ? tagStateSummary + (selectedTagIds.length ? `, ${byTagSummary}` : "") : byTagSummary;
+  const tagStateLabel: Record<string, string> = { all: "All", untagged: "Untagged", transfer: "Transfer", tagged: "Tagged", meta_only: "Meta only" };
+  const tagsSectionSummary = tagStateFilter !== "all"
+    ? tagStateLabel[tagStateFilter] + (selectedTagIds.length ? `, ${selectedTagIds.length} tag${selectedTagIds.length > 1 ? "s" : ""}` : "")
+    : selectedTagIds.length > 0 ? `${selectedTagIds.length} tag${selectedTagIds.length > 1 ? "s" : ""}` : "any";
 
   const handleTagStateChange = (s: TagStateFilter) => {
     setTagStateFilter(s);
@@ -156,8 +157,7 @@ export default function TransactionsPanel(props: TransactionsPanelProps) {
     selectedBanks.length > 0 && { id: "banks", label: `Banks: ${selectedBanks.length}`, onClear: () => setSelectedBanks([]) },
     selectedAccounts.length > 0 && { id: "accounts", label: `Accounts: ${selectedAccounts.length}`, onClear: () => setSelectedAccounts([]) },
     selectedCategories.length > 0 && { id: "categories", label: `Categories: ${selectedCategories.length}`, onClear: () => setSelectedCategories([]) },
-    tagStateFilter !== "all" && { id: "tagstate", label: `Tag state: ${tagStateSummary}`, onClear: () => { setTagStateFilter("all"); setSelectedTagIds([]); } },
-    selectedTagIds.length > 0 && { id: "bytag", label: `Tags: ${selectedTagIds.length}`, onClear: () => setSelectedTagIds([]) }
+    (tagStateFilter !== "all" || selectedTagIds.length > 0) && { id: "tags", label: `Tags: ${tagsSectionSummary}`, onClear: () => { setTagStateFilter("all"); setSelectedTagIds([]); } }
   ].filter(Boolean) as { id: string; label: string; onClear: () => void }[];
 
   const parsedAmountTolerance = Math.max(0, Number.isFinite(Number(transferAmountTolerance)) ? Number(transferAmountTolerance) : 0);
@@ -392,6 +392,7 @@ export default function TransactionsPanel(props: TransactionsPanelProps) {
                     selected={selectedTagIds.map(String)}
                     onChange={(v) => setSelectedTagIds(v.map(Number))}
                     showSelectAll={false}
+                    bare
                   />
                 )}
               </FilterSection>
