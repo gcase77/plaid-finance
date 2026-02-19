@@ -37,7 +37,8 @@ export default function TransactionTable({
   const toggle = (id: string, checked: boolean) => {
     if (!onSelectionChange || !selectedIds) return;
     const next = new Set(selectedIds);
-    checked ? next.add(id) : next.delete(id);
+    if (checked) next.add(id);
+    else next.delete(id);
     onSelectionChange(next);
   };
 
