@@ -117,6 +117,8 @@ export default function AppShell() {
             selectedCategories={filters.selectedCategories}
             setSelectedCategories={filters.setSelectedCategories}
             categoryOptions={filters.categoryOptions}
+            filterOperator={filters.filterOperator}
+            setFilterOperator={filters.setFilterOperator}
             loadingTxns={plaidData.loadingTxns}
             filteredTransactions={filters.filteredTransactions}
           />
