@@ -37,9 +37,41 @@ type TransactionsPanelProps = {
   selectedCategories: string[];
   setSelectedCategories: (v: string[]) => void;
   categoryOptions: string[];
+  filterOperator: "and" | "or";
+  setFilterOperator: (v: "and" | "or") => void;
   loadingTxns: boolean;
   filteredTransactions: Txn[];
 };
+
+type SegmentOption<T extends string> = { value: T; label: string };
+
+function SegmentedButtons<T extends string>({
+  value,
+  onChange,
+  options,
+  size = "sm"
+}: {
+  value: T;
+  onChange: (v: T) => void;
+  options: SegmentOption<T>[];
+  size?: "sm" | "md";
+}) {
+  const cls = size === "sm" ? "btn-sm" : "";
+  return (
+    <div className={`btn-group w-100 ${cls}`} role="group">
+      {options.map((opt) => (
+        <button
+          key={opt.value}
+          type="button"
+          className={`btn ${value === opt.value ? "btn-secondary" : "btn-outline-secondary"}`}
+          onClick={() => onChange(opt.value)}
+        >
+          {opt.label}
+        </button>
+      ))}
+    </div>
+  );
+}
 
 export default function TransactionsPanel(props: TransactionsPanelProps) {
   const {
@@ -51,8 +83,22 @@ export default function TransactionsPanel(props: TransactionsPanelProps) {
     selectedBanks, setSelectedBanks, bankOptions,
     selectedAccounts, setSelectedAccounts, accountOptions,
     selectedCategories, setSelectedCategories, categoryOptions,
+    filterOperator, setFilterOperator,
     loadingTxns, filteredTransactions
   } = props;
+
+  const searchSummary = [
+    nameFilter.trim() ? `name: ${nameMode === "not" ? "not" : "contains"}` : "any",
+    merchantMode === "null"
+      ? "merchant: unspecified"
+      : merchantFilter.trim()
+        ? `merchant: ${merchantMode === "not" ? "not" : "contains"}`
+        : "any"
+  ].join(", ");
+
+  const amountSummary = amountMode && amountFilter.trim() ? `${amountMode === "gt" ? ">" : "<"} ${amountFilter}` : "any";
+  const sourceSummary = `${selectedBanks.length ? `${selectedBanks.length} bank` : "any"}, ${selectedAccounts.length ? `${selectedAccounts.length} account` : "any"}`;
+  const categorySummary = selectedCategories.length ? `${selectedCategories.length} selected` : "any";
 
   const filterChips = [
     nameFilter.trim() && { id: "name", label: `Name ${nameMode === "not" ? "≠" : "∋"} "${nameFilter}"`, onClear: () => { setNameFilter(""); setNameMode("contains"); } },
@@ -74,64 +120,105 @@ export default function TransactionsPanel(props: TransactionsPanelProps) {
         </div>
       </div>
 
-      <FilterSection label="Filters" summary={`${filterChips.length} active`}>
-        <div className="row g-2 mb-2">
-          <div className="col-md-6">
-            <label className="form-label mb-1">Name</label>
-            <div className="input-group input-group-sm">
-              <select className="form-select" value={nameMode} onChange={(e) => setNameMode(e.target.value as TextMode)}>
-                <option value="contains">Contains</option>
-                <option value="not">Does not contain</option>
-              </select>
-              <input className="form-control" value={nameFilter} onChange={(e) => setNameFilter(e.target.value)} placeholder="Name" />
-            </div>
-          </div>
-
-          <div className="col-md-6">
-            <label className="form-label mb-1">Merchant</label>
-            <div className="input-group input-group-sm">
-              <select className="form-select" value={merchantMode} onChange={(e) => setMerchantMode(e.target.value as TextMode)}>
-                <option value="contains">Contains</option>
-                <option value="not">Does not contain</option>
-                <option value="null">Unspecified</option>
-              </select>
-              <input className="form-control" value={merchantFilter} onChange={(e) => setMerchantFilter(e.target.value)} placeholder="Merchant" disabled={merchantMode === "null"} />
-            </div>
-          </div>
-
-          <div className="col-md-4">
-            <label className="form-label mb-1">Amount</label>
-            <div className="input-group input-group-sm">
-              <select className="form-select" value={amountMode} onChange={(e) => setAmountMode(e.target.value as AmountMode)}>
-                <option value="">Any</option>
-                <option value="gt">&gt;</option>
-                <option value="lt">&lt;</option>
-              </select>
-              <input className="form-control" value={amountFilter} onChange={(e) => setAmountFilter(e.target.value)} placeholder="0.00" />
-            </div>
-          </div>
-
-          <div className="col-md-8">
-            <label className="form-label mb-1">Date Range</label>
-            <DateRangeDropdown
-              dateStart={dateStart}
-              dateEnd={dateEnd}
-              onPreset={applyDatePreset}
-              onRangeChange={(start, end) => {
-                setDateStart(start);
-                setDateEnd(end);
-              }}
+      <div className="border rounded p-3 mb-3">
+        <div className="d-flex justify-content-between align-items-center mb-2">
+          <h4 className="mb-0">Filters</h4>
+          <div style={{ minWidth: 140 }}>
+            <SegmentedButtons
+              value={filterOperator}
+              onChange={setFilterOperator}
+              options={[{ value: "and", label: "AND" }, { value: "or", label: "OR" }]}
             />
           </div>
-
-          <div className="col-md-4"><CheckboxFilter label="Banks" options={bankOptions} selected={selectedBanks} onChange={setSelectedBanks} /></div>
-          <div className="col-md-4"><CheckboxFilter label="Accounts" options={accountOptions} selected={selectedAccounts} onChange={setSelectedAccounts} /></div>
-          <div className="col-md-4"><CheckboxFilter label="Detected Categories" options={categoryOptions} selected={selectedCategories} onChange={setSelectedCategories} /></div>
         </div>
-        <button className="btn btn-outline-secondary btn-sm" onClick={clearAllFilters}>Reset filters</button>
-      </FilterSection>
 
-      <AppliedFiltersBar chips={filterChips} onClearAll={clearAllFilters} />
+        <FilterSection label="Search" summary={searchSummary}>
+          <div className="mb-3">
+            <label className="form-label fw-semibold mb-1">Name</label>
+            <div className="mb-2">
+              <SegmentedButtons
+                value={nameMode as "contains" | "not"}
+                onChange={(v) => setNameMode(v)}
+                options={[{ value: "contains", label: "Contains" }, { value: "not", label: "Not" }]}
+              />
+            </div>
+            <input className="form-control" value={nameFilter} onChange={(e) => setNameFilter(e.target.value)} placeholder="Search name" />
+          </div>
+
+          <div>
+            <label className="form-label fw-semibold mb-1">Merchant</label>
+            <div className="mb-2">
+              <SegmentedButtons
+                value={merchantMode}
+                onChange={setMerchantMode}
+                options={[
+                  { value: "contains", label: "Contains" },
+                  { value: "not", label: "Not" },
+                  { value: "null", label: "Unspecified" }
+                ]}
+              />
+            </div>
+            <input className="form-control" value={merchantFilter} onChange={(e) => setMerchantFilter(e.target.value)} placeholder="Search merchant" disabled={merchantMode === "null"} />
+          </div>
+        </FilterSection>
+
+        <FilterSection label="Date range" summary={formatDateRangeLabel(dateStart, dateEnd)}>
+          <DateRangeDropdown
+            dateStart={dateStart}
+            dateEnd={dateEnd}
+            onPreset={applyDatePreset}
+            onRangeChange={(start, end) => {
+              setDateStart(start);
+              setDateEnd(end);
+            }}
+          />
+        </FilterSection>
+
+        <FilterSection label="Amount" summary={amountSummary}>
+          <div className="mb-2">
+            <SegmentedButtons
+              value={amountMode || ""}
+              onChange={setAmountMode}
+              options={[{ value: "", label: "Any" }, { value: "gt", label: ">" }, { value: "lt", label: "<" }]}
+            />
+          </div>
+          <input className="form-control mb-2" value={amountFilter} onChange={(e) => setAmountFilter(e.target.value)} placeholder="0" />
+          <div>
+            <SegmentedButtons
+              value={amountMode === "lt" && amountFilter.trim() === "0" ? "income" : "spending"}
+              onChange={(v) => {
+                if (v === "spending") {
+                  setAmountMode("gt");
+                  setAmountFilter("0");
+                } else {
+                  setAmountMode("lt");
+                  setAmountFilter("0");
+                }
+              }}
+              options={[{ value: "spending", label: "Spending" }, { value: "income", label: "Income" }]}
+            />
+          </div>
+        </FilterSection>
+
+        <FilterSection label="Source" summary={sourceSummary}>
+          <div className="row g-2">
+            <div className="col-md-6">
+              <CheckboxFilter label="Bank" options={bankOptions} selected={selectedBanks} onChange={setSelectedBanks} />
+            </div>
+            <div className="col-md-6">
+              <CheckboxFilter label="Account" options={accountOptions} selected={selectedAccounts} onChange={setSelectedAccounts} />
+            </div>
+          </div>
+        </FilterSection>
+
+        <FilterSection label="Category" summary={categorySummary}>
+          <CheckboxFilter label="Detected" options={categoryOptions} selected={selectedCategories} onChange={setSelectedCategories} />
+        </FilterSection>
+
+        <button className="btn btn-outline-secondary w-100 mt-2" onClick={clearAllFilters}>Clear all filters</button>
+      </div>
+
+      <AppliedFiltersBar chips={filterChips} onClearAll={clearAllFilters} operator={filterOperator} />
 
       {loadingTxns ? <LoadingSpinner /> : <TransactionTable transactions={filteredTransactions} />}
     </div>
