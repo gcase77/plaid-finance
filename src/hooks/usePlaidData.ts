@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { Item, Account, Txn, TransferPreviewResponse, RecognizedTransfersResponse } from "../components/types";
+import type { Item, Account, Txn } from "../components/types";
 import { buildAuthHeaders, type RuntimeAuthMode } from "../lib/auth";
 
 type UsePlaidDataReturn = {
@@ -11,24 +11,6 @@ type UsePlaidDataReturn = {
   loadingTxns: boolean;
   loadItems: (userId?: string | null, token?: string | null) => Promise<void>;
   loadTransactions: (userId?: string | null, token?: string | null) => Promise<void>;
-  previewTransferPairs: (args: {
-    startDate?: string;
-    endDate?: string;
-    includePending?: boolean;
-    amountTolerance?: number;
-    dayRangeTolerance?: number;
-  }) => Promise<TransferPreviewResponse>;
-  applyTransferPairs: (args: {
-    pairIds: string[];
-    startDate?: string;
-    endDate?: string;
-    includePending?: boolean;
-    overwrite?: boolean;
-    amountTolerance?: number;
-    dayRangeTolerance?: number;
-  }) => Promise<{ summary?: { written_pairs?: number; skipped_existing?: number } }>;
-  getRecognizedTransfers: (args: { startDate?: string; endDate?: string }) => Promise<RecognizedTransfersResponse>;
-  unmarkTransferGroups: (groupIds: string[]) => Promise<{ cleared_rows?: number; cleared_groups?: number }>;
   syncTransactions: () => Promise<void>;
   deleteItem: (id: string) => Promise<void>;
   linkBank: (daysRequested?: number) => Promise<void>;
@@ -109,72 +91,6 @@ export function usePlaidData(userId: string | null, token: string | null, runtim
     }
   };
 
-  const previewTransferPairs = async (args: {
-    startDate?: string;
-    endDate?: string;
-    includePending?: boolean;
-    amountTolerance?: number;
-    dayRangeTolerance?: number;
-  }) => {
-    const res = await fetchWithAuth("/api/transactions/internal/preview", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(args || {})
-    });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err?.error || `Preview failed (${res.status})`);
-    }
-    return (await res.json()) as TransferPreviewResponse;
-  };
-
-  const applyTransferPairs = async (args: {
-    pairIds: string[];
-    startDate?: string;
-    endDate?: string;
-    includePending?: boolean;
-    overwrite?: boolean;
-    amountTolerance?: number;
-    dayRangeTolerance?: number;
-  }) => {
-    const res = await fetchWithAuth("/api/transactions/internal/apply", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(args)
-    });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err?.error || `Apply failed (${res.status})`);
-    }
-    return (await res.json()) as { summary?: { written_pairs?: number; skipped_existing?: number } };
-  };
-
-  const getRecognizedTransfers = async (args: { startDate?: string; endDate?: string }) => {
-    const params = new URLSearchParams();
-    if (args.startDate) params.set("startDate", args.startDate);
-    if (args.endDate) params.set("endDate", args.endDate);
-    const suffix = params.toString() ? `?${params}` : "";
-    const res = await fetchWithAuth(`/api/transactions/internal/recognized${suffix}`);
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err?.error || `Recognized lookup failed (${res.status})`);
-    }
-    return (await res.json()) as RecognizedTransfersResponse;
-  };
-
-  const unmarkTransferGroups = async (groupIds: string[]) => {
-    const res = await fetchWithAuth("/api/transactions/internal/unmark", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ groupIds })
-    });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err?.error || `Unmark failed (${res.status})`);
-    }
-    return (await res.json()) as { cleared_rows?: number; cleared_groups?: number };
-  };
-
   const deleteItem = async (id: string) => {
     if (!window.confirm("Delete this bank connection?")) return;
     await fetchWithAuth(`/api/items/${id}`, { method: "DELETE" });
@@ -213,10 +129,6 @@ export function usePlaidData(userId: string | null, token: string | null, runtim
     loadingTxns,
     loadItems,
     loadTransactions,
-    previewTransferPairs,
-    applyTransferPairs,
-    getRecognizedTransfers,
-    unmarkTransferGroups,
     syncTransactions,
     deleteItem,
     linkBank,

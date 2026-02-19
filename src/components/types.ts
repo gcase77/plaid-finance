@@ -1,5 +1,5 @@
 export type AuthMode = "existing" | "new";
-export type TabKey = "main" | "transactions" | "visualize";
+export type TabKey = "main" | "transactions";
 export type TextMode = "contains" | "not" | "null";
 export type AmountMode = "" | "gt" | "lt";
 export type TagType = "income_bucket_1" | "income_bucket_2" | "spending_bucket_1" | "spending_bucket_2" | "meta";
