@@ -134,7 +134,7 @@ export default ({ plaid, prisma, logger }: Params) => {
           const modified_not_included = modifiedIds.filter((id: string) => !modified_existing.includes(id));
           const removed_not_included = removedIds.filter((id: string) => !removed_existing.includes(id));
 
-          const mapTxn = (t: any, isRemoved: boolean) => ({
+          const mapTxn = (t: any) => ({
             id: t.transaction_id,
             user_id: userId,
             item_id: itemId,
@@ -151,74 +151,46 @@ export default ({ plaid, prisma, logger }: Params) => {
             pending: t.pending ?? null,
             personal_finance_category: t.personal_finance_category ?? null,
             personal_finance_category_icon_url: t.personal_finance_category_icon_url ?? null,
-            is_removed: isRemoved
+            is_removed: false
           });
           const toJson = (value: unknown) => (value == null ? null : JSON.stringify(value));
 
-          const rows = [
-            ...data.added.map((t: any) => mapTxn(t, false)),
-            ...data.modified.map((t: any) => mapTxn(t, false)),
-            ...data.removed.map((t: any) => mapTxn(t, true))
-          ];
-          if (rows.length) {
-            const values = rows.map((r) => Prisma.sql`(
-              ${r.id},
-              ${r.user_id},
-              ${r.item_id},
-              ${r.account_id},
-              ${r.name},
-              ${r.original_description},
-              ${r.merchant_name},
-              ${r.amount},
-              ${r.iso_currency_code},
-              ${toJson(r.counterparties)}::jsonb,
-              ${r.datetime},
-              ${r.authorized_datetime},
-              ${toJson(r.location)}::jsonb,
-              ${r.pending},
-              ${toJson(r.personal_finance_category)}::jsonb,
-              ${r.personal_finance_category_icon_url},
-              ${r.is_removed}
+          const fullRows = [...data.added.map((t: any) => mapTxn(t)), ...data.modified.map((t: any) => mapTxn(t))];
+          if (fullRows.length) {
+            const values = fullRows.map((r) => Prisma.sql`(
+              ${r.id}, ${r.user_id}, ${r.item_id}, ${r.account_id}, ${r.name}, ${r.original_description},
+              ${r.merchant_name}, ${r.amount}, ${r.iso_currency_code}, ${toJson(r.counterparties)}::jsonb,
+              ${r.datetime}, ${r.authorized_datetime}, ${toJson(r.location)}::jsonb, ${r.pending},
+              ${toJson(r.personal_finance_category)}::jsonb, ${r.personal_finance_category_icon_url}, ${r.is_removed}
             )`);
-
             await tx.$executeRaw(Prisma.sql`
               INSERT INTO "transactions" (
-                "id",
-                "user_id",
-                "item_id",
-                "account_id",
-                "name",
-                "original_description",
-                "merchant_name",
-                "amount",
-                "iso_currency_code",
-                "counterparties",
-                "datetime",
-                "authorized_datetime",
-                "location",
-                "pending",
-                "personal_finance_category",
-                "personal_finance_category_icon_url",
-                "is_removed"
+                "id", "user_id", "item_id", "account_id", "name", "original_description",
+                "merchant_name", "amount", "iso_currency_code", "counterparties",
+                "datetime", "authorized_datetime", "location", "pending",
+                "personal_finance_category", "personal_finance_category_icon_url", "is_removed"
               )
               VALUES ${Prisma.join(values)}
               ON CONFLICT ("id") DO UPDATE SET
-                "user_id" = EXCLUDED."user_id",
-                "item_id" = EXCLUDED."item_id",
-                "account_id" = EXCLUDED."account_id",
-                "name" = EXCLUDED."name",
-                "original_description" = EXCLUDED."original_description",
-                "merchant_name" = EXCLUDED."merchant_name",
-                "amount" = EXCLUDED."amount",
-                "iso_currency_code" = EXCLUDED."iso_currency_code",
-                "counterparties" = EXCLUDED."counterparties",
-                "datetime" = EXCLUDED."datetime",
-                "authorized_datetime" = EXCLUDED."authorized_datetime",
-                "location" = EXCLUDED."location",
-                "pending" = EXCLUDED."pending",
+                "user_id" = EXCLUDED."user_id", "item_id" = EXCLUDED."item_id", "account_id" = EXCLUDED."account_id",
+                "name" = EXCLUDED."name", "original_description" = EXCLUDED."original_description",
+                "merchant_name" = EXCLUDED."merchant_name", "amount" = EXCLUDED."amount",
+                "iso_currency_code" = EXCLUDED."iso_currency_code", "counterparties" = EXCLUDED."counterparties",
+                "datetime" = EXCLUDED."datetime", "authorized_datetime" = EXCLUDED."authorized_datetime",
+                "location" = EXCLUDED."location", "pending" = EXCLUDED."pending",
                 "personal_finance_category" = EXCLUDED."personal_finance_category",
                 "personal_finance_category_icon_url" = EXCLUDED."personal_finance_category_icon_url",
                 "is_removed" = EXCLUDED."is_removed"
+            `);
+          }
+
+          if (data.removed.length) {
+            const removedValues = data.removed.map((t: any) =>
+              Prisma.sql`(${t.transaction_id}, ${userId}, ${itemId}, ${t.account_id ?? ""}, true)`);
+            await tx.$executeRaw(Prisma.sql`
+              INSERT INTO "transactions" ("id", "user_id", "item_id", "account_id", "is_removed")
+              VALUES ${Prisma.join(removedValues)}
+              ON CONFLICT ("id") DO UPDATE SET "is_removed" = EXCLUDED."is_removed"
             `);
           }
 
