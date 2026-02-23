@@ -71,7 +71,8 @@ export function useAuth(): UseAuthReturn {
 
   useEffect(() => {
     const boot = async () => {
-      const cfg = await fetch("/api/config").then(r => r.ok ? r.json() : {}).catch(() => ({}));
+      type ApiConfig = { authMode?: string; supabaseUrl?: string; supabaseAnonKey?: string };
+const cfg: ApiConfig = await fetch("/api/config").then(r => r.ok ? r.json() : {}).catch(() => ({}));
       const mode = String(cfg.authMode || "supabase") === "dev" ? "dev" : "supabase";
       setRuntimeAuthMode(mode);
 

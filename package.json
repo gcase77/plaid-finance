@@ -5,9 +5,9 @@
   "scripts": {
     "dev:server": "ts-node --transpile-only server/index.ts",
     "dev:client": "vite",
-    "start": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "start": "node dist/server/index.js",
     "watch": "nodemon --watch server --ext ts --exec \"ts-node --transpile-only server/index.ts\"",
-    "build": "vite build",
+    "build": "vite build && tsc",
     "preview": "vite preview",
     "lint": "eslint src",
     "prisma:generate": "prisma generate",

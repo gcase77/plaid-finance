@@ -153,7 +153,7 @@ export default function MainTab(props: MainTabProps) {
                 )}
               </div>
 
-              {loadingItems ? <LoadingSpinner text="Loading items..." /> : (
+              {loadingItems ? <LoadingSpinner message="Loading items..." /> : (
                 <ul className="list-group">
                   {items.map((item) => (
                     <li key={item.id} className="list-group-item d-flex justify-content-between align-items-start">
