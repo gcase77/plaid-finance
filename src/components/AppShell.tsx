@@ -1,40 +1,41 @@
 import { useEffect, useState } from "react";
-import { useAuth } from "../hooks/useAuth";
+import type { Session } from "@supabase/supabase-js";
 import { usePlaidData } from "../hooks/usePlaidData";
 import { useTransactionFilters } from "../hooks/useTransactionFilters";
+import { supabase } from "../lib/supabase";
 import { buildDatePreset } from "../utils/datePresets";
 import MainTab from "./MainTab";
 import TransactionsPanel from "./TransactionsPanel";
 import type { TabKey } from "./types";
 
 export default function AppShell() {
+  const [session, setSession] = useState<Session | null>(null);
   const [activeTab, setActiveTab] = useState<TabKey>("main");
-  const auth = useAuth();
-  const plaidData = usePlaidData(auth.userId, auth.token);
+  const userId = session?.user?.id ?? null;
+  const token = session?.access_token ?? null;
+  const userEmail = session?.user?.email ?? "";
+  const plaidData = usePlaidData(userId, token);
   const filters = useTransactionFilters(plaidData.transactions);
 
   useEffect(() => {
-    auth.onAuthStateChange(async (userId, email, token) => {
-      await plaidData.ensureUserExists(userId, email, token);
-      await plaidData.loadItems(userId, token);
-    });
+    supabase.auth.getSession().then(({ data }) => setSession(data.session));
   }, []);
+
+  useEffect(() => {
+    if (!userId || !token || !userEmail) return;
+    void plaidData.ensureUserExists(userId, userEmail, token).then(() => plaidData.loadItems(userId, token));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, token, userEmail]);
 
   useEffect(() => {
     const onHash = () => {
       const next = (window.location.hash.replace("#", "") || "main") as TabKey;
-      if (!auth.isAuthed && next === "transactions") {
-        setActiveTab("main");
-        window.location.hash = "main";
-        auth.onAuthStateChange(() => Promise.resolve());
-        return;
-      }
       setActiveTab(next === "transactions" ? next : "main");
     };
     window.addEventListener("hashchange", onHash);
     onHash();
     return () => window.removeEventListener("hashchange", onHash);
-  }, [auth.isAuthed]);
+  }, []);
 
   return (
     <div>
@@ -43,7 +44,7 @@ export default function AppShell() {
           <span className="navbar-brand">G Case Financial Insights</span>
           <ul className="navbar-nav">
             <li className="nav-item"><a className={`nav-link ${activeTab === "main" ? "active" : ""}`} href="#main">Main</a></li>
-            <li className="nav-item"><a className={`nav-link ${activeTab === "transactions" ? "active" : ""} ${!auth.isAuthed ? "disabled" : ""}`} href="#transactions">Transactions</a></li>
+            <li className="nav-item"><a className={`nav-link ${activeTab === "transactions" ? "active" : ""}`} href="#transactions">Transactions</a></li>
           </ul>
         </div>
       </nav>
@@ -51,22 +52,8 @@ export default function AppShell() {
       <div className="container mt-4">
         {activeTab === "main" && (
           <MainTab
-            isAuthed={auth.isAuthed}
-            signInEmail={auth.signInEmail}
-            setSignInEmail={auth.setSignInEmail}
-            signInPassword={auth.signInPassword}
-            setSignInPassword={auth.setSignInPassword}
-            signUpEmail={auth.signUpEmail}
-            setSignUpEmail={auth.setSignUpEmail}
-            signUpPassword={auth.signUpPassword}
-            setSignUpPassword={auth.setSignUpPassword}
-            busyAuth={auth.busyAuth}
-            signIn={auth.signIn}
-            signUp={auth.signUp}
-            authError={auth.authError}
-            authStatus={auth.authStatus}
-            userEmail={auth.userEmail}
-            signOut={auth.signOut}
+            userEmail={userEmail}
+            signOut={() => supabase.auth.signOut()}
             linkBank={plaidData.linkBank}
             loadingItems={plaidData.loadingItems}
             items={plaidData.items}
