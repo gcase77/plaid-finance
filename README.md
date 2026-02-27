@@ -3,8 +3,8 @@
 - `AUTH_MODE=supabase` (default): existing Supabase auth behavior (prod-safe).
 - `AUTH_MODE=dev`: no Supabase auth calls; frontend uses a dev-user dropdown and backend accepts `x-dev-user-id` for auth.
 - In dev mode, users can be listed/created via:
-  - `GET /api/dev/users`
-  - `POST /api/dev/users` with `{ "username": "..." }`
+  - `GET` [`/api/dev/users`](server/index.ts#L43)
+  - `POST` [`/api/dev/users`](server/index.ts#L48) with `{ "username": "..." }`
 
 ### Supabase Email/Password Auth (POC)
 
@@ -130,31 +130,16 @@ class Logger {
 
 | Method | Path | Description | Auth |
 |--------|------|-------------|------|
-| GET | `/api/config` | Returns `supabaseUrl` and `supabaseAnonKey` for frontend auth client; no body. | No |
-| GET | `/api/users` | Returns list of users from DB (id, username). | Yes |
-| POST | `/api/users` | Create user for current auth; body: `{ username }`. Returns `{ id, username }`. | Yes |
-| GET | `/api/items` | Returns Plaid items (linked institutions) for current user. | Yes |
-| DELETE | `/api/items/:id` | Deletes item and its accounts; returns `{ success: true }`. | Yes |
-| GET | `/api/accounts/:itemId` | Returns accounts (id, name, type, etc.) for the given item. | Yes |
-| POST | `/api/link-token` | Body: `{ daysRequested }`. Returns Plaid `link_token` for Link UI. | Yes |
-| POST | `/api/exchange` | Body: `{ publicToken }`. Exchanges with Plaid, persists item + accounts; returns `{ success: true }`. | Yes |
-| GET | `/api/transactions` | Returns all transactions for user; query `includeRemoved=true` to include removed. | Yes |
-| POST | `/api/transactions/sync` | Triggers Plaid sync for user’s items; returns `{ added, modified, removed, ... }`. | Yes |
-| PUT | `/api/transactions/tag` | Body: `{ transaction_ids, bucket_1_tag_id?, bucket_2_tag_id?, meta_tag_id? }`. Applies tags to transactions. | Yes |
-| POST | `/api/transactions/internal/preview` | Body: `{ startDate?, endDate?, includePending?, amountTolerance?, dayRangeTolerance? }`. Returns `{ summary, pairs, ambiguous_pairs }` (no writes). | Yes |
-| POST | `/api/transactions/internal/apply` | Body: `{ pairIds, startDate?, endDate?, includePending?, overwrite?, amountTolerance?, dayRangeTolerance? }`. Writes `account_transfer_group` for selected pairs. | Yes |
-| GET | `/api/transactions/internal/recognized` | Query: `startDate?`, `endDate?`. Returns recognized transfer groups. | Yes |
-| POST | `/api/transactions/internal/unmark` | Body: `{ groupIds }`. Clears `account_transfer_group` for given groups. | Yes |
-| GET | `/api/transactions/visualize` | Query: `startDate`, `endDate`. Returns income/spending aggregates by category (excludes internal transfers). | Yes |
-| GET | `/api/transactions/visualize/details` | Query: `set=income\|spending`, `category`, `startDate`, `endDate`. Returns transaction rows for that slice. | Yes |
-| GET | `/api/tags` | Returns all tags for user. | Yes |
-| POST | `/api/tags` | Body: `{ name, type }`. Creates tag. | Yes |
-| PATCH | `/api/tags/:id` | Body: `{ name }`. Renames tag. | Yes |
-| DELETE | `/api/tags/:id` | Deletes tag; fails if in use. | Yes |
-| GET | `/api/budget-rules` | Returns rules and statuses for user. | Yes |
-| POST | `/api/budget-rules` | Body: `{ tag_id, name, type, flat_amount? OR percent?, calendar_window, rollover_options, start_date? OR use_earliest_transaction? }`. Creates rule. | Yes |
-| PATCH | `/api/budget-rules/:id` | Body: `{ name?, flat_amount?, percent?, rollover_options?, start_date? }`. Updates rule. | Yes |
-| DELETE | `/api/budget-rules/:id` | Deletes rule. | Yes |
+| GET | [`/api/config`](server/index.ts#L34) | Returns `authMode`, `supabaseUrl`, and `supabaseAnonKey` for frontend auth client; no body. | No |
+| GET | [`/api/users`](server/routes/users.ts#L23) | Returns list of users from DB (id, username). | Yes |
+| POST | [`/api/users`](server/routes/users.ts#L10) | Create user for current auth; body: `{ username }`. Returns `{ id, username }`. | Yes |
+| GET | [`/api/items`](server/routes/items.ts#L9) | Returns Plaid items (linked institutions) for current user. | Yes |
+| DELETE | [`/api/items/:id`](server/routes/items.ts#L15) | Deletes item and its accounts; returns `{ success: true }`. | Yes |
+| GET | [`/api/accounts/:itemId`](server/routes/accounts.ts#L9) | Returns accounts (id, name, type, etc.) for the given item. | Yes |
+| POST | [`/api/link-token`](server/routes/link.ts#L11) | Body: `{ daysRequested }`. Returns Plaid `link_token` for Link UI. | Yes |
+| POST | [`/api/exchange`](server/routes/link.ts#L36) | Body: `{ publicToken }`. Exchanges with Plaid, persists item + accounts; returns `{ success: true }`. | Yes |
+| GET | [`/api/transactions`](server/index.ts#L68) | Returns all transactions for user; query `includeRemoved=true` to include removed. | Yes |
+| POST | [`/api/transactions/sync`](server/index.ts#L69) | Triggers Plaid sync for user’s items; returns `{ added, modified, removed, ... }`. | Yes |
 
 
 
