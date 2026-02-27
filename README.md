@@ -1,11 +1,3 @@
-### AUTH_MODE
-
-- `AUTH_MODE=supabase` (default): existing Supabase auth behavior (prod-safe).
-- `AUTH_MODE=dev`: no Supabase auth calls; frontend uses a dev-user dropdown and backend accepts `x-dev-user-id` for auth.
-- In dev mode, users can be listed/created via:
-  - `GET` [`/api/dev/users`](server/index.ts#L43)
-  - `POST` [`/api/dev/users`](server/index.ts#L48) with `{ "username": "..." }`
-
 ### Supabase Email/Password Auth (POC)
 
 - Auth uses email/password with:
@@ -130,7 +122,6 @@ class Logger {
 
 | Method | Path | Description | Auth |
 |--------|------|-------------|------|
-| GET | [`/api/config`](server/index.ts#L34) | Returns `authMode`, `supabaseUrl`, and `supabaseAnonKey` for frontend auth client; no body. | No |
 | GET | [`/api/users`](server/routes/users.ts#L23) | Returns list of users from DB (id, username). | Yes |
 | POST | [`/api/users`](server/routes/users.ts#L10) | Create user for current auth; body: `{ username }`. Returns `{ id, username }`. | Yes |
 | GET | [`/api/items`](server/routes/items.ts#L9) | Returns Plaid items (linked institutions) for current user. | Yes |
