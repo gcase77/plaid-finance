@@ -53,12 +53,12 @@ export function useAuth(): UseAuthReturn {
   useEffect(() => {
     const boot = async () => {
       const supabaseUrl = String((window as any).SUPABASE_URL || "");
-      const supabaseAnonKey = String((window as any).SUPABASE_ANON_KEY || "");
-      if (!supabaseUrl || !supabaseAnonKey) {
-        setStatus("Missing Supabase config. Set window.SUPABASE_URL and window.SUPABASE_ANON_KEY.", true);
+      const supabasePublishableKey = String((window as any).SUPABASE_PUBLISHABLE_KEY || "");
+      if (!supabaseUrl || !supabasePublishableKey) {
+        setStatus("Missing Supabase config. Ensure SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY are set.", true);
         return;
       }
-      const sb = window.supabase?.createClient?.(supabaseUrl, supabaseAnonKey) || null;
+      const sb = window.supabase?.createClient?.(supabaseUrl, supabasePublishableKey) || null;
       if (!sb) {
         setStatus("Supabase SDK unavailable on window.supabase.", true);
         return;
