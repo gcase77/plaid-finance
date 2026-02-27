@@ -10,7 +10,7 @@ import type { TabKey } from "./types";
 export default function AppShell() {
   const [activeTab, setActiveTab] = useState<TabKey>("main");
   const auth = useAuth();
-  const plaidData = usePlaidData(auth.userId, auth.token, auth.runtimeAuthMode);
+  const plaidData = usePlaidData(auth.userId, auth.token);
   const filters = useTransactionFilters(plaidData.transactions);
 
   useEffect(() => {
@@ -51,10 +51,7 @@ export default function AppShell() {
       <div className="container mt-4">
         {activeTab === "main" && (
           <MainTab
-            runtimeAuthMode={auth.runtimeAuthMode}
             isAuthed={auth.isAuthed}
-            authMode={auth.authMode}
-            setAuthMode={auth.setAuthMode}
             signInEmail={auth.signInEmail}
             setSignInEmail={auth.setSignInEmail}
             signInPassword={auth.signInPassword}
@@ -75,10 +72,6 @@ export default function AppShell() {
             items={plaidData.items}
             accountsByItem={plaidData.accountsByItem}
             deleteItem={plaidData.deleteItem}
-            devUsers={auth.devUsers}
-            selectedDevUserId={auth.selectedDevUserId}
-            setSelectedDevUserId={auth.setSelectedDevUserId}
-            createDevUser={auth.createDevUser}
           />
         )}
 

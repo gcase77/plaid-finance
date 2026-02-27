@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { Item, Account, Txn } from "../components/types";
-import { buildAuthHeaders, type RuntimeAuthMode } from "../lib/auth";
+import { buildAuthHeaders } from "../lib/auth";
 
 type UsePlaidDataReturn = {
   items: Item[];
@@ -17,7 +17,7 @@ type UsePlaidDataReturn = {
   ensureUserExists: (id: string, email: string, token: string) => Promise<void>;
 };
 
-export function usePlaidData(userId: string | null, token: string | null, runtimeAuthMode: RuntimeAuthMode): UsePlaidDataReturn {
+export function usePlaidData(userId: string | null, token: string | null): UsePlaidDataReturn {
   const [items, setItems] = useState<Item[]>([]);
   const [accountsByItem, setAccountsByItem] = useState<Record<string, Account[]>>({});
   const [transactions, setTransactions] = useState<Txn[]>([]);
@@ -29,7 +29,7 @@ export function usePlaidData(userId: string | null, token: string | null, runtim
     const resolvedToken = tokenOverride || token;
     return fetch(url, {
       ...options,
-      headers: { ...(options.headers || {}), ...buildAuthHeaders(runtimeAuthMode, resolvedToken) }
+      headers: { ...(options.headers || {}), ...buildAuthHeaders(resolvedToken) }
     });
   };
 
