@@ -1,4 +1,3 @@
-export type AuthMode = "existing" | "new";
 export type TabKey = "main" | "transactions";
 export type TextMode = "contains" | "not" | "null";
 export type AmountMode = "" | "gt" | "lt";

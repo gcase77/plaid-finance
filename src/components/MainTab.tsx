@@ -1,12 +1,9 @@
 import { useState, type FormEvent } from "react";
-import type { Account, AuthMode, Item } from "./types";
+import type { Account, Item } from "./types";
 import LoadingSpinner from "./shared/LoadingSpinner";
 
 type MainTabProps = {
-  runtimeAuthMode: "supabase" | "dev";
   isAuthed: boolean;
-  authMode: AuthMode;
-  setAuthMode: (mode: AuthMode) => void;
   signInEmail: string;
   setSignInEmail: (v: string) => void;
   signInPassword: string;
@@ -27,25 +24,18 @@ type MainTabProps = {
   items: Item[];
   accountsByItem: Record<string, Account[]>;
   deleteItem: (id: string) => void;
-  devUsers: Array<{ id: string; username?: string | null }>;
-  selectedDevUserId: string;
-  setSelectedDevUserId: (v: string) => void;
-  createDevUser: (username: string) => Promise<void>;
 };
 
 export default function MainTab(props: MainTabProps) {
   const {
-    runtimeAuthMode,
-    isAuthed, authMode, setAuthMode,
+    isAuthed,
     signInEmail, setSignInEmail, signInPassword, setSignInPassword,
     signUpEmail, setSignUpEmail, signUpPassword, setSignUpPassword,
     busyAuth, signIn, signUp, authError, authStatus, userEmail, signOut,
-    linkBank, loadingItems, items, accountsByItem, deleteItem,
-    devUsers, selectedDevUserId, setSelectedDevUserId, createDevUser
+    linkBank, loadingItems, items, accountsByItem, deleteItem
   } = props;
   const [historyDays, setHistoryDays] = useState(730);
   const [showHistoryPicker, setShowHistoryPicker] = useState(false);
-  const [newDevUsername, setNewDevUsername] = useState("");
 
   return (
     <div className="row justify-content-center">
@@ -55,64 +45,17 @@ export default function MainTab(props: MainTabProps) {
             <h5 className="card-title">Authentication</h5>
             {!isAuthed ? (
               <div>
-                {runtimeAuthMode === "dev" ? (
-                  <div>
-                    <div className="mb-2">
-                      <label className="form-label">Select development user</label>
-                      <select
-                        className="form-select"
-                        value={selectedDevUserId}
-                        onChange={(e) => setSelectedDevUserId(e.target.value)}
-                      >
-                        <option value="">Choose user...</option>
-                        {devUsers.map((u) => (
-                          <option key={u.id} value={u.id}>
-                            {u.username || u.id} ({u.id})
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="input-group">
-                      <input
-                        className="form-control"
-                        placeholder="New user name"
-                        value={newDevUsername}
-                        onChange={(e) => setNewDevUsername(e.target.value)}
-                      />
-                      <button
-                        className="btn btn-outline-primary"
-                        type="button"
-                        onClick={async () => {
-                          await createDevUser(newDevUsername);
-                          setNewDevUsername("");
-                        }}
-                      >
-                        Create User
-                      </button>
-                    </div>
-                    <small className="text-muted d-block mt-2">AUTH_MODE=dev bypasses Supabase authentication.</small>
-                  </div>
-                ) : (
-                  <>
-                    <div className="btn-group w-100 mb-3">
-                      <button className={`btn btn-outline-secondary ${authMode === "existing" ? "active" : ""}`} type="button" onClick={() => setAuthMode("existing")}>Existing User</button>
-                      <button className={`btn btn-outline-secondary ${authMode === "new" ? "active" : ""}`} type="button" onClick={() => setAuthMode("new")}>New User</button>
-                    </div>
-                    {authMode === "existing" ? (
-                      <form onSubmit={signIn}>
-                        <div className="mb-2"><input className="form-control" type="email" placeholder="Email" required value={signInEmail} onChange={(e) => setSignInEmail(e.target.value)} /></div>
-                        <div className="mb-2"><input className="form-control" type="password" placeholder="Password" minLength={6} required value={signInPassword} onChange={(e) => setSignInPassword(e.target.value)} /></div>
-                        <button className="btn btn-outline-primary w-100" type="submit" disabled={busyAuth}>Sign In</button>
-                      </form>
-                    ) : (
-                      <form onSubmit={signUp}>
-                        <div className="mb-2"><input className="form-control" type="email" placeholder="Email" required value={signUpEmail} onChange={(e) => setSignUpEmail(e.target.value)} /></div>
-                        <div className="mb-2"><input className="form-control" type="password" placeholder="Password" minLength={6} required value={signUpPassword} onChange={(e) => setSignUpPassword(e.target.value)} /></div>
-                        <button className="btn btn-primary w-100" type="submit" disabled={busyAuth}>Create Account</button>
-                      </form>
-                    )}
-                  </>
-                )}
+                <form onSubmit={signIn}>
+                  <div className="mb-2"><input className="form-control" type="email" placeholder="Email" required value={signInEmail} onChange={(e) => setSignInEmail(e.target.value)} /></div>
+                  <div className="mb-2"><input className="form-control" type="password" placeholder="Password" minLength={6} required value={signInPassword} onChange={(e) => setSignInPassword(e.target.value)} /></div>
+                  <button className="btn btn-outline-primary w-100" type="submit" disabled={busyAuth}>Sign In</button>
+                </form>
+                <hr />
+                <form onSubmit={signUp}>
+                  <div className="mb-2"><input className="form-control" type="email" placeholder="New account email" required value={signUpEmail} onChange={(e) => setSignUpEmail(e.target.value)} /></div>
+                  <div className="mb-2"><input className="form-control" type="password" placeholder="New account password" minLength={6} required value={signUpPassword} onChange={(e) => setSignUpPassword(e.target.value)} /></div>
+                  <button className="btn btn-primary w-100" type="submit" disabled={busyAuth}>Create Account</button>
+                </form>
                 <small className={`${authError ? "text-danger" : "text-muted"} d-block mt-2`}>{authStatus}</small>
               </div>
             ) : (
@@ -153,7 +96,7 @@ export default function MainTab(props: MainTabProps) {
                 )}
               </div>
 
-              {loadingItems ? <LoadingSpinner text="Loading items..." /> : (
+              {loadingItems ? <LoadingSpinner message="Loading items..." /> : (
                 <ul className="list-group">
                   {items.map((item) => (
                     <li key={item.id} className="list-group-item d-flex justify-content-between align-items-start">
