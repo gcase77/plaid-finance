@@ -1,7 +1,8 @@
-import { supabase } from './supabase-client.js'
+import type { Request, Response, NextFunction } from 'express'
+import { supabase } from './supabase-client'
 
-export async function requestLogger(req, res, next) {
-  const authHeader = req.get('authorization') || ''
+export async function requestLogger(req: Request, res: Response, next: NextFunction) {
+  const authHeader = req.get('authorization') ?? ''
   const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null
 
   if (!token) {
@@ -17,9 +18,7 @@ export async function requestLogger(req, res, next) {
   }
 
   console.log('auth.getUser result:', { error: null, user: data.user })
-
-  req.user = data.user
+  ;(req as Request & { user: typeof data.user }).user = data.user
 
   return next()
 }
-
