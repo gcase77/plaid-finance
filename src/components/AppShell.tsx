@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { usePlaidData } from "../hooks/usePlaidData";
 import { useTransactionFilters } from "../hooks/useTransactionFilters";
+import { useTransactionsData } from "../hooks/useTransactionsData";
 import { supabase } from "../lib/supabase";
 import MainTab from "./MainTab";
 import TransactionsPanel from "./TransactionsPanel";
@@ -14,7 +15,8 @@ export default function AppShell() {
   const token = session?.access_token ?? null;
   const userEmail = session?.user?.email ?? "";
   const plaidData = usePlaidData(userId, token);
-  const filters = useTransactionFilters(plaidData.transactions);
+  const transactionData = useTransactionsData(token);
+  const filters = useTransactionFilters(transactionData.transactions);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session));
@@ -62,10 +64,10 @@ export default function AppShell() {
 
         {activeTab === "transactions" && (
           <TransactionsPanel
-            syncTransactions={plaidData.syncTransactions}
-            syncStatus={plaidData.syncStatus}
+            syncTransactions={transactionData.syncTransactions}
+            syncStatus={transactionData.errorMessage || transactionData.syncStatus}
             filters={filters}
-            loadingTxns={plaidData.loadingTxns}
+            loadingTxns={transactionData.loadingTxns}
           />
         )}
       </div>

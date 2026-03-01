@@ -5,7 +5,7 @@ import TransactionsFilterSection from "./shared/FilterSection";
 import AppliedFiltersBar from "./shared/AppliedFiltersBar";
 
 type TransactionsPanelProps = {
-  syncTransactions: () => void;
+  syncTransactions: () => Promise<void>;
   syncStatus: string;
   filters: UseTransactionFiltersReturn;
   loadingTxns: boolean;
