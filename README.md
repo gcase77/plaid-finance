@@ -8,12 +8,14 @@
   - `SUPABASE_URL`
   - `SUPABASE_ANON_KEY`
 - For current API-key guidance, check:
-  - https://supabase.com/docs/guides/api/api-keys
+  - [https://supabase.com/docs/guides/api/api-keys](https://supabase.com/docs/guides/api/api-keys)
 
 ### Transactions Sync Architecture
 
 #### Scheduler function
+
 Orchestrates concurrent processing by atomically locking user items with a time-based expiration to prevent race conditions before dispatching them to the sync worker.
+
 ```TypeScript
 async function scheduleSyncForUser(userId: string): Promise<void> {
   // 1. ATOMIC LOCKING QUERY:
@@ -34,7 +36,9 @@ async function scheduleSyncForUser(userId: string): Promise<void> {
 ```
 
 #### Sync Worker Function
+
 Iteratively synchronizes a single item's transactions via atomic database transactions, utilizing "read-before-write" auditing to capture state inconsistencies and maintaining idempotency through upsert operations.
+
 ```TypeScript
 async function syncItemTransactions(userId: string, itemId: string): Promise<void> {
   // 1. Initialize variables: cursor, hasMore = true, pageCount = 0.
@@ -93,13 +97,15 @@ async function syncItemTransactions(userId: string, itemId: string): Promise<voi
 }
 ```
 
-
 ### Logger Utility
+
 A unified wrapper around Pino (console/stdout) and Prisma (database persistence).
 
 #### Function Signatures
+
 ```TypeScript
-class Logger {
+class 
+ {
    // Standard ephemeral logging. 
    // Outputs to stdout via Pino.
    // Output is filtered by `LOG_LEVEL` and formatted by `PRETTY_LOGS`.
@@ -117,38 +123,37 @@ class Logger {
 }
 ```
 
-
 ### Server endpoints
 
-| Method | Path | Description | Auth |
-|--------|------|-------------|------|
-| GET | [`/api/users`](server/routes/users.ts#L23) | Returns list of users from DB (id, username). | Yes |
-| POST | [`/api/users`](server/routes/users.ts#L10) | Create user for current auth; body: `{ username }`. Returns `{ id, username }`. | Yes |
-| GET | [`/api/items`](server/routes/items.ts#L9) | Returns Plaid items (linked institutions) for current user. | Yes |
-| DELETE | [`/api/items/:id`](server/routes/items.ts#L15) | Deletes item and its accounts; returns `{ success: true }`. | Yes |
-| GET | [`/api/accounts/:itemId`](server/routes/accounts.ts#L9) | Returns accounts (id, name, type, etc.) for the given item. | Yes |
-| POST | [`/api/link-token`](server/routes/link.ts#L11) | Body: `{ daysRequested }`. Returns Plaid `link_token` for Link UI. | Yes |
-| POST | [`/api/exchange`](server/routes/link.ts#L36) | Body: `{ publicToken }`. Exchanges with Plaid, persists item + accounts; returns `{ success: true }`. | Yes |
-| GET | [`/api/transactions`](server/index.ts#L68) | Returns all transactions for user; query `includeRemoved=true` to include removed. | Yes |
-| POST | [`/api/transactions/sync`](server/index.ts#L69) | Triggers Plaid sync for user’s items; returns `{ added, modified, removed, ... }`. | Yes |
 
-
-
-
-
+| Method | Path                                                    | Description                                                                                           | Auth |
+| ------ | ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- | ---- |
+| GET    | `[/api/users](server/routes/users.ts#L23)`              | Returns list of users from DB (id, username).                                                         | Yes  |
+| POST   | `[/api/users](server/routes/users.ts#L10)`              | Create user for current auth; body: `{ username }`. Returns `{ id, username }`.                       | Yes  |
+| GET    | `[/api/items](server/routes/items.ts#L9)`               | Returns Plaid items (linked institutions) for current user.                                           | Yes  |
+| DELETE | `[/api/items/:id](server/routes/items.ts#L15)`          | Deletes item and its accounts; returns `{ success: true }`.                                           | Yes  |
+| GET    | `[/api/accounts/:itemId](server/routes/accounts.ts#L9)` | Returns accounts (id, name, type, etc.) for the given item.                                           | Yes  |
+| POST   | `[/api/link-token](server/routes/link.ts#L11)`          | Body: `{ daysRequested }`. Returns Plaid `link_token` for Link UI.                                    | Yes  |
+| POST   | `[/api/exchange](server/routes/link.ts#L36)`            | Body: `{ publicToken }`. Exchanges with Plaid, persists item + accounts; returns `{ success: true }`. | Yes  |
+| GET    | `[/api/transactions](server/index.ts#L68)`              | Returns all transactions for user; query `includeRemoved=true` to include removed.                    | Yes  |
+| POST   | `[/api/transactions/sync](server/index.ts#L69)`         | Triggers Plaid sync for user’s items; returns `{ added, modified, removed, ... }`.                    | Yes  |
 
 
 # Random
 
 ## Plaid transactions fetchers
-- https://github.com/plaid/pattern
-- https://github.com/mbafford/plaid-sync
-- https://github.com/dvankley/firefly-plaid-connector-2
-- https://github.com/allancalix/clerk
+
+- [https://github.com/plaid/pattern](https://github.com/plaid/pattern)
+- [https://github.com/mbafford/plaid-sync](https://github.com/mbafford/plaid-sync)
+- [https://github.com/dvankley/firefly-plaid-connector-2](https://github.com/dvankley/firefly-plaid-connector-2)
+- [https://github.com/allancalix/clerk](https://github.com/allancalix/clerk)
 
 Full apps:
-- https://github.com/maybe-finance/maybe
-- https://github.com/actualbudget/actual
+
+- [https://github.com/maybe-finance/maybe](https://github.com/maybe-finance/maybe)
+- [https://github.com/actualbudget/actual](https://github.com/actualbudget/actual)
 
 There's this too:
-- https://github.com/moyano83/Designing-Data-Intensive-Applications
+
+- [https://github.com/moyano83/Designing-Data-Intensive-Applications](https://github.com/moyano83/Designing-Data-Intensive-Applications)
+
