@@ -74,7 +74,12 @@ const dateFilterSql = (alias: string, start: Date | null, end: Date | null) => {
 const router = express.Router();
 const transactionsCache = new Map<string, { rows: unknown[] }>();
 
-const invalidateTransactionsCache = (userId: string) => { transactionsCache.delete(userId); };
+const transactionsCacheKey = (userId: string, includeRemoved: boolean) => `${userId}:${includeRemoved ? "with-removed" : "active-only"}`;
+const invalidateTransactionsCache = (userId: string) => {
+  for (const key of transactionsCache.keys()) {
+    if (key.startsWith(`${userId}:`)) transactionsCache.delete(key);
+  }
+};
 
 const syncItemTransactions = async (prisma: ServerRequest["prisma"], userId: string, itemId: string) => {
     const item = await prisma.items.findFirst({
@@ -279,15 +284,15 @@ router.get("/transactions", async (req, res) => {
     const { user, prisma } = req as unknown as ServerRequest;
     const userId = user.id;
     const includeRemoved = req.query.includeRemoved === "true";
-    const cached = transactionsCache.get(userId);
+    const key = transactionsCacheKey(userId, includeRemoved);
+    const cached = transactionsCache.get(key);
     if (cached) return res.json(cached.rows);
     const rows = await prisma.transactions.findMany({
       where: { user_id: userId, ...(includeRemoved ? {} : { is_removed: false }) },
       orderBy: [{ datetime: "desc" }, { authorized_datetime: "desc" }],
       include: {
         accounts: { select: { name: true, official_name: true } },
-        items: { select: { institution_name: true } },
-        transaction_meta: { select: { account_transfer_group: true, bucket_1_tag_id: true, bucket_2_tag_id: true, meta_tag_id: true } }
+        items: { select: { institution_name: true } }
       }
     });
     const out = rows.map((row) => ({
@@ -295,13 +300,9 @@ router.get("/transactions", async (req, res) => {
       transaction_id: row.id,
       account_name: row.accounts?.name ?? null,
       account_official_name: row.accounts?.official_name ?? null,
-      institution_name: row.items?.institution_name ?? null,
-      account_transfer_group: row.transaction_meta?.account_transfer_group ?? null,
-      bucket_1_tag_id: row.transaction_meta?.bucket_1_tag_id ?? null,
-      bucket_2_tag_id: row.transaction_meta?.bucket_2_tag_id ?? null,
-      meta_tag_id: row.transaction_meta?.meta_tag_id ?? null
+      institution_name: row.items?.institution_name ?? null
     }));
-    transactionsCache.set(userId, { rows: out });
+    transactionsCache.set(key, { rows: out });
     res.json(out);
   } catch (e: any) {
     res.status(500).json({ error: e.message });

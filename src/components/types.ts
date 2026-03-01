@@ -8,7 +8,7 @@ export type Tag = { id: number; name: string; type: TagType; user_id: string };
 export type Item = { id: string; institution_name?: string | null };
 export type Account = { id: string; name?: string | null; official_name?: string | null; mask?: string | null; type?: string | null };
 
-export type Txn = {
+export type TransactionBaseRow = {
   transaction_id?: string;
   name?: string | null;
   merchant_name?: string | null;
@@ -25,11 +25,18 @@ export type Txn = {
   datetime?: string | null;
   authorized_datetime?: string | null;
   personal_finance_category?: { primary?: string | null; detailed?: string | null } | null;
+};
+
+export type TransactionMetaRow = {
+  transaction_id?: string;
   account_transfer_group?: string | null;
   bucket_1_tag_id?: number | null;
   bucket_2_tag_id?: number | null;
   meta_tag_id?: number | null;
 };
+
+export type TransactionMerged = TransactionBaseRow & TransactionMetaRow;
+export type Txn = TransactionMerged;
 
 export type PieCategory = { category: string; amount: number };
 export type VisualizePayload = {
