@@ -126,14 +126,14 @@ class
 ### Server endpoints
 
 
-| Method | Path                                                    | Description                                                                                           | Auth |
-| ------ | ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- | ---- |
-| GET    | `[/api/items](server/routes/items.ts#L9)`               | Returns Plaid items (linked institutions) for current user.                                           | Yes  |
-| GET    | `[/api/accounts/:itemId](server/routes/accounts.ts#L9)` | Returns accounts (id, name, type, etc.) for the given item.                                           | Yes  |
-| POST   | `[/api/link-token](server/routes/link.ts#L11)`          | Body: `{ daysRequested }`. Returns Plaid `link_token` for Link UI.                                    | Yes  |
-| POST   | `[/api/exchange](server/routes/link.ts#L36)`            | Body: `{ publicToken }`. Exchanges with Plaid, persists item + accounts; returns `{ success: true }`. | Yes  |
-| GET    | `[/api/transactions](server/routes/transactions.ts#L277)` | Returns all transactions for user; query `includeRemoved=true` to include removed.                  | Yes  |
-| POST   | `[/api/transactions/sync](server/routes/transactions.ts#L265)` | Triggers Plaid sync for user’s items; returns `{ added, modified, removed, ... }`.              | Yes  |
+| Method | Path                                                        | Request Data                        | Response                                                       |
+| ------ | ----------------------------------------------------------- | ----------------------------------- | -------------------------------------------------------------- |
+| GET    | [api/items](server/routes/items.ts#L9)                      | query: — body: —                    | `Item[]`                                                       |
+| GET    | [api/accounts/:itemId](server/routes/accounts.ts#L9)        | query: — body: —                    | `Account[]`                                                    |
+| POST   | [api/link-token](server/routes/link.ts#L11)                 | query: — body: `{ daysRequested? }` | `{ link_token, ... }`                                          |
+| POST   | [api/exchange](server/routes/link.ts#L36)                   | query: — body: `{ publicToken }`    | `{ success: true }`                                            |
+| GET    | [api/transactions](server/routes/transactions.ts#L277)      | query: `includeRemoved?` body: —    | transaction array                                              |
+| POST   | [api/transactions/sync](server/routes/transactions.ts#L265) | query: — body: —                    | `{ success: true, items_processed, added, modified, removed }` |
 
 
 # Random
