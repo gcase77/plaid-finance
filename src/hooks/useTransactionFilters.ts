@@ -1,41 +1,57 @@
 import { useState, useMemo } from "react";
 import type { TextMode, AmountMode, TagStateFilter, Txn } from "../components/types";
+import { buildDatePreset } from "../utils/datePresets";
 import { getTxnDateOnly } from "../utils/transactionUtils";
 
-type UseTransactionFiltersReturn = {
+export type TransactionFilterState = {
   nameMode: TextMode;
-  setNameMode: (v: TextMode) => void;
   nameFilter: string;
-  setNameFilter: (v: string) => void;
   merchantMode: TextMode;
-  setMerchantMode: (v: TextMode) => void;
   merchantFilter: string;
-  setMerchantFilter: (v: string) => void;
   selectedBanks: string[];
-  setSelectedBanks: (v: string[]) => void;
   selectedAccounts: string[];
-  setSelectedAccounts: (v: string[]) => void;
   selectedCategories: string[];
-  setSelectedCategories: (v: string[]) => void;
   amountMode: AmountMode;
-  setAmountMode: (v: AmountMode) => void;
   amountFilter: string;
-  setAmountFilter: (v: string) => void;
   dateStart: string;
-  setDateStart: (v: string) => void;
   dateEnd: string;
-  setDateEnd: (v: string) => void;
   tagStateFilter: TagStateFilter;
-  setTagStateFilter: (v: TagStateFilter) => void;
   selectedTagIds: number[];
-  setSelectedTagIds: (v: number[]) => void;
   filterOperator: "and" | "or";
+};
+
+export type TransactionFilterActions = {
+  setNameMode: (v: TextMode) => void;
+  setNameFilter: (v: string) => void;
+  setMerchantMode: (v: TextMode) => void;
+  setMerchantFilter: (v: string) => void;
+  setSelectedBanks: (v: string[]) => void;
+  setSelectedAccounts: (v: string[]) => void;
+  setSelectedCategories: (v: string[]) => void;
+  setAmountMode: (v: AmountMode) => void;
+  setAmountFilter: (v: string) => void;
+  setDateStart: (v: string) => void;
+  setDateEnd: (v: string) => void;
+  setTagStateFilter: (v: TagStateFilter) => void;
+  setSelectedTagIds: (v: number[]) => void;
   setFilterOperator: (v: "and" | "or") => void;
-  filteredTransactions: Txn[];
-  bankOptions: Array<[string, string]>;
-  accountOptions: Array<[string, string]>;
-  categoryOptions: string[];
   clearAllFilters: () => void;
+  applyDatePreset: (preset: string) => void;
+};
+
+type TransactionFilterDerived = {
+  filteredTransactions: Txn[];
+  options: {
+    bankOptions: Array<[string, string]>;
+    accountOptions: Array<[string, string]>;
+    categoryOptions: string[];
+  };
+};
+
+export type UseTransactionFiltersReturn = {
+  state: TransactionFilterState;
+  actions: TransactionFilterActions;
+  derived: TransactionFilterDerived;
 };
 
 export function useTransactionFilters(transactions: Txn[]): UseTransactionFiltersReturn {
@@ -158,39 +174,54 @@ export function useTransactionFilters(transactions: Txn[]): UseTransactionFilter
     setSelectedTagIds([]);
   };
 
+  const applyDatePreset = (preset: string) => {
+    const d = buildDatePreset(preset);
+    setDateStart(d.start);
+    setDateEnd(d.end);
+  };
+
   return {
-    nameMode,
-    setNameMode,
-    nameFilter,
-    setNameFilter,
-    merchantMode,
-    setMerchantMode,
-    merchantFilter,
-    setMerchantFilter,
-    selectedBanks,
-    setSelectedBanks,
-    selectedAccounts,
-    setSelectedAccounts,
-    selectedCategories,
-    setSelectedCategories,
-    amountMode,
-    setAmountMode,
-    amountFilter,
-    setAmountFilter,
-    dateStart,
-    setDateStart,
-    dateEnd,
-    setDateEnd,
-    tagStateFilter,
-    setTagStateFilter,
-    selectedTagIds,
-    setSelectedTagIds,
-    filterOperator,
-    setFilterOperator,
-    filteredTransactions,
-    bankOptions,
-    accountOptions,
-    categoryOptions,
-    clearAllFilters
+    state: {
+      nameMode,
+      nameFilter,
+      merchantMode,
+      merchantFilter,
+      selectedBanks,
+      selectedAccounts,
+      selectedCategories,
+      amountMode,
+      amountFilter,
+      dateStart,
+      dateEnd,
+      tagStateFilter,
+      selectedTagIds,
+      filterOperator
+    },
+    actions: {
+      setNameMode,
+      setNameFilter,
+      setMerchantMode,
+      setMerchantFilter,
+      setSelectedBanks,
+      setSelectedAccounts,
+      setSelectedCategories,
+      setAmountMode,
+      setAmountFilter,
+      setDateStart,
+      setDateEnd,
+      setTagStateFilter,
+      setSelectedTagIds,
+      setFilterOperator,
+      clearAllFilters,
+      applyDatePreset
+    },
+    derived: {
+      filteredTransactions,
+      options: {
+        bankOptions,
+        accountOptions,
+        categoryOptions
+      }
+    }
   };
 }

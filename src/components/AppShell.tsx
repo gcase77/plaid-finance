@@ -3,7 +3,6 @@ import type { Session } from "@supabase/supabase-js";
 import { usePlaidData } from "../hooks/usePlaidData";
 import { useTransactionFilters } from "../hooks/useTransactionFilters";
 import { supabase } from "../lib/supabase";
-import { buildDatePreset } from "../utils/datePresets";
 import MainTab from "./MainTab";
 import TransactionsPanel from "./TransactionsPanel";
 import type { TabKey } from "./types";
@@ -65,41 +64,8 @@ export default function AppShell() {
           <TransactionsPanel
             syncTransactions={plaidData.syncTransactions}
             syncStatus={plaidData.syncStatus}
-            clearAllFilters={filters.clearAllFilters}
-            applyDatePreset={(preset) => {
-              const d = buildDatePreset(preset);
-              filters.setDateStart(d.start);
-              filters.setDateEnd(d.end);
-            }}
-            nameMode={filters.nameMode}
-            setNameMode={filters.setNameMode}
-            nameFilter={filters.nameFilter}
-            setNameFilter={filters.setNameFilter}
-            merchantMode={filters.merchantMode}
-            setMerchantMode={filters.setMerchantMode}
-            merchantFilter={filters.merchantFilter}
-            setMerchantFilter={filters.setMerchantFilter}
-            amountMode={filters.amountMode}
-            setAmountMode={filters.setAmountMode}
-            amountFilter={filters.amountFilter}
-            setAmountFilter={filters.setAmountFilter}
-            dateStart={filters.dateStart}
-            setDateStart={filters.setDateStart}
-            dateEnd={filters.dateEnd}
-            setDateEnd={filters.setDateEnd}
-            selectedBanks={filters.selectedBanks}
-            setSelectedBanks={filters.setSelectedBanks}
-            bankOptions={filters.bankOptions}
-            selectedAccounts={filters.selectedAccounts}
-            setSelectedAccounts={filters.setSelectedAccounts}
-            accountOptions={filters.accountOptions}
-            selectedCategories={filters.selectedCategories}
-            setSelectedCategories={filters.setSelectedCategories}
-            categoryOptions={filters.categoryOptions}
-            filterOperator={filters.filterOperator}
-            setFilterOperator={filters.setFilterOperator}
+            filters={filters}
             loadingTxns={plaidData.loadingTxns}
-            filteredTransactions={filters.filteredTransactions}
           />
         )}
       </div>
