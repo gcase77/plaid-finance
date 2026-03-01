@@ -23,7 +23,21 @@ if (process.env.NODE_ENV !== "production") {
 }
 
 const userIdModels = new Set(["items", "accounts", "transactions", "system_logs", "tags", "budget_rules"]);
-const whereOps = new Set(["findMany", "findFirst", "findFirstOrThrow", "count", "aggregate", "groupBy", "updateMany", "deleteMany"]);
+const whereOps = new Set([
+  "findMany",
+  "findFirst",
+  "findFirstOrThrow",
+  "findUnique",
+  "findUniqueOrThrow",
+  "count",
+  "aggregate",
+  "groupBy",
+  "update",
+  "updateMany",
+  "delete",
+  "deleteMany",
+  "upsert"
+]);
 const mergeWhere = (where: unknown, scope: Record<string, unknown>) =>
   where ? { AND: [where, scope] } : scope;
 
@@ -43,8 +57,9 @@ export const createUserScopedClient = (userId: string) =>
             if (operation === "create" && args.data && typeof args.data === "object") {
               args.data.user_id = userId;
             }
-            if (operation === "createMany" && Array.isArray(args.data)) {
-              args.data = args.data.map((row: any) => ({ ...row, user_id: userId }));
+            if (operation === "createMany") {
+              if (Array.isArray(args.data)) args.data = args.data.map((row: any) => ({ ...row, user_id: userId }));
+              else if (args.data && typeof args.data === "object") args.data.user_id = userId;
             }
           }
 
