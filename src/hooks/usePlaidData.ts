@@ -79,7 +79,7 @@ export function usePlaidData(userId: string | null, token: string | null): UsePl
   const linkBank = async (daysRequested = 730) => {
     if (!userId) return;
     const sanitizedDaysRequested = Math.min(730, Math.max(1, Number.isFinite(daysRequested) ? Math.floor(daysRequested) : 730));
-    const linkTokenRes = await fetchWithAuth("/api/link-token", {
+    const linkTokenRes = await fetchWithAuth("/api/link/token", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ daysRequested: sanitizedDaysRequested })
@@ -89,7 +89,7 @@ export function usePlaidData(userId: string | null, token: string | null): UsePl
     window.Plaid.create({
       token: data.link_token,
       onSuccess: async (publicToken: string) => {
-        await fetchWithAuth("/api/exchange", {
+        await fetchWithAuth("/api/link/exchange", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ publicToken })
