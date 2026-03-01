@@ -1,22 +1,11 @@
 import express from "express";
-import type { PrismaClient } from "../../generated/prisma/client";
+import type { ServerRequest } from "../middleware/auth";
 
-type Params = { prisma: PrismaClient };
+const router = express.Router();
 
-export default ({ prisma }: Params) => {
-  const router = express.Router();
+router.get("/items", async (req, res) => {
+  const items = await (req as unknown as ServerRequest).prisma.items.findMany();
+  res.json(items);
+});
 
-  router.get("/items", async (req, res) => {
-    const userId = (req as any).user.id;
-    const items = await prisma.items.findMany({ where: { user_id: userId } });
-    res.json(items);
-  });
-
-  router.delete("/items/:id", async (req, res) => {
-    await prisma.accounts.deleteMany({ where: { item_id: req.params.id } });
-    await prisma.items.delete({ where: { id: req.params.id } });
-    res.json({ success: true });
-  });
-
-  return router;
-};
+export default router;

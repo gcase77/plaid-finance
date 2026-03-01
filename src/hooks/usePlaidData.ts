@@ -12,9 +12,7 @@ type UsePlaidDataReturn = {
   loadItems: (userId?: string | null, token?: string | null) => Promise<void>;
   loadTransactions: (userId?: string | null, token?: string | null) => Promise<void>;
   syncTransactions: () => Promise<void>;
-  deleteItem: (id: string) => Promise<void>;
   linkBank: (daysRequested?: number) => Promise<void>;
-  ensureUserExists: (id: string, email: string, token: string) => Promise<void>;
 };
 
 export function usePlaidData(userId: string | null, token: string | null): UsePlaidDataReturn {
@@ -66,19 +64,6 @@ export function usePlaidData(userId: string | null, token: string | null): UsePl
     }
   };
 
-  const ensureUserExists = async (id: string, email: string, tk: string) => {
-    const res = await fetchWithAuth("/api/users", {}, tk);
-    if (!res.ok) throw new Error("Failed to fetch users");
-    const users = (await res.json()) as Array<{ id: string }>;
-    if (users.some((u) => u.id === id)) return;
-    const createRes = await fetchWithAuth("/api/users", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email })
-    }, tk);
-    if (!createRes.ok) throw new Error("Failed to create user");
-  };
-
   const syncTransactions = async () => {
     if (!userId) return;
     setLoadingTxns(true);
@@ -89,12 +74,6 @@ export function usePlaidData(userId: string | null, token: string | null): UsePl
     } finally {
       setLoadingTxns(false);
     }
-  };
-
-  const deleteItem = async (id: string) => {
-    if (!window.confirm("Delete this bank connection?")) return;
-    await fetchWithAuth(`/api/items/${id}`, { method: "DELETE" });
-    await loadItems();
   };
 
   const linkBank = async (daysRequested = 730) => {
@@ -130,8 +109,6 @@ export function usePlaidData(userId: string | null, token: string | null): UsePl
     loadItems,
     loadTransactions,
     syncTransactions,
-    deleteItem,
-    linkBank,
-    ensureUserExists
+    linkBank
   };
 }

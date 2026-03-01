@@ -22,10 +22,10 @@ export default function AppShell() {
   }, []);
 
   useEffect(() => {
-    if (!userId || !token || !userEmail) return;
-    void plaidData.ensureUserExists(userId, userEmail, token).then(() => plaidData.loadItems(userId, token));
+    if (!userId || !token) return;
+    void plaidData.loadItems(userId, token);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userId, token, userEmail]);
+  }, [userId, token]);
 
   useEffect(() => {
     const onHash = () => {
@@ -58,7 +58,6 @@ export default function AppShell() {
             loadingItems={plaidData.loadingItems}
             items={plaidData.items}
             accountsByItem={plaidData.accountsByItem}
-            deleteItem={plaidData.deleteItem}
           />
         )}
 
