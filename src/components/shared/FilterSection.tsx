@@ -1,37 +1,9 @@
 import { useState } from "react";
-import type { AmountMode, TextMode } from "../types";
+import type { UseTransactionFiltersReturn } from "../../hooks/useTransactionFilters";
 import { DATE_RANGE_PRESETS, formatDateRangeLabel } from "./dateRangeUtils";
 
 type TransactionsFilterSectionProps = {
-  clearAllFilters: () => void;
-  applyDatePreset: (preset: string) => void;
-  nameMode: TextMode;
-  setNameMode: (v: TextMode) => void;
-  nameFilter: string;
-  setNameFilter: (v: string) => void;
-  merchantMode: TextMode;
-  setMerchantMode: (v: TextMode) => void;
-  merchantFilter: string;
-  setMerchantFilter: (v: string) => void;
-  amountMode: AmountMode;
-  setAmountMode: (v: AmountMode) => void;
-  amountFilter: string;
-  setAmountFilter: (v: string) => void;
-  dateStart: string;
-  setDateStart: (v: string) => void;
-  dateEnd: string;
-  setDateEnd: (v: string) => void;
-  selectedBanks: string[];
-  setSelectedBanks: (v: string[]) => void;
-  bankOptions: Array<[string, string]>;
-  selectedAccounts: string[];
-  setSelectedAccounts: (v: string[]) => void;
-  accountOptions: Array<[string, string]>;
-  selectedCategories: string[];
-  setSelectedCategories: (v: string[]) => void;
-  categoryOptions: string[];
-  filterOperator: "and" | "or";
-  setFilterOperator: (v: "and" | "or") => void;
+  filters: UseTransactionFiltersReturn;
 };
 
 type SegmentOption<T extends string> = { value: T; label: string };
@@ -185,54 +157,24 @@ function DateRangeDropdown({
   );
 }
 
-export default function TransactionsFilterSection(props: TransactionsFilterSectionProps) {
-  const {
-    clearAllFilters,
-    applyDatePreset,
-    nameMode,
-    setNameMode,
-    nameFilter,
-    setNameFilter,
-    merchantMode,
-    setMerchantMode,
-    merchantFilter,
-    setMerchantFilter,
-    amountMode,
-    setAmountMode,
-    amountFilter,
-    setAmountFilter,
-    dateStart,
-    setDateStart,
-    dateEnd,
-    setDateEnd,
-    selectedBanks,
-    setSelectedBanks,
-    bankOptions,
-    selectedAccounts,
-    setSelectedAccounts,
-    accountOptions,
-    selectedCategories,
-    setSelectedCategories,
-    categoryOptions,
-    filterOperator,
-    setFilterOperator
-  } = props;
+export default function TransactionsFilterSection({ filters }: TransactionsFilterSectionProps) {
+  const { state, actions, derived } = filters;
 
   const searchSummary = [
-    nameFilter.trim() ? `name: ${nameMode === "not" ? "not" : "contains"}` : "any",
-    merchantMode === "null"
+    state.nameFilter.trim() ? `name: ${state.nameMode === "not" ? "not" : "contains"}` : "any",
+    state.merchantMode === "null"
       ? "merchant: unspecified"
-      : merchantFilter.trim()
-        ? `merchant: ${merchantMode === "not" ? "not" : "contains"}`
+      : state.merchantFilter.trim()
+        ? `merchant: ${state.merchantMode === "not" ? "not" : "contains"}`
         : "any"
   ].join(", ");
 
   const amountSummary =
-    amountMode && amountFilter.trim() ? `${amountMode === "gt" ? ">" : "<"} ${amountFilter}` : "any";
-  const sourceSummary = `${selectedBanks.length ? `${selectedBanks.length} bank` : "any"}, ${
-    selectedAccounts.length ? `${selectedAccounts.length} account` : "any"
+    state.amountMode && state.amountFilter.trim() ? `${state.amountMode === "gt" ? ">" : "<"} ${state.amountFilter}` : "any";
+  const sourceSummary = `${state.selectedBanks.length ? `${state.selectedBanks.length} bank` : "any"}, ${
+    state.selectedAccounts.length ? `${state.selectedAccounts.length} account` : "any"
   }`;
-  const categorySummary = selectedCategories.length ? `${selectedCategories.length} selected` : "any";
+  const categorySummary = state.selectedCategories.length ? `${state.selectedCategories.length} selected` : "any";
 
   return (
     <>
@@ -241,8 +183,8 @@ export default function TransactionsFilterSection(props: TransactionsFilterSecti
           <h4 className="mb-0">Filters</h4>
           <div style={{ minWidth: 90, textAlign: "right" }}>
             <SegmentedButtons
-              value={filterOperator}
-              onChange={setFilterOperator}
+              value={state.filterOperator}
+              onChange={actions.setFilterOperator}
               options={[
                 { value: "and", label: "AND" },
                 { value: "or", label: "OR" }
@@ -256,8 +198,8 @@ export default function TransactionsFilterSection(props: TransactionsFilterSecti
             <label className="form-label fw-semibold mb-1">Name</label>
             <div className="mb-2">
               <SegmentedButtons
-                value={nameMode as "contains" | "not"}
-                onChange={(v) => setNameMode(v)}
+                value={state.nameMode as "contains" | "not"}
+                onChange={(v) => actions.setNameMode(v)}
                 options={[
                   { value: "contains", label: "Contains" },
                   { value: "not", label: "Not" }
@@ -266,8 +208,8 @@ export default function TransactionsFilterSection(props: TransactionsFilterSecti
             </div>
             <input
               className="form-control"
-              value={nameFilter}
-              onChange={(e) => setNameFilter(e.target.value)}
+              value={state.nameFilter}
+              onChange={(e) => actions.setNameFilter(e.target.value)}
               placeholder="Search name"
             />
           </div>
@@ -276,8 +218,8 @@ export default function TransactionsFilterSection(props: TransactionsFilterSecti
             <label className="form-label fw-semibold mb-1">Merchant</label>
             <div className="mb-2">
               <SegmentedButtons
-                value={merchantMode}
-                onChange={setMerchantMode}
+                value={state.merchantMode}
+                onChange={actions.setMerchantMode}
                 options={[
                   { value: "contains", label: "Contains" },
                   { value: "not", label: "Not" },
@@ -287,22 +229,22 @@ export default function TransactionsFilterSection(props: TransactionsFilterSecti
             </div>
             <input
               className="form-control"
-              value={merchantFilter}
-              onChange={(e) => setMerchantFilter(e.target.value)}
+              value={state.merchantFilter}
+              onChange={(e) => actions.setMerchantFilter(e.target.value)}
               placeholder="Search merchant"
-              disabled={merchantMode === "null"}
+              disabled={state.merchantMode === "null"}
             />
           </div>
         </FilterAccordionSection>
 
-        <FilterAccordionSection label="Date range" summary={formatDateRangeLabel(dateStart, dateEnd)}>
+        <FilterAccordionSection label="Date range" summary={formatDateRangeLabel(state.dateStart, state.dateEnd)}>
           <DateRangeDropdown
-            dateStart={dateStart}
-            dateEnd={dateEnd}
-            onPreset={applyDatePreset}
+            dateStart={state.dateStart}
+            dateEnd={state.dateEnd}
+            onPreset={actions.applyDatePreset}
             onRangeChange={(start, end) => {
-              setDateStart(start);
-              setDateEnd(end);
+              actions.setDateStart(start);
+              actions.setDateEnd(end);
             }}
           />
         </FilterAccordionSection>
@@ -310,8 +252,8 @@ export default function TransactionsFilterSection(props: TransactionsFilterSecti
         <FilterAccordionSection label="Amount" summary={amountSummary}>
           <div className="mb-2">
             <SegmentedButtons
-              value={amountMode || ""}
-              onChange={setAmountMode}
+              value={state.amountMode || ""}
+              onChange={actions.setAmountMode}
               options={[
                 { value: "", label: "Any" },
                 { value: "gt", label: ">" },
@@ -321,19 +263,19 @@ export default function TransactionsFilterSection(props: TransactionsFilterSecti
           </div>
           <input
             className="form-control mb-2"
-            value={amountFilter}
-            onChange={(e) => setAmountFilter(e.target.value)}
+            value={state.amountFilter}
+            onChange={(e) => actions.setAmountFilter(e.target.value)}
             placeholder="0"
           />
           <SegmentedButtons
-            value={amountMode === "lt" && amountFilter.trim() === "0" ? "income" : "spending"}
+            value={state.amountMode === "lt" && state.amountFilter.trim() === "0" ? "income" : "spending"}
             onChange={(v) => {
               if (v === "spending") {
-                setAmountMode("gt");
-                setAmountFilter("0");
+                actions.setAmountMode("gt");
+                actions.setAmountFilter("0");
               } else {
-                setAmountMode("lt");
-                setAmountFilter("0");
+                actions.setAmountMode("lt");
+                actions.setAmountFilter("0");
               }
             }}
             options={[
@@ -347,15 +289,15 @@ export default function TransactionsFilterSection(props: TransactionsFilterSecti
           <div className="d-flex flex-column gap-2">
             <CheckboxFilter
               label="Bank"
-              options={bankOptions}
-              selected={selectedBanks}
-              onChange={setSelectedBanks}
+              options={derived.options.bankOptions}
+              selected={state.selectedBanks}
+              onChange={actions.setSelectedBanks}
             />
             <CheckboxFilter
               label="Account"
-              options={accountOptions}
-              selected={selectedAccounts}
-              onChange={setSelectedAccounts}
+              options={derived.options.accountOptions}
+              selected={state.selectedAccounts}
+              onChange={actions.setSelectedAccounts}
             />
           </div>
         </FilterAccordionSection>
@@ -363,17 +305,16 @@ export default function TransactionsFilterSection(props: TransactionsFilterSecti
         <FilterAccordionSection label="Category" summary={categorySummary}>
           <CheckboxFilter
             label="Detected"
-            options={categoryOptions}
-            selected={selectedCategories}
-            onChange={setSelectedCategories}
+            options={derived.options.categoryOptions}
+            selected={state.selectedCategories}
+            onChange={actions.setSelectedCategories}
           />
         </FilterAccordionSection>
 
-        <button className="btn btn-outline-secondary w-100 mt-2" onClick={clearAllFilters}>
+        <button className="btn btn-outline-secondary w-100 mt-2" onClick={actions.clearAllFilters}>
           Clear all filters
         </button>
       </div>
     </>
   );
 }
-
