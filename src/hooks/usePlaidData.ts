@@ -74,7 +74,7 @@ export function usePlaidData(userId: string | null, token: string | null): UsePl
     const createRes = await fetchWithAuth("/api/users", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username: email })
+      body: JSON.stringify({ email })
     }, tk);
     if (!createRes.ok) throw new Error("Failed to create user");
   };

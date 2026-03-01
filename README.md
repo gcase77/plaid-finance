@@ -128,8 +128,8 @@ class
 
 | Method | Path                                                    | Description                                                                                           | Auth |
 | ------ | ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- | ---- |
-| GET    | `[/api/users](server/routes/users.ts#L23)`              | Returns list of users from DB (id, username).                                                         | Yes  |
-| POST   | `[/api/users](server/routes/users.ts#L10)`              | Create user for current auth; body: `{ username }`. Returns `{ id, username }`.                       | Yes  |
+| GET    | `[/api/users](server/routes/users.ts#L23)`              | Returns list of users from DB (id, email).                                                            | Yes  |
+| POST   | `[/api/users](server/routes/users.ts#L10)`              | Create user for current auth; body: `{ email }`. Returns `{ id, email }`.                             | Yes  |
 | GET    | `[/api/items](server/routes/items.ts#L9)`               | Returns Plaid items (linked institutions) for current user.                                           | Yes  |
 | DELETE | `[/api/items/:id](server/routes/items.ts#L15)`          | Deletes item and its accounts; returns `{ success: true }`.                                           | Yes  |
 | GET    | `[/api/accounts/:itemId](server/routes/accounts.ts#L9)` | Returns accounts (id, name, type, etc.) for the given item.                                           | Yes  |

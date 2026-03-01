@@ -10,9 +10,9 @@ export default ({ prisma, logger }: Params) => {
   router.post("/users", async (req, res) => {
     try {
       const id = (req as any).user.id;
-      const username = req.body.username ?? null;
-      await prisma.users.create({ data: { id, username } });
-      res.json({ id, username });
+      const email = req.body.email ?? null;
+      await prisma.users.create({ data: { id, email } });
+      res.json({ id, email });
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       logger.log("error", msg);
