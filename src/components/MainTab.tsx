@@ -9,13 +9,12 @@ type MainTabProps = {
   loadingItems: boolean;
   items: Item[];
   accountsByItem: Record<string, Account[]>;
-  deleteItem: (id: string) => void;
 };
 
 export default function MainTab(props: MainTabProps) {
   const {
     userEmail, signOut,
-    linkBank, loadingItems, items, accountsByItem, deleteItem
+    linkBank, loadingItems, items, accountsByItem
   } = props;
   const [historyDays, setHistoryDays] = useState(730);
   const [showHistoryPicker, setShowHistoryPicker] = useState(false);
@@ -69,7 +68,6 @@ export default function MainTab(props: MainTabProps) {
                       <strong>{item.institution_name || item.id}</strong>
                       <div className="small text-muted">{accountsByItem[item.id]?.length || 0} accounts</div>
                     </div>
-                    <button className="btn btn-sm btn-outline-danger" onClick={() => deleteItem(item.id)}>Delete</button>
                   </li>
                 ))}
               </ul>
