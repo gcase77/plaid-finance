@@ -6,7 +6,7 @@
 - Email verification is expected to be disabled in Supabase so new users get a session immediately after sign-up
 - Required env vars:
   - `SUPABASE_URL`
-  - `SUPABASE_ANON_KEY`
+  - `SUPABASE_PUBLISHABLE_KEY`
 - For current API-key guidance, check:
   - [https://supabase.com/docs/guides/api/api-keys](https://supabase.com/docs/guides/api/api-keys)
 
