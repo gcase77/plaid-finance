@@ -1,29 +1,23 @@
-import { Request, Response, NextFunction } from "express";
-import { createClient } from "@supabase/supabase-js";
+import type { Request, Response, NextFunction } from "express";
+import { supabase } from "../lib/supabase";
+import { createUserScopedClient, type UserScopedPrisma } from "../lib/prisma";
 
-const supabase = createClient(
-  process.env.SUPABASE_URL || "",
-  process.env.SUPABASE_PUBLISHABLE_KEY || ""
-);
+export type ServerRequest = Request & {
+  user: { id: string; email: string | null };
+  prisma: UserScopedPrisma;
+};
 
 export const requireAuth = async (req: Request, res: Response, next: NextFunction) => {
-  const authHeader = req.headers.authorization;
+  const token = req.get("authorization")?.startsWith("Bearer ")
+    ? req.get("authorization")!.slice(7)
+    : null;
+  if (!token) return res.status(401).json({ error: "Missing bearer token" });
 
-  if (!authHeader?.startsWith("Bearer ")) {
-    return res.status(401).json({ error: "Missing or invalid authorization header" });
-  }
+  const { data, error } = await supabase.auth.getUser(token);
+  if (error || !data?.user) return res.status(401).json({ error: "Invalid or expired token" });
 
-  const token = authHeader.substring(7);
-
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser(token);
-
-  if (error || !user) {
-    return res.status(401).json({ error: "Invalid or expired token" });
-  }
-
-  (req as any).user = { id: user.id, email: user.email };
-  next();
+  const serverReq = req as unknown as ServerRequest;
+  serverReq.user = { id: data.user.id, email: data.user.email ?? null };
+  serverReq.prisma = createUserScopedClient(data.user.id);
+  return next();
 };

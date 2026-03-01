@@ -6,7 +6,7 @@
 - Email verification is expected to be disabled in Supabase so new users get a session immediately after sign-up
 - Required env vars:
   - `SUPABASE_URL`
-  - `SUPABASE_ANON_KEY`
+  - `SUPABASE_PUBLISHABLE_KEY`
 - For current API-key guidance, check:
   - [https://supabase.com/docs/guides/api/api-keys](https://supabase.com/docs/guides/api/api-keys)
 
@@ -128,15 +128,12 @@ class
 
 | Method | Path                                                    | Description                                                                                           | Auth |
 | ------ | ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- | ---- |
-| GET    | `[/api/users](server/routes/users.ts#L23)`              | Returns list of users from DB (id, email).                                                            | Yes  |
-| POST   | `[/api/users](server/routes/users.ts#L10)`              | Create user for current auth; body: `{ email }`. Returns `{ id, email }`.                             | Yes  |
 | GET    | `[/api/items](server/routes/items.ts#L9)`               | Returns Plaid items (linked institutions) for current user.                                           | Yes  |
-| DELETE | `[/api/items/:id](server/routes/items.ts#L15)`          | Deletes item and its accounts; returns `{ success: true }`.                                           | Yes  |
 | GET    | `[/api/accounts/:itemId](server/routes/accounts.ts#L9)` | Returns accounts (id, name, type, etc.) for the given item.                                           | Yes  |
 | POST   | `[/api/link-token](server/routes/link.ts#L11)`          | Body: `{ daysRequested }`. Returns Plaid `link_token` for Link UI.                                    | Yes  |
 | POST   | `[/api/exchange](server/routes/link.ts#L36)`            | Body: `{ publicToken }`. Exchanges with Plaid, persists item + accounts; returns `{ success: true }`. | Yes  |
-| GET    | `[/api/transactions](server/index.ts#L68)`              | Returns all transactions for user; query `includeRemoved=true` to include removed.                    | Yes  |
-| POST   | `[/api/transactions/sync](server/index.ts#L69)`         | Triggers Plaid sync for user’s items; returns `{ added, modified, removed, ... }`.                    | Yes  |
+| GET    | `[/api/transactions](server/routes/transactions.ts#L277)` | Returns all transactions for user; query `includeRemoved=true` to include removed.                  | Yes  |
+| POST   | `[/api/transactions/sync](server/routes/transactions.ts#L265)` | Triggers Plaid sync for user’s items; returns `{ added, modified, removed, ... }`.              | Yes  |
 
 
 # Random

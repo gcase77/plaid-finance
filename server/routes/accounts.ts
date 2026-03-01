@@ -1,15 +1,11 @@
 import express from "express";
-import type { PrismaClient } from "../../generated/prisma/client";
+import type { ServerRequest } from "../middleware/auth";
 
-type Params = { prisma: PrismaClient };
+const router = express.Router();
 
-export default ({ prisma }: Params) => {
-  const router = express.Router();
+router.get("/accounts/:itemId", async (req, res) => {
+  const accounts = await (req as unknown as ServerRequest).prisma.accounts.findMany({ where: { item_id: req.params.itemId } });
+  res.json(accounts);
+});
 
-  router.get("/accounts/:itemId", async (req, res) => {
-    const accounts = await prisma.accounts.findMany({ where: { item_id: req.params.itemId } });
-    res.json(accounts);
-  });
-
-  return router;
-};
+export default router;

@@ -1,10 +1,9 @@
 import express from "express";
-import { createHash, randomUUID } from "crypto";
-import type { PlaidApi } from "plaid";
-import type { Logger } from "../logger";
-import { Prisma, type PrismaClient } from "../../generated/prisma/client";
-
-type Params = { plaid: PlaidApi; prisma: PrismaClient; logger: Logger };
+import { createHash } from "crypto";
+import { Prisma } from "../../generated/prisma/client";
+import { plaid } from "../lib/plaid";
+import { logger } from "../logger";
+import type { ServerRequest } from "../middleware/auth";
 
 const PAGE_SIZE = 500;
 const LOCK_MINUTES = 5;
@@ -72,13 +71,12 @@ const dateFilterSql = (alias: string, start: Date | null, end: Date | null) => {
   `;
 };
 
-export default ({ plaid, prisma, logger }: Params) => {
-  const router = express.Router();
-  const transactionsCache = new Map<string, { rows: unknown[] }>();
+const router = express.Router();
+const transactionsCache = new Map<string, { rows: unknown[] }>();
 
-  const invalidateTransactionsCache = (userId: string) => { transactionsCache.delete(userId); };
+const invalidateTransactionsCache = (userId: string) => { transactionsCache.delete(userId); };
 
-  const syncItemTransactions = async (userId: string, itemId: string) => {
+const syncItemTransactions = async (prisma: ServerRequest["prisma"], userId: string, itemId: string) => {
     const item = await prisma.items.findFirst({
       where: { id: itemId, user_id: userId },
       select: { access_token: true, transaction_cursor: true }
@@ -232,7 +230,7 @@ export default ({ plaid, prisma, logger }: Params) => {
     return { cursor: currentCursor, added: addedCount, modified: modifiedCount, removed: removedCount };
   };
 
-  const scheduleSyncForUser = async (userId: string) => {
+const scheduleSyncForUser = async (prisma: ServerRequest["prisma"], userId: string) => {
     const now = new Date(isoNow());
     const lockUntil = new Date(addMinutes(LOCK_MINUTES));
     const rows = await prisma.$queryRaw<{ id: string }[]>`
@@ -250,7 +248,7 @@ export default ({ plaid, prisma, logger }: Params) => {
     let removed = 0;
 
     for (const itemId of itemIds) {
-      const result = await syncItemTransactions(userId, itemId);
+      const result = await syncItemTransactions(prisma, userId, itemId);
       added += result.added || 0;
       modified += result.modified || 0;
       removed += result.removed || 0;
@@ -264,51 +262,50 @@ export default ({ plaid, prisma, logger }: Params) => {
     return { items_processed: itemIds.length, added, modified, removed };
   };
 
-  const syncHandler = async (req: express.Request, res: express.Response) => {
-    try {
-      const userId = (req as any).user.id;
-      const result = await scheduleSyncForUser(userId);
-      invalidateTransactionsCache(userId);
-      res.json({ success: true, ...result });
-    } catch (e: any) {
-      logger.log("error", "sync transactions", { err: e, userId: (req as any).user?.id });
-      res.status(500).json({ error: e.message });
-    }
-  };
+router.post("/transactions/sync", async (req, res) => {
+  try {
+    const { user, prisma } = req as unknown as ServerRequest;
+    const result = await scheduleSyncForUser(prisma, user.id);
+    invalidateTransactionsCache(user.id);
+    res.json({ success: true, ...result });
+  } catch (e: any) {
+    logger.log("error", "sync transactions", { err: e, userId: (req as any).user?.id });
+    res.status(500).json({ error: e.message });
+  }
+});
 
-  const getAllHandler = async (req: express.Request, res: express.Response) => {
-    try {
-      const userId = (req as any).user.id;
-      const includeRemoved = req.query.includeRemoved === "true";
-      const cached = transactionsCache.get(userId);
-      if (cached) return res.json(cached.rows);
-      const rows = await prisma.transactions.findMany({
-        where: { user_id: userId, ...(includeRemoved ? {} : { is_removed: false }) },
-        orderBy: [{ datetime: "desc" }, { authorized_datetime: "desc" }],
-        include: {
-          accounts: { select: { name: true, official_name: true } },
-          items: { select: { institution_name: true } },
-          transaction_meta: { select: { account_transfer_group: true, bucket_1_tag_id: true, bucket_2_tag_id: true, meta_tag_id: true } }
-        }
-      });
-      const out = rows.map((row) => ({
-        ...row,
-        transaction_id: row.id,
-        account_name: row.accounts?.name ?? null,
-        account_official_name: row.accounts?.official_name ?? null,
-        institution_name: row.items?.institution_name ?? null,
-        account_transfer_group: row.transaction_meta?.account_transfer_group ?? null,
-        bucket_1_tag_id: row.transaction_meta?.bucket_1_tag_id ?? null,
-        bucket_2_tag_id: row.transaction_meta?.bucket_2_tag_id ?? null,
-        meta_tag_id: row.transaction_meta?.meta_tag_id ?? null
-      }));
-      transactionsCache.set(userId, { rows: out });
-      res.json(out);
-    } catch (e: any) {
-      res.status(500).json({ error: e.message });
-    }
-  };
+router.get("/transactions", async (req, res) => {
+  try {
+    const { user, prisma } = req as unknown as ServerRequest;
+    const userId = user.id;
+    const includeRemoved = req.query.includeRemoved === "true";
+    const cached = transactionsCache.get(userId);
+    if (cached) return res.json(cached.rows);
+    const rows = await prisma.transactions.findMany({
+      where: { user_id: userId, ...(includeRemoved ? {} : { is_removed: false }) },
+      orderBy: [{ datetime: "desc" }, { authorized_datetime: "desc" }],
+      include: {
+        accounts: { select: { name: true, official_name: true } },
+        items: { select: { institution_name: true } },
+        transaction_meta: { select: { account_transfer_group: true, bucket_1_tag_id: true, bucket_2_tag_id: true, meta_tag_id: true } }
+      }
+    });
+    const out = rows.map((row) => ({
+      ...row,
+      transaction_id: row.id,
+      account_name: row.accounts?.name ?? null,
+      account_official_name: row.accounts?.official_name ?? null,
+      institution_name: row.items?.institution_name ?? null,
+      account_transfer_group: row.transaction_meta?.account_transfer_group ?? null,
+      bucket_1_tag_id: row.transaction_meta?.bucket_1_tag_id ?? null,
+      bucket_2_tag_id: row.transaction_meta?.bucket_2_tag_id ?? null,
+      meta_tag_id: row.transaction_meta?.meta_tag_id ?? null
+    }));
+    transactionsCache.set(userId, { rows: out });
+    res.json(out);
+  } catch (e: any) {
+    res.status(500).json({ error: e.message });
+  }
+});
 
-
-  return { router, getAllHandler, syncHandler, scheduleSyncForUser, syncItemTransactions };
-};
+export default router;
