@@ -1,5 +1,6 @@
 import pino from "pino";
 import type { PrismaClient } from "../generated/prisma/client";
+import { prisma } from "./lib/prisma";
 
 const levelMap: Record<string, number> = {
   TRACE: 5,
@@ -54,3 +55,5 @@ export class Logger {
     });
   }
 }
+
+export const logger = new Logger(prisma);
