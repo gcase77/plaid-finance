@@ -5,7 +5,7 @@ import type { ServerRequest } from "../middleware/auth";
 
 const router = express.Router();
 
-router.post("/link-token", async (req, res) => {
+router.post("/link/token", async (req, res) => {
   try {
     const userId = (req as unknown as ServerRequest).user.id;
     const requestedDays = Number(req.body?.daysRequested);
@@ -30,7 +30,7 @@ router.post("/link-token", async (req, res) => {
   }
 });
 
-router.post("/exchange", async (req, res) => {
+router.post("/link/exchange", async (req, res) => {
   try {
     const { prisma, user } = req as unknown as ServerRequest;
     const userId = user.id;
