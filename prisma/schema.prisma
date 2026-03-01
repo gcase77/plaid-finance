@@ -8,8 +8,8 @@ datasource db {
 }
 
 model users {
-  id           String         @id
-  username     String?
+  id           String         @id @db.Uuid
+  email        String?
   
   items        items[]
   accounts     accounts[]
@@ -21,7 +21,7 @@ model users {
 
 model items {
   id                      String         @id
-  user_id                 String
+  user_id                 String         @db.Uuid
   access_token            String?
   transaction_cursor      String?
   institution_id          String?
@@ -44,7 +44,7 @@ model items {
 model accounts {
   id              String         @id
   item_id         String?
-  user_id         String
+  user_id         String         @db.Uuid
   name            String?
   official_name   String?
   type            String?
@@ -60,7 +60,7 @@ model accounts {
 
 model transactions {
   id                                 String   @id
-  user_id                            String
+  user_id                            String   @db.Uuid
   item_id                            String
   account_id                         String
   name                               String?
@@ -127,7 +127,7 @@ model tags {
   id      Int     @id @default(autoincrement())
   name    String
   type    TagType
-  user_id String
+  user_id String  @db.Uuid
 
   bucket_1_meta transaction_meta[] @relation("Bucket1Tag")
   bucket_2_meta transaction_meta[] @relation("Bucket2Tag")
@@ -140,7 +140,7 @@ model tags {
 
 model budget_rules {
   id               Int            @id @default(autoincrement())
-  user_id          String
+  user_id          String         @db.Uuid
   tag_id           Int
   name             String
   start_date       DateTime
@@ -156,7 +156,7 @@ model budget_rules {
 
 model system_logs {
   id          Int      @id @default(autoincrement())
-  user_id     String
+  user_id     String   @db.Uuid
   type        String
   level       Int
   metadata    Json?
