@@ -1,20 +1,19 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import App from "./App";
-
-declare const SUPABASE_URL: string | undefined;
-declare const SUPABASE_PUBLISHABLE_KEY: string | undefined;
-
-const supabaseUrl = SUPABASE_URL;
-const supabasePublishableKey = SUPABASE_PUBLISHABLE_KEY;
-
-if (supabaseUrl && supabasePublishableKey) {
-  (window as any).SUPABASE_URL = supabaseUrl;
-  (window as any).SUPABASE_PUBLISHABLE_KEY = supabasePublishableKey;
-}
+import { BrowserRouter, Route, Routes } from "react-router-dom";
+import AppShell from "./components/AppShell";
+import RequireAuth from "./components/RequireAuth";
+import SignIn from "./components/SignIn";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <App />
+    <BrowserRouter>
+      <Routes>
+        <Route path="/sign-in" element={<SignIn />} />
+        <Route element={<RequireAuth />}>
+          <Route path="/" element={<AppShell />} />
+        </Route>
+      </Routes>
+    </BrowserRouter>
   </StrictMode>
 );

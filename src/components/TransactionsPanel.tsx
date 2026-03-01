@@ -44,7 +44,7 @@ export default function TransactionsPanel({ syncTransactions, syncStatus, loadin
   type FilterChip = { id: string; label: string; onClear: () => void };
 
   const {
-    clearAllFilters, applyDatePreset,
+    clearAllFilters,
     nameMode, setNameMode, nameFilter, setNameFilter,
     merchantMode, setMerchantMode, merchantFilter, setMerchantFilter,
     amountMode, setAmountMode, amountFilter, setAmountFilter,
