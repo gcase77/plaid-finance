@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Navigate, Outlet } from "react-router-dom";
-import { supabase } from "../lib/supabase";
+import { supabase } from "../../lib/supabase";
 
 export default function RequireAuth() {
   const [claims, setClaims] = useState<object | null | undefined>(undefined);
@@ -14,6 +14,6 @@ export default function RequireAuth() {
   }, []);
 
   if (claims === undefined) return null;
-  if (!claims) return <Navigate to="/sign-in" replace />;
+  if (!claims) return <Navigate to="/auth" replace />;
   return <Outlet />;
 }

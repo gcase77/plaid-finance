@@ -5,7 +5,19 @@ export type SupabaseClient = {
     onAuthStateChange: (cb: (_event: string, session: Session | null) => void | Promise<void>) => void;
     getSession: () => Promise<{ data?: { session?: Session | null } }>;
     signInWithPassword: (input: { email: string; password: string }) => Promise<{ error?: { message?: string } | null }>;
-    signUp: (input: { email: string; password: string }) => Promise<{ error?: { message?: string } | null }>;
+    signUp: (input: {
+      email: string;
+      password: string;
+      options?: { emailRedirectTo?: string };
+    }) => Promise<{ error?: { message?: string } | null }>;
+    resetPasswordForEmail: (
+      email: string,
+      options?: { redirectTo?: string }
+    ) => Promise<{ error?: { message?: string } | null }>;
+    updateUser: (
+      attributes: { password: string },
+      options?: Record<string, unknown>
+    ) => Promise<{ error?: { message?: string } | null }>;
     signOut: () => Promise<void>;
   };
 };
