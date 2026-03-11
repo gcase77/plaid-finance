@@ -1,3 +1,12 @@
+## Project
+The frontend is contained in `/src`, the backend is contained in `/server`, and `/models` is a non functional directory where small software models can be created and used to extrapolate into the whole app. 
+
+### Conventions
+- Not every software component needs to be in /models and not everything in /models is used.
+- Endpoints listed in the readme must be up to date with the endpoints the server exposes. 
+- UI components should start as stand alone features but must be refactored into `components/shared` if a similar component is needed multiple times.
+
+
 ## Cursor Cloud specific instructions
 
 This is a personal finance app (React + Express + Prisma + Supabase + Plaid). See `README.md` for architecture details.
