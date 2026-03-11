@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { Item, Account } from "../components/types";
 import { buildAuthHeaders } from "../lib/auth";
 
@@ -14,6 +14,11 @@ export function usePlaidData(userId: string | null, token: string | null): UsePl
   const [items, setItems] = useState<Item[]>([]);
   const [accountsByItem, setAccountsByItem] = useState<Record<string, Account[]>>({});
   const [loadingItems, setLoadingItems] = useState(false);
+
+  useEffect(() => {
+    setItems([]);
+    setAccountsByItem({});
+  }, [userId]);
 
   const fetchWithAuth = async (url: string, options: RequestInit = {}, tokenOverride?: string | null) => {
     const resolvedToken = tokenOverride || token;

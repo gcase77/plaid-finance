@@ -4,8 +4,8 @@ import LoadingSpinner from "./shared/LoadingSpinner";
 
 type MainTabProps = {
   userEmail: string;
-  signOut: () => void;
-  linkBank: (daysRequested?: number) => void;
+  signOut: () => void | Promise<void>;
+  linkBank: (daysRequested?: number) => void | Promise<void>;
   loadingItems: boolean;
   items: Item[];
   accountsByItem: Record<string, Account[]>;

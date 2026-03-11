@@ -1,19 +1,9 @@
-import { useEffect, useState } from "react";
 import { Navigate, Outlet } from "react-router-dom";
-import { supabase } from "../../lib/supabase";
+import { useAuth } from "../../contexts/useAuth";
 
 export default function RequireAuth() {
-  const [claims, setClaims] = useState<object | null | undefined>(undefined);
-
-  useEffect(() => {
-    supabase.auth.getClaims().then(({ data }) => setClaims(data?.claims ?? null));
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
-      supabase.auth.getClaims().then(({ data }) => setClaims(data?.claims ?? null));
-    });
-    return () => subscription.unsubscribe();
-  }, []);
-
-  if (claims === undefined) return null;
-  if (!claims) return <Navigate to="/auth" replace />;
+  const { session, isLoading } = useAuth();
+  if (isLoading) return null;
+  if (!session?.user?.id) return <Navigate to="/auth" replace />;
   return <Outlet />;
 }

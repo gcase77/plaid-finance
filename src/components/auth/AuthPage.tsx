@@ -145,7 +145,7 @@ export default function AuthPage({ mode }: AuthPageProps) {
           setError(signInError.message || "Unable to sign in.");
           return;
         }
-        navigate("/");
+        navigate("/home");
         return;
       }
 
