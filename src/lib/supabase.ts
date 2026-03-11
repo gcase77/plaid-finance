@@ -71,7 +71,16 @@ const bootstrapPasswordRecoveryStateFromUrl = () => {
 
 bootstrapPasswordRecoveryStateFromUrl();
 
-export const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+const resolvedSupabaseUrl =
+  typeof SUPABASE_URL === "string" && SUPABASE_URL.trim()
+    ? SUPABASE_URL
+    : "https://placeholder.supabase.co";
+const resolvedSupabasePublishableKey =
+  typeof SUPABASE_PUBLISHABLE_KEY === "string" && SUPABASE_PUBLISHABLE_KEY.trim()
+    ? SUPABASE_PUBLISHABLE_KEY
+    : "placeholder-publishable-key";
+
+export const supabase = createClient(resolvedSupabaseUrl, resolvedSupabasePublishableKey);
 
 if (typeof window !== "undefined") {
   supabase.auth.onAuthStateChange((event) => {
