@@ -1,6 +1,6 @@
 import { useState } from "react";
-import type { Account, Item } from "./types";
-import LoadingSpinner from "./shared/LoadingSpinner";
+import type { Account, Item } from "../types";
+import LoadingSpinner from "../shared/LoadingSpinner";
 
 type MainTabProps = {
   userEmail: string;

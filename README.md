@@ -130,10 +130,11 @@ class
 | ------ | ----------------------------------------------------------- | ----------------------------------- | -------------------------------------------------------------- |
 | GET    | [api/items](server/routes/items.ts#L9)                      | query: — body: —                    | `Item[]`                                                       |
 | GET    | [api/accounts/:itemId](server/routes/accounts.ts#L9)        | query: — body: —                    | `Account[]`                                                    |
-| POST   | [api/link-token](server/routes/link.ts#L11)                 | query: — body: `{ daysRequested? }` | `{ link_token, ... }`                                          |
-| POST   | [api/exchange](server/routes/link.ts#L36)                   | query: — body: `{ publicToken }`    | `{ success: true }`                                            |
+| POST   | [api/link/token](server/routes/link.ts#L11)                 | query: — body: `{ daysRequested? }` | `{ link_token, ... }`                                          |
+| POST   | [api/link/exchange](server/routes/link.ts#L36)              | query: — body: `{ publicToken }`    | `{ success: true }`                                            |
 | GET    | [api/transactions](server/routes/transactions.ts#L277)      | query: `includeRemoved?` body: —    | transaction array                                              |
 | POST   | [api/transactions/sync](server/routes/transactions.ts#L265) | query: — body: —                    | `{ success: true, items_processed, added, modified, removed }` |
+| GET    | [api/transaction_meta](server/routes/transaction_meta.ts#L7) | query: — body: —                    | `{ transaction_id, account_transfer_group, bucket_1_tag_id, bucket_2_tag_id, meta_tag_id }[]` |
 
 
 # Random

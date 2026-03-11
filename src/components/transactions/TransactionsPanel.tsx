@@ -1,8 +1,8 @@
-import type { UseTransactionFiltersReturn } from "../hooks/useTransactionFilters";
-import LoadingSpinner from "./shared/LoadingSpinner";
-import TransactionTable from "./shared/TransactionTable";
-import TransactionsFilterSection from "./shared/FilterSection";
-import AppliedFiltersBar from "./shared/AppliedFiltersBar";
+import type { UseTransactionFiltersReturn } from "../../hooks/useTransactionFilters";
+import LoadingSpinner from "../shared/LoadingSpinner";
+import TransactionTable from "../shared/TransactionTable";
+import TransactionsFilterSection from "../shared/FilterSection";
+import AppliedFiltersBar from "../shared/AppliedFiltersBar";
 
 type TransactionsPanelProps = {
   syncTransactions: () => Promise<void>;
