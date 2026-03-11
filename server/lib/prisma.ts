@@ -22,22 +22,18 @@ if (process.env.NODE_ENV !== "production") {
   globalForPrisma.prisma = prisma;
 }
 
-const userIdModels = new Set(["items", "accounts", "transactions", "transaction_meta", "system_logs", "tags", "budget_rules"]);
-const whereOps = new Set([
+const userIdModels = new Set(["items", "accounts", "transactions", "system_logs", "tags", "budget_rules"]);
+const nonUniqueWhereOps = new Set([
   "findMany",
   "findFirst",
   "findFirstOrThrow",
-  "findUnique",
-  "findUniqueOrThrow",
   "count",
   "aggregate",
   "groupBy",
-  "update",
   "updateMany",
-  "delete",
-  "deleteMany",
-  "upsert"
+  "deleteMany"
 ]);
+const uniqueWhereOps = new Set(["findUnique", "findUniqueOrThrow", "update", "delete", "upsert"]);
 const mergeWhere = (where: unknown, scope: Record<string, unknown>) =>
   where ? { AND: [where, scope] } : scope;
 
@@ -48,14 +44,19 @@ export const createUserScopedClient = (userId: string) =>
         async $allOperations({ model, operation, args, query }: any) {
           if (!model || !args || typeof args !== "object") return query(args);
 
-          if (model === "users" && whereOps.has(operation)) {
-            args.where = mergeWhere(args.where, { id: userId });
+          if (model === "users") {
+            if (nonUniqueWhereOps.has(operation)) args.where = mergeWhere(args.where, { id: userId });
+            if (uniqueWhereOps.has(operation)) args.where = { ...(args.where ?? {}), id: userId };
           }
 
           if (userIdModels.has(model)) {
-            if (whereOps.has(operation)) args.where = mergeWhere(args.where, { user_id: userId });
+            if (nonUniqueWhereOps.has(operation)) args.where = mergeWhere(args.where, { user_id: userId });
+            if (uniqueWhereOps.has(operation)) args.where = { ...(args.where ?? {}), user_id: userId };
             if (operation === "create" && args.data && typeof args.data === "object") {
               args.data.user_id = userId;
+            }
+            if (operation === "upsert" && args.create && typeof args.create === "object") {
+              args.create.user_id = userId;
             }
             if (operation === "createMany") {
               if (Array.isArray(args.data)) args.data = args.data.map((row: any) => ({ ...row, user_id: userId }));
