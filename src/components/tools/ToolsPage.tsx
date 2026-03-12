@@ -3,16 +3,18 @@ import type { Session } from "@supabase/supabase-js";
 import { supabase } from "../../lib/supabase";
 import { useTransactionsData } from "../../hooks/useTransactionsData";
 import TransferGroupTool from "./TransferGroupTool";
+import TagsTool from "./TagsTool";
 
-type ToolKey = "account-transfers";
+type ToolKey = "tags" | "account-transfers";
 
 const TOOLS: { key: ToolKey; label: string }[] = [
+  { key: "tags", label: "Tags" },
   { key: "account-transfers", label: "Find Transfers" }
 ];
 
 export default function ToolsPage() {
   const [session, setSession] = useState<Session | null>(null);
-  const [active, setActive] = useState<ToolKey>("account-transfers");
+  const [active, setActive] = useState<ToolKey>("tags");
   const token = session?.access_token ?? null;
   const { transactions, invalidateTransactionMeta } = useTransactionsData(token);
 
@@ -40,6 +42,13 @@ export default function ToolsPage() {
       </div>
 
       <div className="flex-fill">
+        {active === "tags" && (
+          <TagsTool
+            transactions={transactions}
+            token={token}
+            invalidateTransactionMeta={invalidateTransactionMeta}
+          />
+        )}
         {active === "account-transfers" && (
           <TransferGroupTool
             transactions={transactions}
