@@ -64,12 +64,14 @@ function CheckboxFilter<T extends string | number>({
   label,
   options,
   selected,
-  onChange
+  onChange,
+  tertiaryAction
 }: {
   label: string;
   options: T[] | Array<[T, string]>;
   selected: T[];
   onChange: (selected: T[]) => void;
+  tertiaryAction?: { label: string; onClick: () => void; active?: boolean };
 }) {
   const normalizedOptions: Array<[T, string]> = options.map((opt) =>
     Array.isArray(opt) ? (opt as [T, string]) : ([opt, opt] as [T, string])
@@ -94,6 +96,14 @@ function CheckboxFilter<T extends string | number>({
           <button className="btn btn-outline-secondary btn-sm" onClick={handleSelectNone}>
             None
           </button>
+          {tertiaryAction && (
+            <button
+              className={`btn btn-sm ${tertiaryAction.active ? "btn-secondary" : "btn-outline-secondary"}`}
+              onClick={tertiaryAction.onClick}
+            >
+              {tertiaryAction.label}
+            </button>
+          )}
         </div>
         {normalizedOptions.map(([id, displayLabel]) => (
           <label className="form-check d-block" key={id}>
@@ -251,9 +261,13 @@ export default function TransactionsFilterSection({ filters, tags }: Transaction
   }`;
   const selectedCategoryCount = state.selectedCategories.length;
   const selectedTagCount = state.selectedTagIds.length;
-  const categorySummary = selectedCategoryCount || selectedTagCount
-    ? `${selectedTagCount} tag${selectedTagCount === 1 ? "" : "s"}, ${selectedCategoryCount} detected`
-    : "any";
+  const tagSummary = state.tagStateFilter === "untagged"
+    ? "untagged"
+    : selectedTagCount
+      ? `${selectedTagCount} tag${selectedTagCount === 1 ? "" : "s"}`
+      : "any";
+  const detectedSummary = selectedCategoryCount ? `${selectedCategoryCount} detected` : "any";
+  const categorySummary = `${tagSummary}, ${detectedSummary}`;
 
   return (
     <>
@@ -387,7 +401,18 @@ export default function TransactionsFilterSection({ filters, tags }: Transaction
               label="Tags"
               options={tags.map((tag) => [tag.id, tag.name] as [number, string])}
               selected={state.selectedTagIds}
-              onChange={actions.setSelectedTagIds}
+              onChange={(ids) => {
+                actions.setTagStateFilter("all");
+                actions.setSelectedTagIds(ids);
+              }}
+              tertiaryAction={{
+                label: "Untagged",
+                active: state.tagStateFilter === "untagged",
+                onClick: () => {
+                  actions.setTagStateFilter("untagged");
+                  actions.setSelectedTagIds([]);
+                }
+              }}
             />
           </div>
           <CategoryHierarchyFilter
