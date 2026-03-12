@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import type { Txn } from "../types";
 import { buildAuthHeaders } from "../../lib/auth";
-import { formatTxnAmount, formatTxnDate, getTxnDateOnly } from "../../utils/transactionUtils";
+import { formatTxnDate, getTxnDateOnly } from "../../utils/transactionUtils";
 
 type Props = {
   transactions: Txn[];
@@ -15,6 +15,10 @@ type Pair = {
   inflow: Txn;
   dayGap: number;
 };
+
+function getErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : "Unexpected error";
+}
 
 function daysBetween(a: Txn, b: Txn): number {
   const d1 = getTxnDateOnly(a);
@@ -126,8 +130,8 @@ export default function TransferGroupTool({ transactions, token, invalidateTrans
       });
       if (!res.ok) throw new Error((await res.json()).error ?? res.statusText);
       await invalidateTransactionMeta();
-    } catch (e: any) {
-      setError(e.message);
+    } catch (error: unknown) {
+      setError(getErrorMessage(error));
     } finally {
       setSavingId(null);
     }
@@ -144,8 +148,8 @@ export default function TransferGroupTool({ transactions, token, invalidateTrans
       });
       if (!res.ok) throw new Error((await res.json()).error ?? res.statusText);
       await invalidateTransactionMeta();
-    } catch (e: any) {
-      setError(e.message);
+    } catch (error: unknown) {
+      setError(getErrorMessage(error));
     } finally {
       setRemovingId(null);
     }
