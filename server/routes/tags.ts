@@ -7,6 +7,19 @@ const router = express.Router();
 
 const VALID_TYPES = new Set<string>(Object.values(TagType));
 
+router.get("/tags", async (req, res) => {
+  try {
+    const { user, prisma } = req as unknown as ServerRequest;
+    const tags = await prisma.tags.findMany({
+      where: { user_id: user.id },
+      orderBy: { name: "asc" }
+    });
+    res.json(tags);
+  } catch (e: any) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 router.post("/tags", async (req, res) => {
   try {
     const { user, prisma } = req as unknown as ServerRequest;

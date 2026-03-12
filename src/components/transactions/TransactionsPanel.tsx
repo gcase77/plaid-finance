@@ -1,4 +1,5 @@
 import type { UseTransactionFiltersReturn } from "../../hooks/useTransactionFilters";
+import type { Tag } from "../types";
 import LoadingSpinner from "../shared/LoadingSpinner";
 import TransactionTable from "../shared/TransactionTable";
 import TransactionsFilterSection from "../shared/FilterSection";
@@ -9,9 +10,10 @@ type TransactionsPanelProps = {
   syncStatus: string;
   filters: UseTransactionFiltersReturn;
   loadingTxns: boolean;
+  tags: Tag[];
 };
 
-export default function TransactionsPanel({ syncTransactions, syncStatus, loadingTxns, filters }: TransactionsPanelProps) {
+export default function TransactionsPanel({ syncTransactions, syncStatus, loadingTxns, filters, tags }: TransactionsPanelProps) {
   return (
     <div>
       <div className="d-flex align-items-center justify-content-between mb-3">
@@ -23,11 +25,11 @@ export default function TransactionsPanel({ syncTransactions, syncStatus, loadin
 
       <div className="row">
         <div className="col-12 col-lg-3 mb-3 mb-lg-0">
-          <TransactionsFilterSection filters={filters} />
+          <TransactionsFilterSection filters={filters} tags={tags} />
         </div>
         <div className="col-12 col-lg-9">
           <AppliedFiltersBar filters={filters} />
-          {loadingTxns ? <LoadingSpinner /> : <TransactionTable transactions={filters.derived.filteredTransactions} />}
+          {loadingTxns ? <LoadingSpinner /> : <TransactionTable transactions={filters.derived.filteredTransactions} tags={tags} />}
         </div>
       </div>
     </div>
