@@ -9,6 +9,15 @@ function formatAccountDisplay(institution: string, account: string): string {
   return acct.toLowerCase().includes(inst) ? acct : `${institution} | ${acct}`;
 }
 
+function getTxnTagLabels(t: Txn, tagMap: Map<number, string>): string[] {
+  const labels = new Set<string>();
+  if (t.account_transfer_group) labels.add("account_transfer");
+  if (t.bucket_1_tag_id != null) labels.add(tagMap.get(t.bucket_1_tag_id) || String(t.bucket_1_tag_id));
+  if (t.bucket_2_tag_id != null) labels.add(tagMap.get(t.bucket_2_tag_id) || String(t.bucket_2_tag_id));
+  if (t.meta_tag_id != null) labels.add(tagMap.get(t.meta_tag_id) || String(t.meta_tag_id));
+  return [...labels];
+}
+
 type TransactionTableProps = {
   transactions: Txn[];
   emptyMessage?: string;
@@ -61,6 +70,7 @@ export default function TransactionTable({
             <th>Merchant</th>
             <th className="text-end">Amount</th>
             <th>Account</th>
+            <th>Tags</th>
             <th>Detected</th>
             {taggingMode && <th>Bucket 1</th>}
             {taggingMode && <th>Bucket 2</th>}
@@ -84,6 +94,7 @@ export default function TransactionTable({
                 <td>{t.merchant_name || ""}</td>
                 <td className="text-end">{formatTxnAmount(t)}</td>
                 <td>{formatAccountDisplay(t.institution_name || "", t.account_name || t.account_official_name || "")}</td>
+                <td>{getTxnTagLabels(t, tagMap).join(", ")}</td>
                 <td>{formatTxnDetectedCategory(t.personal_finance_category)}</td>
                 {taggingMode && <td><span className="badge bg-secondary">{t.bucket_1_tag_id != null ? tagMap.get(t.bucket_1_tag_id) || t.bucket_1_tag_id : ""}</span></td>}
                 {taggingMode && <td><span className="badge bg-secondary">{t.bucket_2_tag_id != null ? tagMap.get(t.bucket_2_tag_id) || t.bucket_2_tag_id : ""}</span></td>}
