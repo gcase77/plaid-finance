@@ -13,7 +13,7 @@ export default function AppLayout() {
           </ul>
         </div>
       </nav>
-      <div className="container mt-4">
+      <div className="container-fluid px-4 mt-4">
         <Outlet />
       </div>
     </div>

@@ -134,7 +134,12 @@ class
 | POST   | [api/link/exchange](server/routes/link.ts#L36)              | query: — body: `{ publicToken }`    | `{ success: true }`                                            |
 | GET    | [api/transactions](server/routes/transactions.ts#L277)      | query: `includeRemoved?` body: —    | transaction array                                              |
 | POST   | [api/transactions/sync](server/routes/transactions.ts#L265) | query: — body: —                    | `{ success: true, items_processed, added, modified, removed }` |
-| GET    | [api/transaction_meta](server/routes/transaction_meta.ts#L7) | query: — body: —                    | `{ transaction_id, account_transfer_group, bucket_1_tag_id, bucket_2_tag_id, meta_tag_id }[]` |
+| GET    | [api/transaction_meta](server/routes/transaction_meta.ts#L8) | query: — body: —                    | `{ transaction_id, account_transfer_group, bucket_1_tag_id, bucket_2_tag_id, meta_tag_id }[]` |
+| POST   | [api/tags](server/routes/tags.ts#L12)                        | query: — body: `{ name, type }`     | created tag object |
+| DELETE | [api/tags/:id](server/routes/tags.ts#L25)                    | query: — body: —                    | `{ success: true }` |
+| PATCH  | [api/transaction_meta/tags](server/routes/tags.ts#L47)       | query: — body: `MetaTagUpdate[]`    | `{ success: true }` |
+| POST   | [api/transaction_meta/transfer_group](server/routes/transaction_meta.ts#L37) | query: — body: `{ transaction_ids: [id1, id2] }` | `{ account_transfer_group: uuid }` |
+| DELETE | [api/transaction_meta/transfer_group](server/routes/transaction_meta.ts#L62) | query: — body: `{ transaction_ids: [id1, id2] }` | `{ success: true }` |
 
 
 # Random
