@@ -251,8 +251,8 @@ export default function TransactionsFilterSection({ filters, tags }: Transaction
   }`;
   const selectedCategoryCount = state.selectedCategories.length;
   const selectedTagCount = state.selectedTagIds.length;
-  const categorySummary = selectedCategoryCount || selectedTagCount
-    ? `${selectedTagCount} tag${selectedTagCount === 1 ? "" : "s"}, ${selectedCategoryCount} detected`
+  const categorySummary = selectedCategoryCount || selectedTagCount || state.tagStateFilter === "untagged"
+    ? `${state.tagStateFilter === "untagged" ? "untagged, " : ""}${selectedTagCount} tag${selectedTagCount === 1 ? "" : "s"}, ${selectedCategoryCount} detected`
     : "any";
 
   return (
@@ -383,11 +383,31 @@ export default function TransactionsFilterSection({ filters, tags }: Transaction
 
         <FilterAccordionSection label="Category" summary={categorySummary}>
           <div className="mb-2">
+            <div className="d-flex gap-2 mb-2">
+              <button
+                className={`btn btn-sm ${state.tagStateFilter === "all" ? "btn-secondary" : "btn-outline-secondary"}`}
+                onClick={() => actions.setTagStateFilter("all")}
+              >
+                Any
+              </button>
+              <button
+                className={`btn btn-sm ${state.tagStateFilter === "untagged" ? "btn-secondary" : "btn-outline-secondary"}`}
+                onClick={() => {
+                  actions.setTagStateFilter("untagged");
+                  actions.setSelectedTagIds([]);
+                }}
+              >
+                Untagged
+              </button>
+            </div>
             <CheckboxFilter
               label="Tags"
               options={tags.map((tag) => [tag.id, tag.name] as [number, string])}
               selected={state.selectedTagIds}
-              onChange={actions.setSelectedTagIds}
+              onChange={(ids) => {
+                actions.setTagStateFilter("all");
+                actions.setSelectedTagIds(ids);
+              }}
             />
           </div>
           <CategoryHierarchyFilter

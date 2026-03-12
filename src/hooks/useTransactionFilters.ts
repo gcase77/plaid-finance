@@ -115,9 +115,12 @@ export function useTransactionFilters(transactions: Txn[]): UseTransactionFilter
     }
     if (tagStateFilter !== "all") {
       predicates.push((t) => {
-        const hasBucket = t.bucket_1_tag_id != null;
-        if (tagStateFilter === "untagged") return !hasBucket;
-        if (tagStateFilter === "tagged") return hasBucket;
+        const hasAnyTag = t.account_transfer_group != null
+          || t.bucket_1_tag_id != null
+          || t.bucket_2_tag_id != null
+          || t.meta_tag_id != null;
+        if (tagStateFilter === "untagged") return !hasAnyTag;
+        if (tagStateFilter === "tagged") return hasAnyTag;
         return true;
       });
     }

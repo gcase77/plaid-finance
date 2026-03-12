@@ -62,6 +62,11 @@ export default function AppliedFiltersBar({ filters }: AppliedFiltersBarProps) {
       id: "categories",
       label: `Detected: ${state.selectedCategories.length}`,
       onClear: () => actions.setSelectedCategories([])
+    },
+    state.tagStateFilter === "untagged" && {
+      id: "untagged",
+      label: "Untagged only",
+      onClear: () => actions.setTagStateFilter("all")
     }
   ].filter(Boolean) as FilterChip[];
 
