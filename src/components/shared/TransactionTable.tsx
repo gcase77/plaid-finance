@@ -18,6 +18,19 @@ function getTxnTagLabels(t: Txn, tagMap: Map<number, string>): string[] {
   return [...labels];
 }
 
+function TagBadges({ labels }: { labels: string[] }) {
+  if (!labels.length) return <span className="text-muted small">—</span>;
+  return (
+    <div className="d-flex flex-wrap gap-1">
+      {labels.map((label) => (
+        <span key={label} className={`badge ${label === "account_transfer" ? "bg-dark" : "bg-secondary"}`}>
+          {label}
+        </span>
+      ))}
+    </div>
+  );
+}
+
 type TransactionTableProps = {
   transactions: Txn[];
   emptyMessage?: string;
@@ -66,15 +79,12 @@ export default function TransactionTable({
             {taggingMode && <th style={{ width: 32 }}><input type="checkbox" className="form-check-input" checked={allSelected} onChange={(e) => toggleAll(e.target.checked)} /></th>}
             <th style={{ width: 40 }}></th>
             <th>Date</th>
+            <th>Tags</th>
             <th>Name</th>
             <th>Merchant</th>
             <th className="text-end">Amount</th>
             <th>Account</th>
-            <th>Tags</th>
             <th>Detected</th>
-            {taggingMode && <th>Bucket 1</th>}
-            {taggingMode && <th>Bucket 2</th>}
-            {taggingMode && <th>Meta</th>}
           </tr>
         </thead>
         <tbody>
@@ -90,15 +100,12 @@ export default function TransactionTable({
                 )}
                 <td>{getTxnIconUrl(t) ? <img src={getTxnIconUrl(t)} alt="icon" style={{ width: 24, height: 24 }} /> : ""}</td>
                 <td>{formatTxnDate(t)}</td>
+                <td><TagBadges labels={getTxnTagLabels(t, tagMap)} /></td>
                 <td>{(t.original_description || "").trim() || t.name || ""}</td>
                 <td>{t.merchant_name || ""}</td>
                 <td className="text-end">{formatTxnAmount(t)}</td>
                 <td>{formatAccountDisplay(t.institution_name || "", t.account_name || t.account_official_name || "")}</td>
-                <td>{getTxnTagLabels(t, tagMap).join(", ")}</td>
                 <td>{formatTxnDetectedCategory(t.personal_finance_category)}</td>
-                {taggingMode && <td><span className="badge bg-secondary">{t.bucket_1_tag_id != null ? tagMap.get(t.bucket_1_tag_id) || t.bucket_1_tag_id : ""}</span></td>}
-                {taggingMode && <td><span className="badge bg-secondary">{t.bucket_2_tag_id != null ? tagMap.get(t.bucket_2_tag_id) || t.bucket_2_tag_id : ""}</span></td>}
-                {taggingMode && <td><span className="badge bg-info text-dark">{t.meta_tag_id != null ? tagMap.get(t.meta_tag_id) || t.meta_tag_id : ""}</span></td>}
               </tr>
             );
           })}
