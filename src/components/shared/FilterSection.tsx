@@ -1,9 +1,11 @@
 import { useState } from "react";
 import type { UseTransactionFiltersReturn } from "../../hooks/useTransactionFilters";
+import type { Tag } from "../types";
 import { DATE_RANGE_PRESETS, formatDateRangeLabel } from "./dateRangeUtils";
 
 type TransactionsFilterSectionProps = {
   filters: UseTransactionFiltersReturn;
+  tags: Tag[];
 };
 
 type SegmentOption<T extends string> = { value: T; label: string };
@@ -58,7 +60,7 @@ function SegmentedButtons<T extends string>({
   );
 }
 
-function CheckboxFilter<T extends string>({
+function CheckboxFilter<T extends string | number>({
   label,
   options,
   selected,
@@ -230,7 +232,7 @@ function DateRangeDropdown({
   );
 }
 
-export default function TransactionsFilterSection({ filters }: TransactionsFilterSectionProps) {
+export default function TransactionsFilterSection({ filters, tags }: TransactionsFilterSectionProps) {
   const { state, actions, derived } = filters;
 
   const searchSummary = [
@@ -247,7 +249,11 @@ export default function TransactionsFilterSection({ filters }: TransactionsFilte
   const sourceSummary = `${state.selectedBanks.length ? `${state.selectedBanks.length} bank` : "any"}, ${
     state.selectedAccounts.length ? `${state.selectedAccounts.length} account` : "any"
   }`;
-  const categorySummary = state.selectedCategories.length ? `${state.selectedCategories.length} selected` : "any";
+  const selectedCategoryCount = state.selectedCategories.length;
+  const selectedTagCount = state.selectedTagIds.length;
+  const categorySummary = selectedCategoryCount || selectedTagCount
+    ? `${selectedTagCount} tag${selectedTagCount === 1 ? "" : "s"}, ${selectedCategoryCount} detected`
+    : "any";
 
   return (
     <>
@@ -376,6 +382,14 @@ export default function TransactionsFilterSection({ filters }: TransactionsFilte
         </FilterAccordionSection>
 
         <FilterAccordionSection label="Category" summary={categorySummary}>
+          <div className="mb-2">
+            <CheckboxFilter
+              label="Tags"
+              options={tags.map((tag) => [tag.id, tag.name] as [number, string])}
+              selected={state.selectedTagIds}
+              onChange={actions.setSelectedTagIds}
+            />
+          </div>
           <CategoryHierarchyFilter
             groups={derived.options.categoryOptionsByPrimary}
             selected={state.selectedCategories}
