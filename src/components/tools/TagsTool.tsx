@@ -35,6 +35,7 @@ function parseSelectValue(value: string): number | null | undefined {
 export default function TagsTool({ transactions, token, invalidateTransactionMeta }: Props) {
   const queryClient = useQueryClient();
   const filters = useTransactionFilters(transactions);
+  const [tab, setTab] = useState<"my-tags" | "tag-transactions">("my-tags");
   const [createName, setCreateName] = useState("");
   const [createType, setCreateType] = useState<TagType>("spending_bucket_1");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -148,155 +149,164 @@ export default function TagsTool({ transactions, token, invalidateTransactionMet
   };
 
   return (
-    <div className="d-flex flex-column gap-3">
-      <div className="card">
-        <div className="card-body">
-          <h6 className="card-title mb-1">Tags</h6>
-          <p className="text-muted small mb-0">Manually identify transactions</p>
-        </div>
-      </div>
+    <div className="card">
+      <div className="card-body">
+        <h6 className="card-title mb-1">Tags</h6>
+        <p className="text-muted small mb-3">Manually identify transactions</p>
 
-      <div className="card">
-        <div className="card-body">
-          <h6 className="card-title">My Tags</h6>
-          <div className="row g-2 align-items-end mb-3">
-            <div className="col-sm-5">
-              <label className="form-label small mb-1">Name</label>
-              <input
-                className="form-control form-control-sm"
-                value={createName}
-                onChange={(e) => setCreateName(e.target.value)}
-                placeholder="Tag name"
-              />
-            </div>
-            <div className="col-sm-4">
-              <label className="form-label small mb-1">Type</label>
-              <select className="form-select form-select-sm" value={createType} onChange={(e) => setCreateType(e.target.value as TagType)}>
-                {TAG_TYPES.map((type) => (
-                  <option key={type} value={type}>{type}</option>
-                ))}
-              </select>
-            </div>
-            <div className="col-sm-3">
-              <button
-                className="btn btn-sm btn-primary w-100"
-                disabled={!createName.trim() || createTagMutation.isPending}
-                onClick={() => createTagMutation.mutate()}
-              >
-                {createTagMutation.isPending ? "Creating..." : "Create tag"}
-              </button>
-            </div>
-          </div>
+        <ul className="nav nav-tabs mb-3">
+          <li className="nav-item">
+            <button className={`nav-link ${tab === "my-tags" ? "active" : ""}`} onClick={() => setTab("my-tags")}>
+              My Tags
+            </button>
+          </li>
+          <li className="nav-item">
+            <button className={`nav-link ${tab === "tag-transactions" ? "active" : ""}`} onClick={() => setTab("tag-transactions")}>
+              Tag Transactions
+            </button>
+          </li>
+        </ul>
 
-          {(tagsQuery.error || createTagMutation.error || deleteTagMutation.error) && (
-            <div className="alert alert-danger py-1 small">
-              {(tagsQuery.error as Error | null)?.message
-                || (createTagMutation.error as Error | null)?.message
-                || (deleteTagMutation.error as Error | null)?.message}
+        {tab === "my-tags" && (
+          <>
+            <div className="row g-2 align-items-end mb-3">
+              <div className="col-sm-5">
+                <label className="form-label small mb-1">Name</label>
+                <input
+                  className="form-control form-control-sm"
+                  value={createName}
+                  onChange={(e) => setCreateName(e.target.value)}
+                  placeholder="Tag name"
+                />
+              </div>
+              <div className="col-sm-4">
+                <label className="form-label small mb-1">Type</label>
+                <select className="form-select form-select-sm" value={createType} onChange={(e) => setCreateType(e.target.value as TagType)}>
+                  {TAG_TYPES.map((type) => (
+                    <option key={type} value={type}>{type}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="col-sm-3">
+                <button
+                  className="btn btn-sm btn-primary w-100"
+                  disabled={!createName.trim() || createTagMutation.isPending}
+                  onClick={() => createTagMutation.mutate()}
+                >
+                  {createTagMutation.isPending ? "Creating..." : "Create tag"}
+                </button>
+              </div>
             </div>
-          )}
 
-          {tagsQuery.isLoading ? (
-            <LoadingSpinner message="Loading tags..." />
-          ) : (
-            <div className="table-responsive">
-              <table className="table table-sm align-middle mb-0">
-                <thead>
-                  <tr>
-                    <th>Name</th>
-                    <th>Type</th>
-                    <th style={{ width: 90 }} />
-                  </tr>
-                </thead>
-                <tbody>
-                  {tags.length === 0 ? (
-                    <tr><td colSpan={3} className="text-muted small">No tags yet.</td></tr>
-                  ) : (
-                    tags.map((tag) => (
-                      <tr key={tag.id}>
-                        <td>{tag.name}</td>
-                        <td><span className="badge bg-secondary">{tag.type}</span></td>
-                        <td className="text-end">
-                          <button
-                            className="btn btn-sm btn-outline-danger"
-                            disabled={deleteTagMutation.isPending}
-                            onClick={() => deleteTagMutation.mutate(tag.id)}
-                          >
-                            Delete
-                          </button>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      </div>
+            {(tagsQuery.error || createTagMutation.error || deleteTagMutation.error) && (
+              <div className="alert alert-danger py-1 small">
+                {(tagsQuery.error as Error | null)?.message
+                  || (createTagMutation.error as Error | null)?.message
+                  || (deleteTagMutation.error as Error | null)?.message}
+              </div>
+            )}
 
-      <div className="card">
-        <div className="card-body">
-          <h6 className="card-title">Tag Transactions</h6>
-          {actionError && <div className="alert alert-warning py-1 small">{actionError}</div>}
-          {applyTagsMutation.error && <div className="alert alert-danger py-1 small">{(applyTagsMutation.error as Error).message}</div>}
+            {tagsQuery.isLoading ? (
+              <LoadingSpinner message="Loading tags..." />
+            ) : (
+              <div className="table-responsive">
+                <table className="table table-sm align-middle mb-0">
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Type</th>
+                      <th style={{ width: 90 }} />
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {tags.length === 0 ? (
+                      <tr><td colSpan={3} className="text-muted small">No tags yet.</td></tr>
+                    ) : (
+                      tags.map((tag) => (
+                        <tr key={tag.id}>
+                          <td>{tag.name}</td>
+                          <td><span className="badge bg-secondary">{tag.type}</span></td>
+                          <td className="text-end">
+                            <button
+                              className="btn btn-sm btn-outline-danger"
+                              disabled={deleteTagMutation.isPending}
+                              onClick={() => deleteTagMutation.mutate(tag.id)}
+                            >
+                              Delete
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </>
+        )}
 
-          <div className="row g-2 align-items-end mb-3">
-            <div className="col-12 col-md-3">
-              <label className="form-label small mb-1">Bucket 1</label>
-              <select className="form-select form-select-sm" value={bucket1Value} onChange={(e) => setBucket1Value(e.target.value)}>
-                <option value={NO_CHANGE}>No change</option>
-                <option value={CLEAR}>Clear</option>
-                {bucketTags.map((tag) => <option key={tag.id} value={String(tag.id)}>{tag.name}</option>)}
-              </select>
-            </div>
-            <div className="col-12 col-md-3">
-              <label className="form-label small mb-1">Bucket 2</label>
-              <select className="form-select form-select-sm" value={bucket2Value} onChange={(e) => setBucket2Value(e.target.value)}>
-                <option value={NO_CHANGE}>No change</option>
-                <option value={CLEAR}>Clear</option>
-                {bucketTags.map((tag) => <option key={tag.id} value={String(tag.id)}>{tag.name}</option>)}
-              </select>
-            </div>
-            <div className="col-12 col-md-3">
-              <label className="form-label small mb-1">Meta</label>
-              <select className="form-select form-select-sm" value={metaValue} onChange={(e) => setMetaValue(e.target.value)}>
-                <option value={NO_CHANGE}>No change</option>
-                <option value={CLEAR}>Clear</option>
-                {metaTags.map((tag) => <option key={tag.id} value={String(tag.id)}>{tag.name}</option>)}
-              </select>
-            </div>
-            <div className="col-12 col-md-3 d-flex gap-2">
-              <button className="btn btn-sm btn-primary flex-fill" onClick={onApplyTags} disabled={applyTagsMutation.isPending}>
-                {applyTagsMutation.isPending ? "Applying..." : `Apply (${selectedIds.size})`}
-              </button>
-              <button className="btn btn-sm btn-outline-secondary" onClick={() => setSelectedIds(new Set())}>
-                Clear
-              </button>
-            </div>
-          </div>
+        {tab === "tag-transactions" && (
+          <>
+            {actionError && <div className="alert alert-warning py-1 small">{actionError}</div>}
+            {applyTagsMutation.error && <div className="alert alert-danger py-1 small">{(applyTagsMutation.error as Error).message}</div>}
 
-          <div className="small text-muted mb-2">
-            Bucket 1 options: {tagByType.get("income_bucket_1")?.length || 0} income, {tagByType.get("spending_bucket_1")?.length || 0} spending.
-            {" "}Bucket 2 options: {tagByType.get("income_bucket_2")?.length || 0} income, {tagByType.get("spending_bucket_2")?.length || 0} spending.
-          </div>
+            <div className="row g-2 align-items-end mb-3">
+              <div className="col-12 col-md-3">
+                <label className="form-label small mb-1">Bucket 1</label>
+                <select className="form-select form-select-sm" value={bucket1Value} onChange={(e) => setBucket1Value(e.target.value)}>
+                  <option value={NO_CHANGE}>No change</option>
+                  <option value={CLEAR}>Clear</option>
+                  {bucketTags.map((tag) => <option key={tag.id} value={String(tag.id)}>{tag.name}</option>)}
+                </select>
+              </div>
+              <div className="col-12 col-md-3">
+                <label className="form-label small mb-1">Bucket 2</label>
+                <select className="form-select form-select-sm" value={bucket2Value} onChange={(e) => setBucket2Value(e.target.value)}>
+                  <option value={NO_CHANGE}>No change</option>
+                  <option value={CLEAR}>Clear</option>
+                  {bucketTags.map((tag) => <option key={tag.id} value={String(tag.id)}>{tag.name}</option>)}
+                </select>
+              </div>
+              <div className="col-12 col-md-3">
+                <label className="form-label small mb-1">Meta</label>
+                <select className="form-select form-select-sm" value={metaValue} onChange={(e) => setMetaValue(e.target.value)}>
+                  <option value={NO_CHANGE}>No change</option>
+                  <option value={CLEAR}>Clear</option>
+                  {metaTags.map((tag) => <option key={tag.id} value={String(tag.id)}>{tag.name}</option>)}
+                </select>
+              </div>
+              <div className="col-12 col-md-3 d-flex gap-2">
+                <button className="btn btn-sm btn-primary flex-fill" onClick={onApplyTags} disabled={applyTagsMutation.isPending}>
+                  {applyTagsMutation.isPending ? "Applying..." : `Apply (${selectedIds.size})`}
+                </button>
+                <button className="btn btn-sm btn-outline-secondary" onClick={() => setSelectedIds(new Set())}>
+                  Clear
+                </button>
+              </div>
+            </div>
 
-          <div className="row">
-            <div className="col-12 col-lg-3 mb-3 mb-lg-0">
-              <TransactionsFilterSection filters={filters} tags={tags} />
+            <div className="small text-muted mb-2">
+              Bucket 1 options: {tagByType.get("income_bucket_1")?.length || 0} income, {tagByType.get("spending_bucket_1")?.length || 0} spending.
+              {" "}Bucket 2 options: {tagByType.get("income_bucket_2")?.length || 0} income, {tagByType.get("spending_bucket_2")?.length || 0} spending.
             </div>
-            <div className="col-12 col-lg-9">
-              <AppliedFiltersBar filters={filters} />
-              <TransactionTable
-                transactions={selectableTransactions}
-                taggingMode
-                selectedIds={selectedIds}
-                onSelectionChange={setSelectedIds}
-                tags={tags}
-              />
+
+            <div className="row">
+              <div className="col-12 col-lg-3 mb-3 mb-lg-0">
+                <TransactionsFilterSection filters={filters} tags={tags} />
+              </div>
+              <div className="col-12 col-lg-9">
+                <AppliedFiltersBar filters={filters} />
+                <TransactionTable
+                  transactions={selectableTransactions}
+                  taggingMode
+                  selectedIds={selectedIds}
+                  onSelectionChange={setSelectedIds}
+                  tags={tags}
+                />
+              </div>
             </div>
-          </div>
-        </div>
+          </>
+        )}
       </div>
     </div>
   );
