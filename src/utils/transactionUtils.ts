@@ -44,3 +44,39 @@ export const getTxnIconUrl = (t: Txn) => {
 
 export const formatTxnAmount = (t: Txn) => 
   `${String(t.iso_currency_code || "").toUpperCase() === "USD" ? "$" : ""} ${Number(t.amount || 0).toFixed(2)}`;
+
+const LOWERCASE_CATEGORY_WORDS = new Set(["and", "of", "from"]);
+
+export const formatCategoryLabel = (value?: string | null): string => {
+  const normalized = String(value || "").trim().replace(/_/g, " ");
+  if (!normalized) return "";
+  return normalized
+    .split(/\s+/)
+    .map((word) => {
+      const lower = word.toLowerCase();
+      if (LOWERCASE_CATEGORY_WORDS.has(lower)) return lower;
+      return `${lower.charAt(0).toUpperCase()}${lower.slice(1)}`;
+    })
+    .join(" ");
+};
+
+export const formatCategorySubLabel = (primary?: string | null, value?: string | null): string => {
+  const rawPrimary = String(primary || "").trim();
+  const rawValue = String(value || "").trim();
+  if (!rawValue) return "";
+  const prefix = rawPrimary ? `${rawPrimary}_` : "";
+  const trimmed = prefix && rawValue.startsWith(prefix) ? rawValue.slice(prefix.length) : rawValue;
+  return formatCategoryLabel(trimmed);
+};
+
+export const formatTxnDetectedCategory = (category?: Txn["personal_finance_category"]): string => {
+  const primary = String(category?.primary || "").trim();
+  const detailed = String(category?.detailed || "").trim();
+  if (!primary && !detailed) return "";
+  if (!primary) return formatCategoryLabel(detailed);
+  if (!detailed || detailed === primary) return formatCategoryLabel(primary);
+  const primaryLabel = formatCategoryLabel(primary);
+  const detailedLabel = formatCategorySubLabel(primary, detailed);
+  if (!detailedLabel || detailedLabel === primaryLabel) return primaryLabel;
+  return `${primaryLabel}, ${detailedLabel}`;
+};

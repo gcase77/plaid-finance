@@ -1,5 +1,5 @@
 import type { Tag, Txn } from "../types";
-import { getTxnIconUrl, formatTxnDate, formatTxnAmount } from "../../utils/transactionUtils";
+import { getTxnIconUrl, formatTxnDate, formatTxnAmount, formatTxnDetectedCategory } from "../../utils/transactionUtils";
 
 function formatAccountDisplay(institution: string, account: string): string {
   if (!account) return institution || "";
@@ -84,7 +84,7 @@ export default function TransactionTable({
                 <td>{t.merchant_name || ""}</td>
                 <td className="text-end">{formatTxnAmount(t)}</td>
                 <td>{formatAccountDisplay(t.institution_name || "", t.account_name || t.account_official_name || "")}</td>
-                <td>{t.personal_finance_category?.detailed || t.personal_finance_category?.primary || ""}</td>
+                <td>{formatTxnDetectedCategory(t.personal_finance_category)}</td>
                 {taggingMode && <td><span className="badge bg-secondary">{t.bucket_1_tag_id != null ? tagMap.get(t.bucket_1_tag_id) || t.bucket_1_tag_id : ""}</span></td>}
                 {taggingMode && <td><span className="badge bg-secondary">{t.bucket_2_tag_id != null ? tagMap.get(t.bucket_2_tag_id) || t.bucket_2_tag_id : ""}</span></td>}
                 {taggingMode && <td><span className="badge bg-info text-dark">{t.meta_tag_id != null ? tagMap.get(t.meta_tag_id) || t.meta_tag_id : ""}</span></td>}

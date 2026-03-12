@@ -109,6 +109,79 @@ function CheckboxFilter<T extends string>({
   );
 }
 
+function CategoryHierarchyFilter({
+  groups,
+  selected,
+  onChange
+}: {
+  groups: UseTransactionFiltersReturn["derived"]["options"]["categoryOptionsByPrimary"];
+  selected: string[];
+  onChange: (selected: string[]) => void;
+}) {
+  const selectedSet = new Set(selected);
+  const handleToggleValue = (value: string, checked: boolean) => {
+    const next = new Set(selectedSet);
+    if (checked) next.add(value);
+    else next.delete(value);
+    onChange([...next]);
+  };
+  const handleToggleGroup = (values: string[], checked: boolean) => {
+    const next = new Set(selectedSet);
+    values.forEach((value) => {
+      if (checked) next.add(value);
+      else next.delete(value);
+    });
+    onChange([...next]);
+  };
+  const allValues = groups.flatMap((g) => g.options.map((opt) => opt.value));
+
+  return (
+    <div>
+      <label className="form-label mb-1">Detected ({selected.length})</label>
+      <div className="border rounded p-2" style={{ maxHeight: 180, overflowY: "auto" }}>
+        <div className="d-flex gap-2 mb-1">
+          <button className="btn btn-outline-secondary btn-sm" onClick={() => onChange([...new Set(allValues)])}>
+            All
+          </button>
+          <button className="btn btn-outline-secondary btn-sm" onClick={() => onChange([])}>
+            None
+          </button>
+        </div>
+        {groups.map((group) => {
+          const groupValues = group.options.map((opt) => opt.value);
+          const groupAllSelected = groupValues.length > 0 && groupValues.every((value) => selectedSet.has(value));
+          return (
+            <div key={group.primary} className="mb-2">
+              <label className="form-check d-block fw-semibold">
+                <input
+                  className="form-check-input"
+                  type="checkbox"
+                  checked={groupAllSelected}
+                  onChange={(e) => handleToggleGroup(groupValues, e.target.checked)}
+                />{" "}
+                <span className="form-check-label">{group.primaryLabel}</span>
+              </label>
+              <div className="ms-3">
+                {group.options.map((opt) => (
+                  <label className="form-check d-block" key={opt.value}>
+                    <input
+                      className="form-check-input"
+                      type="checkbox"
+                      checked={selectedSet.has(opt.value)}
+                      onChange={(e) => handleToggleValue(opt.value, e.target.checked)}
+                    />{" "}
+                    <span className="form-check-label">{opt.label}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function DateRangeDropdown({
   dateStart,
   dateEnd,
@@ -303,9 +376,8 @@ export default function TransactionsFilterSection({ filters }: TransactionsFilte
         </FilterAccordionSection>
 
         <FilterAccordionSection label="Category" summary={categorySummary}>
-          <CheckboxFilter
-            label="Detected"
-            options={derived.options.categoryOptions}
+          <CategoryHierarchyFilter
+            groups={derived.options.categoryOptionsByPrimary}
             selected={state.selectedCategories}
             onChange={actions.setSelectedCategories}
           />
