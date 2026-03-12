@@ -1,7 +1,13 @@
 import { useState, useMemo } from "react";
 import type { TextMode, AmountMode, TagStateFilter, Txn } from "../components/types";
 import { buildDatePreset } from "../utils/datePresets";
-import { getTxnDateOnly } from "../utils/transactionUtils";
+import { formatCategoryLabel, formatCategorySubLabel, getTxnDateOnly } from "../utils/transactionUtils";
+
+type CategoryOptionGroup = {
+  primary: string;
+  primaryLabel: string;
+  options: Array<{ value: string; label: string }>;
+};
 
 export type TransactionFilterState = {
   nameMode: TextMode;
@@ -44,7 +50,7 @@ type TransactionFilterDerived = {
   options: {
     bankOptions: Array<[string, string]>;
     accountOptions: Array<[string, string]>;
-    categoryOptions: string[];
+    categoryOptionsByPrimary: CategoryOptionGroup[];
   };
 };
 
@@ -149,13 +155,24 @@ export function useTransactionFilters(transactions: Txn[]): UseTransactionFilter
     return [...m.entries()];
   }, [transactions]);
 
-  const categoryOptions = useMemo(() => {
-    const s = new Set<string>();
+  const categoryOptionsByPrimary = useMemo(() => {
+    const groups = new Map<string, Set<string>>();
     transactions.forEach((t) => {
-      const cat = t.personal_finance_category?.detailed || t.personal_finance_category?.primary;
-      if (cat) s.add(cat);
+      const primary = String(t.personal_finance_category?.primary || t.personal_finance_category?.detailed || "").trim();
+      const value = String(t.personal_finance_category?.detailed || t.personal_finance_category?.primary || "").trim();
+      if (!primary || !value) return;
+      if (!groups.has(primary)) groups.set(primary, new Set<string>());
+      groups.get(primary)?.add(value);
     });
-    return [...s].sort();
+    return [...groups.entries()]
+      .map(([primary, valueSet]) => ({
+        primary,
+        primaryLabel: formatCategoryLabel(primary),
+        options: [...valueSet]
+          .sort()
+          .map((value) => ({ value, label: formatCategorySubLabel(primary, value) }))
+      }))
+      .sort((a, b) => a.primaryLabel.localeCompare(b.primaryLabel));
   }, [transactions]);
 
   const clearAllFilters = () => {
@@ -220,7 +237,7 @@ export function useTransactionFilters(transactions: Txn[]): UseTransactionFilter
       options: {
         bankOptions,
         accountOptions,
-        categoryOptions
+        categoryOptionsByPrimary
       }
     }
   };
