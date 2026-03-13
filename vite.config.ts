@@ -9,6 +9,7 @@ export default defineConfig({
   define: {
     SUPABASE_URL: JSON.stringify(process.env.SUPABASE_URL ?? ""),
     SUPABASE_PUBLISHABLE_KEY: JSON.stringify(process.env.SUPABASE_PUBLISHABLE_KEY ?? ""),
+    APP_BASE_URL: JSON.stringify(process.env.APP_BASE_URL ?? ""),
   },
   server: {
     proxy: {
