@@ -28,7 +28,7 @@ export default function ToolsPage() {
     <div className="d-flex gap-3 align-items-start">
       <div className="card" style={{ minWidth: 180, flexShrink: 0 }}>
         <div className="card-body p-2">
-          <p className="text-muted small fw-semibold px-2 mb-1 mt-1">Tools</p>
+          <p className="text-muted fw-bold fs-5 px-2 mb-1 mt-1">Tools</p>
           <ul className="nav flex-column">
             {TOOLS.map(t => (
               <li key={t.key} className="nav-item">
