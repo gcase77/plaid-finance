@@ -101,6 +101,14 @@ export type BudgetRuleType = "flat_rate" | "percent_of_income";
 export type CalendarWindow = "week" | "month";
 export type RolloverOption = "none" | "surplus" | "deficit" | "both";
 
+export type BudgetRuleCacheEntry = {
+  start_date: string;
+  end_date: string;
+  associated_spending: number;
+  associated_income: number | null;
+  rollover: number;
+};
+
 export type BudgetRule = {
   id: number;
   user_id: string;
@@ -112,7 +120,7 @@ export type BudgetRule = {
   percent: number | null;
   calendar_window: CalendarWindow;
   rollover_options: RolloverOption;
-  tag: Tag;
+  cache: BudgetRuleCacheEntry[] | null;
 };
 
 export type PeriodHistory = {

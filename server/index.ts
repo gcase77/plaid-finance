@@ -8,6 +8,7 @@ import linkRouter from "./routes/link";
 import transactionsRouter from "./routes/transactions";
 import transactionMetaRouter from "./routes/transaction_meta";
 import tagsRouter from "./routes/tags";
+import budgetRulesRouter from "./routes/budget_rules";
 import { requireAuth } from "./middleware/auth";
 
 const app = express();
@@ -25,6 +26,7 @@ app.use("/api", linkRouter);
 app.use("/api", transactionsRouter);
 app.use("/api", transactionMetaRouter);
 app.use("/api", tagsRouter);
+app.use("/api", budgetRulesRouter);
 
 if (fs.existsSync(distPath)) {
   app.get("*", (req, res, next) => {
