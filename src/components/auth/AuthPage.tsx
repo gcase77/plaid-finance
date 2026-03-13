@@ -161,7 +161,7 @@ export default function AuthPage({ mode }: AuthPageProps) {
           setError(signUpError.message || "Unable to create account.");
           return;
         }
-        setSuccess("Account created. Check your email if confirmation is required.");
+        setSuccess("Account created. Check your email to confirm");
         setPassword("");
         setConfirmPassword("");
         return;
