@@ -92,9 +92,14 @@ export default function TransactionTable({
             const id = txnId(t, idx);
             const isSelected = !!selectedIds?.has(id);
             return (
-              <tr key={id} className={isSelected ? "table-active" : ""}>
+              <tr
+                key={id}
+                className={isSelected ? "table-active" : ""}
+                style={taggingMode ? { cursor: "pointer" } : undefined}
+                onClick={taggingMode ? () => toggle(id, !isSelected) : undefined}
+              >
                 {taggingMode && (
-                  <td>
+                  <td onClick={(e) => e.stopPropagation()}>
                     <input type="checkbox" className="form-check-input" checked={isSelected} onChange={(e) => toggle(id, e.target.checked)} />
                   </td>
                 )}
