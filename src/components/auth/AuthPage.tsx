@@ -6,6 +6,8 @@ import {
   supabase
 } from "../../lib/supabase";
 
+declare const APP_BASE_URL: string;
+
 type AuthMode = "signIn" | "signUp" | "forgotPassword" | "resetPassword";
 
 type AuthPageProps = {
@@ -153,7 +155,7 @@ export default function AuthPage({ mode }: AuthPageProps) {
         const { error: signUpError } = await supabase.auth.signUp({
           email,
           password,
-          options: { emailRedirectTo: `${window.location.origin}/auth` }
+          options: { emailRedirectTo: `${APP_BASE_URL}/auth` }
         });
         if (signUpError) {
           setError(signUpError.message || "Unable to create account.");
@@ -167,7 +169,7 @@ export default function AuthPage({ mode }: AuthPageProps) {
 
       if (isForgot) {
         const { error: forgotError } = await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: `${window.location.origin}/auth/reset-password`
+          redirectTo: `${APP_BASE_URL}/auth/reset-password`
         });
         if (forgotError) {
           setError(forgotError.message || "Unable to send reset email.");
