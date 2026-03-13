@@ -135,7 +135,7 @@ function friendlyApplyError(raw: string): string {
 export default function TagsTool({ transactions, token, invalidateTransactionMeta }: Props) {
   const queryClient = useQueryClient();
   const filters = useTransactionFilters(transactions);
-  const [tab, setTab] = useState<"my-tags" | "tag-transactions">("my-tags");
+  const [tab, setTab] = useState<"my-tags" | "tag-transactions">("tag-transactions");
   const [myTagsMode, setMyTagsMode] = useState<MyTagsMode>("default");
   const [createName, setCreateName] = useState("");
   const [createKind, setCreateKind] = useState<TagUiKind>("spending");
@@ -334,13 +334,13 @@ export default function TagsTool({ transactions, token, invalidateTransactionMet
 
         <ul className="nav nav-tabs mb-3">
           <li className="nav-item">
-            <button className={`nav-link ${tab === "my-tags" ? "active" : ""}`} onClick={() => setTab("my-tags")}>
-              My Tags
+            <button className={`nav-link ${tab === "tag-transactions" ? "active" : ""}`} onClick={() => setTab("tag-transactions")}>
+              Tag Transactions
             </button>
           </li>
           <li className="nav-item">
-            <button className={`nav-link ${tab === "tag-transactions" ? "active" : ""}`} onClick={() => setTab("tag-transactions")}>
-              Tag Transactions
+            <button className={`nav-link ${tab === "my-tags" ? "active" : ""}`} onClick={() => setTab("my-tags")}>
+              My Tags
             </button>
           </li>
         </ul>
@@ -417,7 +417,7 @@ export default function TagsTool({ transactions, token, invalidateTransactionMet
                   { label: "Income tags", list: incomeTags },
                   { label: "Spending tags", list: spendingTags },
                   { label: "Meta tags", list: metaOnlyTags }
-                ] as const).map(({ label, list, sub }) => (
+                ] as const).map(({ label, list }) => (
                   <div key={label} className="col-12 col-md-4">
                     <div className="border rounded p-2 h-100">
                       <div className="d-flex justify-content-between align-items-center mb-1">

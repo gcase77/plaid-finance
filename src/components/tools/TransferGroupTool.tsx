@@ -237,15 +237,14 @@ export default function TransferGroupTool({ transactions, token, invalidateTrans
                               <TxnCols t={pair.outflow} />
                               <TxnCols t={pair.inflow} />
                               <td className="text-end">
-                                {isAmbiguous ? (
-                                  <span className="badge bg-warning text-dark">Ambiguous</span>
-                                ) : (
+                                <div className="d-flex justify-content-end align-items-center gap-2">
                                   <button className="btn btn-sm btn-outline-primary"
                                     disabled={savingId === pair.pairId}
                                     onClick={() => addGroup(pair)}>
                                     {savingId === pair.pairId ? "..." : "Add"}
                                   </button>
-                                )}
+                                  {isAmbiguous && <span className="badge bg-warning text-dark">Ambiguous</span>}
+                                </div>
                               </td>
                             </tr>
                           );
