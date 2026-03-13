@@ -149,6 +149,7 @@ model budget_rules {
   percent          Float?
   calendar_window  CalendarWindow
   rollover_options RolloverOption
+  cache            Json?
 
   users users @relation(fields: [user_id], references: [id], onDelete: Cascade)
   tag   tags  @relation(fields: [tag_id], references: [id], onDelete: Cascade)
