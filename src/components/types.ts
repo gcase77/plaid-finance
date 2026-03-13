@@ -106,7 +106,7 @@ export type BudgetRuleCacheEntry = {
   end_date: string;
   associated_spending: number;
   associated_income: number | null;
-  rollover: number;
+  rollover: number | null;
 };
 
 export type BudgetRule = {
