@@ -1,7 +1,16 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { buildAuthHeaders } from "../../lib/auth";
-import type { BudgetRule, BudgetRuleCacheEntry, BudgetRuleType, CalendarWindow, RolloverOption, Tag } from "../types";
+import type {
+  BudgetRule,
+  BudgetRuleCacheEntry,
+  BudgetRuleType,
+  CalendarWindow,
+  RolloverOption,
+  Tag,
+  TransactionBaseRow,
+  TransactionMetaRow
+} from "../types";
 import LoadingSpinner from "../shared/LoadingSpinner";
 
 type Props = { token: string | null };
@@ -52,6 +61,7 @@ const formToBody = (f: FormState) => ({
 
 const ROLLOVER_OPTS: RolloverOption[] = ["none", "surplus", "deficit", "both"];
 const ROLLOVER_LABELS: Record<RolloverOption, string> = { none: "None", surplus: "Surplus", deficit: "Deficit", both: "Both" };
+const EMPTY_TAGS: Tag[] = [];
 
 function BtnGroup<T extends string>({
   options, labels, value, onChange
@@ -71,18 +81,40 @@ function BtnGroup<T extends string>({
   );
 }
 
-function RuleForm({ form, setForm, spendingTags, incomeTags, onSave, onCancel, isPending, error }: {
+function RuleForm({ form, setForm, spendingTags, useEarliestStart, setUseEarliestStart, getEarliestStartDate, checkboxId, onSave, onCancel, isPending, error }: {
   form: FormState;
-  setForm: (f: FormState) => void;
+  setForm: React.Dispatch<React.SetStateAction<FormState>>;
   spendingTags: Tag[];
-  incomeTags: Tag[];
+  useEarliestStart: boolean;
+  setUseEarliestStart: (value: boolean) => void;
+  getEarliestStartDate: (tagId: number) => Promise<string | null>;
+  checkboxId: string;
   onSave: () => void;
   onCancel: () => void;
   isPending: boolean;
   error: string | null;
 }) {
-  const set = (key: keyof FormState) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
-    setForm({ ...form, [key]: e.target.value });
+  const set = (key: keyof FormState) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    if (key === "start_date" && useEarliestStart) setUseEarliestStart(false);
+    setForm((prev) => ({ ...prev, [key]: e.target.value }));
+  };
+
+  const handleTagChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const nextTagId = e.target.value;
+    setForm((prev) => ({ ...prev, tag_id: nextTagId }));
+    if (!useEarliestStart || !nextTagId) return;
+    const earliest = await getEarliestStartDate(Number(nextTagId));
+    if (!earliest) return;
+    setForm((prev) => ({ ...prev, tag_id: nextTagId, start_date: earliest }));
+  };
+
+  const handleUseEarliestChange = async (checked: boolean) => {
+    setUseEarliestStart(checked);
+    if (!checked || !form.tag_id) return;
+    const earliest = await getEarliestStartDate(Number(form.tag_id));
+    if (!earliest) return;
+    setForm((prev) => ({ ...prev, start_date: earliest }));
+  };
 
   return (
     <div className="border rounded p-3 mb-3 bg-light">
@@ -94,23 +126,28 @@ function RuleForm({ form, setForm, spendingTags, incomeTags, onSave, onCancel, i
         </div>
         <div className="col-12 col-md-4">
           <label className="form-label small mb-1">Tag</label>
-          <select className="form-select form-select-sm" value={form.tag_id} onChange={set("tag_id")}>
+          <select className="form-select form-select-sm" value={form.tag_id} onChange={(e) => void handleTagChange(e)}>
             <option value="">Select tag…</option>
-            {incomeTags.length > 0 && (
-              <optgroup label="Income">
-                {incomeTags.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-              </optgroup>
-            )}
             {spendingTags.length > 0 && (
-              <optgroup label="Spending">
-                {spendingTags.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-              </optgroup>
+              spendingTags.map(t => <option key={t.id} value={t.id}>{t.name}</option>)
             )}
           </select>
         </div>
         <div className="col-12 col-md-4">
           <label className="form-label small mb-1">Start Date</label>
-          <input type="date" className="form-control form-control-sm" value={form.start_date} onChange={set("start_date")} />
+          <input type="date" className="form-control form-control-sm mb-1" value={form.start_date} onChange={set("start_date")} />
+          <div className="form-check">
+            <input
+              className="form-check-input"
+              type="checkbox"
+              id={checkboxId}
+              checked={useEarliestStart}
+              onChange={(e) => void handleUseEarliestChange(e.target.checked)}
+            />
+            <label className="form-check-label small" htmlFor={checkboxId}>
+              Use earliest tagged transaction
+            </label>
+          </div>
         </div>
       </div>
       <div className="row g-2 mb-3 align-items-end">
@@ -195,8 +232,8 @@ function CacheTable({ cache, ruleType }: { cache: BudgetRuleCacheEntry[]; ruleTy
               {ruleType === "percent_of_income" && (
                 <td className="text-end">{e.associated_income != null ? `$${e.associated_income.toFixed(2)}` : "—"}</td>
               )}
-              <td className={`text-end ${e.rollover >= 0 ? "text-success" : "text-danger"}`}>
-                {e.rollover >= 0 ? "+" : ""}${Math.abs(e.rollover).toFixed(2)}
+              <td className={`text-end ${e.rollover == null ? "text-muted" : e.rollover >= 0 ? "text-success" : "text-danger"}`}>
+                {e.rollover == null ? "—" : `${e.rollover >= 0 ? "+" : "-"}$${Math.abs(e.rollover).toFixed(2)}`}
               </td>
             </tr>
           ))}
@@ -215,6 +252,8 @@ export default function BudgetRulesTool({ token }: Props) {
   const [editForm, setEditForm] = useState<FormState>(BLANK);
   const [createError, setCreateError] = useState<string | null>(null);
   const [editError, setEditError] = useState<string | null>(null);
+  const [createUseEarliestStart, setCreateUseEarliestStart] = useState(false);
+  const [editUseEarliestStart, setEditUseEarliestStart] = useState(false);
 
   const rulesQuery = useQuery({
     queryKey: ["budget_rules"],
@@ -238,10 +277,38 @@ export default function BudgetRulesTool({ token }: Props) {
     }
   });
 
-  const tags = tagsQuery.data ?? [];
+  const tags = tagsQuery.data ?? EMPTY_TAGS;
   const tagsById = useMemo(() => new Map(tags.map(t => [t.id, t])), [tags]);
   const spendingTags = useMemo(() => tags.filter(t => t.type.startsWith("spending")), [tags]);
-  const incomeTags = useMemo(() => tags.filter(t => t.type.startsWith("income")), [tags]);
+
+  const getEarliestStartDate = async (tagId: number) => {
+    if (!Number.isInteger(tagId)) return null;
+
+    const txRows = queryClient
+      .getQueriesData<TransactionBaseRow[]>({ queryKey: ["transactions"] })
+      .flatMap(([, rows]) => (Array.isArray(rows) ? rows : []));
+    const metaRows = queryClient.getQueryData<TransactionMetaRow[]>(["transaction_meta"]) ?? [];
+    if (!txRows.length || !metaRows.length) return null;
+
+    const metaByTxnId = new Map(metaRows.map((row) => [String(row.transaction_id ?? ""), row]));
+    let earliestMs: number | null = null;
+
+    for (const txn of txRows) {
+      const txnId = String(txn.transaction_id ?? "");
+      if (!txnId) continue;
+      const meta = metaByTxnId.get(txnId);
+      if (!meta) continue;
+      if (meta.bucket_1_tag_id !== tagId && meta.bucket_2_tag_id !== tagId) continue;
+
+      const dateRaw = txn.datetime ?? txn.authorized_datetime;
+      if (!dateRaw) continue;
+      const ms = new Date(dateRaw).valueOf();
+      if (Number.isNaN(ms)) continue;
+      if (earliestMs == null || ms < earliestMs) earliestMs = ms;
+    }
+
+    return earliestMs == null ? null : new Date(earliestMs).toISOString().slice(0, 10);
+  };
 
   const createMutation = useMutation({
     mutationFn: async (body: object) => {
@@ -256,6 +323,7 @@ export default function BudgetRulesTool({ token }: Props) {
       setMode("default");
       setCreateForm(BLANK);
       setCreateError(null);
+      setCreateUseEarliestStart(false);
       await queryClient.invalidateQueries({ queryKey: ["budget_rules"] });
     },
     onError: (e: Error) => setCreateError(e.message)
@@ -299,9 +367,12 @@ export default function BudgetRulesTool({ token }: Props) {
             form={createForm}
             setForm={setCreateForm}
             spendingTags={spendingTags}
-            incomeTags={incomeTags}
+            useEarliestStart={createUseEarliestStart}
+            setUseEarliestStart={setCreateUseEarliestStart}
+            getEarliestStartDate={getEarliestStartDate}
+            checkboxId="create-use-earliest-start-date"
             onSave={() => { setCreateError(null); createMutation.mutate(formToBody(createForm)); }}
-            onCancel={() => { setMode("default"); setCreateForm(BLANK); setCreateError(null); }}
+            onCancel={() => { setMode("default"); setCreateForm(BLANK); setCreateError(null); setCreateUseEarliestStart(false); }}
             isPending={createMutation.isPending}
             error={createError}
           />
@@ -310,7 +381,7 @@ export default function BudgetRulesTool({ token }: Props) {
             <button
               className="btn btn-sm btn-outline-primary px-3"
               style={{ minWidth: 130 }}
-              onClick={() => { setMode("creating"); setCreateForm(BLANK); setCreateError(null); }}
+              onClick={() => { setMode("creating"); setCreateForm(BLANK); setCreateError(null); setCreateUseEarliestStart(false); }}
             >
               New rule
             </button>
@@ -350,9 +421,12 @@ export default function BudgetRulesTool({ token }: Props) {
                         form={editForm}
                         setForm={setEditForm}
                         spendingTags={spendingTags}
-                        incomeTags={incomeTags}
+                        useEarliestStart={editUseEarliestStart}
+                        setUseEarliestStart={setEditUseEarliestStart}
+                        getEarliestStartDate={getEarliestStartDate}
+                        checkboxId={`edit-use-earliest-start-date-${rule.id}`}
                         onSave={() => { setEditError(null); updateMutation.mutate({ id: rule.id, body: formToBody(editForm) }); }}
-                        onCancel={() => { setEditingId(null); setEditError(null); }}
+                        onCancel={() => { setEditingId(null); setEditError(null); setEditUseEarliestStart(false); }}
                         isPending={updateMutation.isPending}
                         error={editError}
                       />
@@ -381,7 +455,7 @@ export default function BudgetRulesTool({ token }: Props) {
                           {mode !== "deleting" && (
                             <button
                               className="btn btn-sm btn-outline-secondary py-0"
-                              onClick={() => { setEditingId(rule.id); setEditForm(ruleToForm(rule)); setEditError(null); }}
+                              onClick={() => { setEditingId(rule.id); setEditForm(ruleToForm(rule)); setEditError(null); setEditUseEarliestStart(false); }}
                             >
                               Edit
                             </button>
