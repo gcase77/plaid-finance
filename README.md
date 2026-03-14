@@ -164,6 +164,12 @@ L, U
 \text{percent} \cdot \text{income}_{i-1}
 ```
 
+**If budget rule is flat amount type:**
+
+```math
+\text{base\_budget}_i = \text{flat\_amount}
+```
+
 # Random
 
 ## Plaid transactions fetchers
