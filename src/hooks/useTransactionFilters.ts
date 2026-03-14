@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import type { TextMode, AmountMode, TagStateFilter, Txn } from "../components/types";
+import type { TextMode, TagStateFilter, Txn } from "../components/types";
 import { buildDatePreset } from "../utils/datePresets";
 import { formatCategoryLabel, formatCategorySubLabel, getTxnDateOnly } from "../utils/transactionUtils";
 
@@ -17,8 +17,8 @@ export type TransactionFilterState = {
   selectedBanks: string[];
   selectedAccounts: string[];
   selectedCategories: string[];
-  amountMode: AmountMode;
-  amountFilter: string;
+  amountMin: string;
+  amountMax: string;
   dateStart: string;
   dateEnd: string;
   tagStateFilter: TagStateFilter;
@@ -34,8 +34,8 @@ export type TransactionFilterActions = {
   setSelectedBanks: (v: string[]) => void;
   setSelectedAccounts: (v: string[]) => void;
   setSelectedCategories: (v: string[]) => void;
-  setAmountMode: (v: AmountMode) => void;
-  setAmountFilter: (v: string) => void;
+  setAmountMin: (v: string) => void;
+  setAmountMax: (v: string) => void;
   setDateStart: (v: string) => void;
   setDateEnd: (v: string) => void;
   setTagStateFilter: (v: TagStateFilter) => void;
@@ -68,8 +68,8 @@ export function useTransactionFilters(transactions: Txn[]): UseTransactionFilter
   const [selectedBanks, setSelectedBanks] = useState<string[]>([]);
   const [selectedAccounts, setSelectedAccounts] = useState<string[]>([]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [amountMode, setAmountMode] = useState<AmountMode>("");
-  const [amountFilter, setAmountFilter] = useState<string>("");
+  const [amountMin, setAmountMin] = useState("");
+  const [amountMax, setAmountMax] = useState("");
   const [dateStart, setDateStart] = useState("");
   const [dateEnd, setDateEnd] = useState("");
   const [tagStateFilter, setTagStateFilter] = useState<TagStateFilter>("all");
@@ -77,7 +77,8 @@ export function useTransactionFilters(transactions: Txn[]): UseTransactionFilter
   const [filterOperator, setFilterOperator] = useState<"and" | "or">("and");
 
   const filteredTransactions = useMemo(() => {
-    const minAmount = amountFilter.trim() ? Number(amountFilter) : null;
+    const minVal = amountMin.trim() ? Number(amountMin) : null;
+    const maxVal = amountMax.trim() ? Number(amountMax) : null;
     const predicates: Array<(t: Txn) => boolean> = [];
 
     if (nameFilter.trim()) {
@@ -96,10 +97,12 @@ export function useTransactionFilters(transactions: Txn[]): UseTransactionFilter
       const cat = t.personal_finance_category?.detailed || t.personal_finance_category?.primary || "";
       return selectedCategories.includes(cat);
     });
-    if (amountMode && minAmount !== null && Number.isFinite(minAmount)) {
+    if ((minVal !== null && Number.isFinite(minVal)) || (maxVal !== null && Number.isFinite(maxVal))) {
       predicates.push((t) => {
-        const amt = Number(t.amount || 0);
-        return amountMode === "gt" ? amt > minAmount : amt < minAmount;
+        const amt = Number(t.amount ?? 0);
+        if (minVal !== null && Number.isFinite(minVal) && amt < minVal) return false;
+        if (maxVal !== null && Number.isFinite(maxVal) && amt > maxVal) return false;
+        return true;
       });
     }
     if (dateStart || dateEnd) {
@@ -136,7 +139,7 @@ export function useTransactionFilters(transactions: Txn[]): UseTransactionFilter
     return transactions.filter((t) =>
       filterOperator === "or" ? predicates.some((p) => p(t)) : predicates.every((p) => p(t))
     );
-  }, [transactions, filterOperator, nameFilter, nameMode, merchantFilter, merchantMode, selectedBanks, selectedAccounts, selectedCategories, amountFilter, amountMode, dateStart, dateEnd, tagStateFilter, selectedTagIds]);
+  }, [transactions, filterOperator, nameFilter, nameMode, merchantFilter, merchantMode, selectedBanks, selectedAccounts, selectedCategories, amountMin, amountMax, dateStart, dateEnd, tagStateFilter, selectedTagIds]);
 
   const bankOptions = useMemo(() => {
     const m = new Map<string, string>();
@@ -186,8 +189,8 @@ export function useTransactionFilters(transactions: Txn[]): UseTransactionFilter
     setSelectedBanks([]);
     setSelectedAccounts([]);
     setSelectedCategories([]);
-    setAmountMode("");
-    setAmountFilter("");
+    setAmountMin("");
+    setAmountMax("");
     setDateStart("");
     setDateEnd("");
     setTagStateFilter("all");
@@ -209,8 +212,8 @@ export function useTransactionFilters(transactions: Txn[]): UseTransactionFilter
       selectedBanks,
       selectedAccounts,
       selectedCategories,
-      amountMode,
-      amountFilter,
+      amountMin,
+      amountMax,
       dateStart,
       dateEnd,
       tagStateFilter,
@@ -225,8 +228,8 @@ export function useTransactionFilters(transactions: Txn[]): UseTransactionFilter
       setSelectedBanks,
       setSelectedAccounts,
       setSelectedCategories,
-      setAmountMode,
-      setAmountFilter,
+      setAmountMin,
+      setAmountMax,
       setDateStart,
       setDateEnd,
       setTagStateFilter,
