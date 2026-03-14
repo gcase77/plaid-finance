@@ -147,7 +147,7 @@ class
 
 ### Budget Calculation
 
-```latex
+```math
 \text{effective\_budget}_i = \text{base\_budget}_i + \text{balance}_{i-1}
 \qquad
 \text{balance}_i =
@@ -159,7 +159,7 @@ L, U
 
 **If budget rule is percent of income type:**
 
-```latex
+```math
 \text{base\_budget}_i =
 \text{percent} \cdot \text{income}_{i-1}
 ```
