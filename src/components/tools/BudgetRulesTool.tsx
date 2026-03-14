@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { buildAuthHeaders } from "../../lib/auth";
 import type {
@@ -62,6 +62,46 @@ const formToBody = (f: FormState) => ({
 const ROLLOVER_OPTS: RolloverOption[] = ["none", "surplus", "deficit", "both"];
 const ROLLOVER_LABELS: Record<RolloverOption, string> = { none: "None", surplus: "Surplus", deficit: "Deficit", both: "Both" };
 const EMPTY_TAGS: Tag[] = [];
+
+const WINDOW_SIZE = 3;
+const ON_BUDGET_EPS = 0.01;
+
+const MONTH_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+function toShortDate(iso: string): string {
+  const parts = iso.split("-");
+  if (parts.length !== 3) return iso;
+  const m = Number(parts[1]);
+  const d = Number(parts[2]);
+  if (Number.isNaN(m) || Number.isNaN(d) || m < 1 || m > 12) return iso;
+  return `${MONTH_SHORT[m - 1]} ${d}`;
+}
+
+function budgetDiff(e: BudgetRuleCacheEntry): number {
+  return (e.effective_budget ?? 0) - e.associated_spend;
+}
+
+function statusColor(e: BudgetRuleCacheEntry): "success" | "danger" | "warning" {
+  const diff = budgetDiff(e);
+  if (Math.abs(diff) < ON_BUDGET_EPS) return "warning";
+  return diff >= 0 ? "success" : "danger";
+}
+
+function statusBadge(e: BudgetRuleCacheEntry): string {
+  const diff = budgetDiff(e);
+  const x = Math.abs(diff).toFixed(0);
+  if (Math.abs(diff) < ON_BUDGET_EPS) return "= on budget";
+  return diff >= 0 ? `▼ $${x} saved` : `▲ $${x} over`;
+}
+
+function statusTooltip(e: BudgetRuleCacheEntry): string {
+  const budget = e.effective_budget ?? 0;
+  const diff = budgetDiff(e);
+  if (Math.abs(diff) < ON_BUDGET_EPS) return `Exactly on budget ($${budget.toFixed(2)})`;
+  const d = Math.abs(diff).toFixed(2);
+  return diff >= 0
+    ? `Under by $${d} — $${e.associated_spend.toFixed(2)} of $${budget.toFixed(2)}`
+    : `Over by $${d} of $${budget.toFixed(2)} budget`;
+}
 
 function BtnGroup<T extends string>({
   options, labels, value, onChange
@@ -211,6 +251,116 @@ function RuleForm({ form, setForm, spendingTags, useEarliestStart, setUseEarlies
   );
 }
 
+function BudgetStatusBlock({ cache }: { cache: BudgetRuleCacheEntry[] }) {
+  const periods = useMemo(() => cache.slice(1), [cache]);
+  const [windowStart, setWindowStart] = useState(0);
+  const [hoveredRow, setHoveredRow] = useState<number | null>(null);
+
+  useEffect(() => {
+    setWindowStart(Math.max(0, periods.length - WINDOW_SIZE));
+  }, [periods.length]);
+
+  if (!periods.length) return <div className="text-muted small py-2">No period data yet.</div>;
+
+  const visible = periods.slice(windowStart, windowStart + WINDOW_SIZE);
+  const maxVal = Math.max(
+    ...visible.map((p) => Math.max(p.effective_budget ?? 0, p.associated_spend)),
+    1
+  );
+  const canUp = windowStart > 0;
+  const canDown = windowStart + WINDOW_SIZE < periods.length;
+  const newestPeriod = periods[periods.length - 1];
+  const summaryDiff = newestPeriod ? budgetDiff(newestPeriod) : null;
+  const summaryEnd = newestPeriod ? toShortDate(newestPeriod.end_date) : null;
+
+  return (
+    <div className="mb-2">
+      <div className="d-flex align-items-center gap-2 mb-1 flex-wrap">
+        {summaryDiff != null && summaryEnd != null && newestPeriod?.effective_budget != null && (
+          <p className="text-muted mb-0 flex-grow-1" style={{ fontSize: "0.95rem" }}>
+            {summaryDiff >= 0
+              ? `You have $${summaryDiff.toFixed(2)} left to spend before ${summaryEnd}`
+              : `You are $${Math.abs(summaryDiff).toFixed(2)} over budget until ${summaryEnd}`}
+          </p>
+        )}
+        <div className="d-flex">
+          <button
+            type="button"
+            className="btn btn-outline-secondary py-0 px-1"
+            style={{ fontSize: "0.7rem", lineHeight: 1, minWidth: 24 }}
+            disabled={!canDown}
+            onClick={() => setWindowStart((s) => Math.min(periods.length - WINDOW_SIZE, s + WINDOW_SIZE))}
+            aria-label="Newer periods"
+          >
+            ▲
+          </button>
+          <button
+            type="button"
+            className="btn btn-outline-secondary py-0 px-1 ms-1"
+            style={{ fontSize: "0.7rem", lineHeight: 1, minWidth: 24 }}
+            disabled={!canUp}
+            onClick={() => setWindowStart((s) => Math.max(0, s - WINDOW_SIZE))}
+            aria-label="Older periods"
+          >
+            ▼
+          </button>
+        </div>
+      </div>
+      <style>{`.budget-window-enter { animation: budgetWindowFade 0.2s ease; } @keyframes budgetWindowFade { from { opacity: 0; } to { opacity: 1; } }`}</style>
+      <div key={windowStart} className="border rounded bg-light px-2 py-2 budget-window-enter" style={{ maxHeight: 220, overflowY: "auto" }}>
+        {[...visible].reverse().map((e, revI) => {
+          const i = visible.length - 1 - revI;
+          const colorKey = statusColor(e);
+          const budget = e.effective_budget ?? 0;
+          const spendPct = maxVal > 0 ? (e.associated_spend / maxVal) * 100 : 0;
+          const budgetPct = maxVal > 0 && budget > 0 ? (budget / maxVal) * 100 : 0;
+          const tip = statusTooltip(e);
+          const showTip = hoveredRow === i;
+          return (
+            <div key={`${e.end_date}-${i}`} className="d-flex align-items-center gap-2 mb-2 small">
+              <span className="text-muted text-nowrap" style={{ width: 44, fontSize: "0.75rem" }}>
+                {toShortDate(e.end_date)}
+              </span>
+              <div
+                className="flex-grow-1 position-relative rounded bg-secondary bg-opacity-25"
+                style={{ height: 14, cursor: "help" }}
+                onMouseEnter={() => setHoveredRow(i)}
+                onMouseLeave={() => setHoveredRow(null)}
+              >
+                {showTip && (
+                  <span
+                    className="position-absolute start-50 translate-middle-x rounded px-2 py-1 bg-dark text-white text-nowrap"
+                    style={{
+                      ...(revI === 0 ? { top: "100%", marginTop: 4 } : { bottom: "100%", marginBottom: 4 }),
+                      fontSize: "0.7rem",
+                      zIndex: 10,
+                    }}
+                  >
+                    {tip}
+                  </span>
+                )}
+                <div
+                  className={`position-absolute top-0 bottom-0 start-0 rounded opacity-75 ${colorKey === "success" ? "bg-success" : colorKey === "danger" ? "bg-danger" : "bg-warning"}`}
+                  style={{ width: `${spendPct}%` }}
+                />
+                {budget > 0 && (
+                  <div
+                    className="position-absolute top-0 bottom-0 bg-dark opacity-75"
+                    style={{ left: `${budgetPct}%`, width: 2, marginLeft: -1 }}
+                  />
+                )}
+              </div>
+              <span className={`${colorKey === "success" ? "text-success" : colorKey === "danger" ? "text-danger" : "text-warning"} text-nowrap`} style={{ minWidth: 72, fontSize: "0.75rem", textAlign: "right" }}>
+                {e.effective_budget != null ? statusBadge(e) : "—"}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function CacheTable({ cache, ruleType }: { cache: BudgetRuleCacheEntry[]; ruleType: BudgetRuleType }) {
   if (!cache.length) return <div className="text-muted small py-2">No period data yet.</div>;
   return (
@@ -227,8 +377,8 @@ function CacheTable({ cache, ruleType }: { cache: BudgetRuleCacheEntry[]; ruleTy
           </tr>
         </thead>
         <tbody>
-          {cache.map((e, i) => (
-            <tr key={i}>
+          {[...cache].reverse().map((e, i) => (
+            <tr key={e.end_date}>
               <td className="text-nowrap">{e.start_date} – {e.end_date}</td>
               <td className="text-end">{e.base_budget == null ? "—" : `$${e.base_budget.toFixed(2)}`}</td>
               <td className="text-end">{e.effective_budget == null ? "—" : `$${e.effective_budget.toFixed(2)}`}</td>
@@ -358,6 +508,18 @@ export default function BudgetRulesTool({ token }: Props) {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["budget_rules"] })
   });
 
+  const refreshMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const res = await fetch(`/api/budget_rules/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", ...buildAuthHeaders(token) },
+        body: JSON.stringify({})
+      });
+      if (!res.ok) { const d = await res.json().catch(() => ({})); throw new Error(d?.error || `Failed to refresh (${res.status})`); }
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["budget_rules"] })
+  });
+
   const rules = rulesQuery.data ?? [];
 
   return (
@@ -453,16 +615,28 @@ export default function BudgetRulesTool({ token }: Props) {
                           <button
                             className="btn btn-sm btn-outline-secondary py-0"
                             onClick={() => setExpandedId(isExpanded ? null : rule.id)}
+                            aria-label={isExpanded ? "Collapse period table" : "Expand period table"}
                           >
                             {isExpanded ? "▲" : "▼"} Periods
                           </button>
                           {mode !== "deleting" && (
-                            <button
-                              className="btn btn-sm btn-outline-secondary py-0"
-                              onClick={() => { setEditingId(rule.id); setEditForm(ruleToForm(rule)); setEditError(null); setEditUseEarliestStart(false); }}
-                            >
-                              Edit
-                            </button>
+                            <>
+                              <button
+                                className="btn btn-sm btn-outline-secondary py-0"
+                                onClick={() => refreshMutation.mutate(rule.id)}
+                                disabled={refreshMutation.isPending}
+                                aria-label="Refresh rule"
+                                title="Refresh"
+                              >
+                                ↻
+                              </button>
+                              <button
+                                className="btn btn-sm btn-outline-secondary py-0"
+                                onClick={() => { setEditingId(rule.id); setEditForm(ruleToForm(rule)); setEditError(null); setEditUseEarliestStart(false); }}
+                              >
+                                Edit
+                              </button>
+                            </>
                           )}
                           {mode === "deleting" && (
                             <button
@@ -474,6 +648,9 @@ export default function BudgetRulesTool({ token }: Props) {
                             </button>
                           )}
                         </div>
+                      </div>
+                      <div className="px-3 pb-2">
+                        <BudgetStatusBlock cache={(rule.cache as BudgetRuleCacheEntry[] | null) ?? []} />
                       </div>
                       {isExpanded && (
                         <div className="border-top px-3 py-2">

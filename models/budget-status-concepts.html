@@ -1,0 +1,217 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Budget Status — Concept E</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0e1117;
+      --surface: #161b22;
+      --border: #21262d;
+      --ink: #e6edf3;
+      --muted: #7d8590;
+      --green: #3fb950;
+      --red: #f85149;
+      --yellow: #d29922;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Space Grotesk', sans-serif; background: var(--bg); color: var(--ink); padding: 32px 24px; }
+
+    .concept-wrap { max-width: 520px; }
+    .card-shell {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px 16px;
+    }
+    .concept-window {
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      padding: 8px;
+      max-height: 220px;
+    }
+
+    .nav-arrow {
+      display: block;
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--ink);
+      padding: 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 18px;
+      line-height: 1;
+    }
+    .nav-arrow:hover:not(:disabled) { background: var(--border); }
+    .nav-arrow:disabled { opacity: 0.4; cursor: not-allowed; }
+    .nav-arrow-top { margin-bottom: 8px; }
+    .nav-arrow-bottom { margin-top: 8px; }
+
+    .concept-e .bullet-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      position: relative;
+    }
+    .concept-e .bullet-row:hover .tooltip-e { display: block; }
+    .tooltip-e {
+      display: none;
+      position: absolute;
+      bottom: calc(100% + 6px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1c2128;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px 10px;
+      font-size: 11px;
+      color: var(--ink);
+      white-space: nowrap;
+      pointer-events: none;
+      z-index: 10;
+      box-shadow: 0 4px 16px rgba(0,0,0,.5);
+    }
+    .concept-e .bl { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--muted); width: 44px; }
+    .concept-e .bullet-track {
+      flex: 1;
+      height: 14px;
+      background: var(--border);
+      border-radius: 3px;
+      position: relative;
+      overflow: visible;
+    }
+    .concept-e .b-range {
+      position: absolute;
+      top: 2px; bottom: 2px; left: 0;
+      border-radius: 2px;
+      background: rgba(88,166,255,.18);
+    }
+    .concept-e .b-spend {
+      position: absolute;
+      top: 0; bottom: 0; left: 0;
+      border-radius: 3px;
+    }
+    .concept-e .b-marker {
+      position: absolute;
+      top: -2px; bottom: -2px;
+      width: 3px;
+      background: #fff;
+      border-radius: 1px;
+    }
+    .concept-e .b-pct {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      min-width: 72px;
+      text-align: right;
+      white-space: nowrap;
+    }
+  </style>
+</head>
+<body>
+
+<div class="concept-wrap">
+  <button type="button" class="nav-arrow nav-arrow-top" id="nav-up" aria-label="Previous">▲</button>
+  <div class="card-shell">
+    <div class="concept-window concept-e" id="ce"></div>
+  </div>
+  <button type="button" class="nav-arrow nav-arrow-bottom" id="nav-down" aria-label="Next">▼</button>
+</div>
+
+<script>
+  const periods = (function() {
+    const base = new Date('2026-02-10');
+    const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+    const ratios = [0.65, 0.72, 0.85, 0.92, 1, 1, 1.08, 1.15, 1.22];
+    const budgets = [400, 450, 500, 520, 550, 600, 620, 680, 710];
+    const out = [];
+    for (let i = 0; i < 50; i++) {
+      const d = new Date(base);
+      d.setDate(d.getDate() + i * 7);
+      const end = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      const budget = pick(budgets);
+      const spend = Math.round(budget * pick(ratios) * 100) / 100;
+      out.push({ end, budget, spend });
+    }
+    return out;
+  })();
+
+  const WINDOW_SIZE = 6;
+  let currentStart = 0;
+
+  function over(p) { return p.spend > p.budget; }
+  function exact(p) { return p.spend === p.budget; }
+  function color(p) {
+    if (exact(p)) return '#d29922';
+    return over(p) ? '#f85149' : '#3fb950';
+  }
+  function msg(p) {
+    const diff = Math.abs(p.budget - p.spend).toFixed(2);
+    if (exact(p)) return `Exactly on budget ($${p.budget.toFixed(2)})`;
+    if (over(p)) return `Over by $${diff} of $${p.budget.toFixed(2)} budget`;
+    return `Under by $${diff} — $${p.spend.toFixed(2)} of $${p.budget.toFixed(2)}`;
+  }
+  function badge(p) {
+    const diff = Math.abs(p.budget - p.spend).toFixed(0);
+    if (exact(p)) return '= on budget';
+    return over(p) ? `▲ $${diff} over` : `▼ $${diff} saved`;
+  }
+
+  function getVisible() {
+    return periods.slice(currentStart, currentStart + WINDOW_SIZE);
+  }
+
+  function renderE(visible) {
+    const el = document.getElementById('ce');
+    el.innerHTML = '';
+    const maxVal = Math.max(...visible.map(p => Math.max(p.budget, p.spend)));
+    visible.forEach(p => {
+      const spendW = (p.spend / maxVal) * 100;
+      const budgetW = (p.budget / maxVal) * 100;
+      const row = document.createElement('div');
+      row.className = 'bullet-row';
+      row.innerHTML = `
+        <span class="bl">${p.end}</span>
+        <div class="bullet-track">
+          <div class="b-range" style="width:${budgetW}%"></div>
+          <div class="b-spend" style="width:${spendW}%;background:${color(p)};opacity:.8"></div>
+          <div class="b-marker" style="left:${budgetW}%"></div>
+        </div>
+        <span class="b-pct" style="color:${color(p)}">${badge(p)}</span>
+        <div class="tooltip-e">${msg(p)}</div>
+      `;
+      el.appendChild(row);
+    });
+  }
+
+  function updateNav() {
+    document.getElementById('nav-up').disabled = currentStart === 0;
+    document.getElementById('nav-down').disabled = currentStart + WINDOW_SIZE >= periods.length;
+  }
+
+  function renderAll() {
+    renderE(getVisible());
+    updateNav();
+  }
+
+  document.getElementById('nav-up').onclick = () => {
+    currentStart = Math.max(0, currentStart - WINDOW_SIZE);
+    renderAll();
+  };
+  document.getElementById('nav-down').onclick = () => {
+    if (currentStart + WINDOW_SIZE < periods.length) {
+      currentStart += WINDOW_SIZE;
+      renderAll();
+    }
+  };
+
+  renderAll();
+</script>
+
+</body>
+</html>

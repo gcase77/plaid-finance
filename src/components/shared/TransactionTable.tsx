@@ -1,6 +1,17 @@
 import type { Tag, Txn } from "../types";
 import { getTxnIconUrl, formatTxnDate, formatTxnAmount, formatTxnDetectedCategory } from "../../utils/transactionUtils";
 
+function getTxnSummary(transactions: Txn[]) {
+  const nonTransfer = transactions.filter((t) => !t.account_transfer_group);
+  const income = nonTransfer.filter((t) => (t.amount ?? 0) < 0).reduce((s, t) => s + Math.abs(t.amount ?? 0), 0);
+  const spending = nonTransfer.filter((t) => (t.amount ?? 0) > 0).reduce((s, t) => s + (t.amount ?? 0), 0);
+  return { income, spending, count: transactions.length };
+}
+
+function formatCurrency(amount: number) {
+  return `$ ${amount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
 function formatAccountDisplay(institution: string, account: string): string {
   if (!account) return institution || "";
   if (!institution) return account;
@@ -71,8 +82,16 @@ export default function TransactionTable({
 
   const allSelected = !!selectedIds && transactions.length > 0 && transactions.every((t, i) => selectedIds.has(txnId(t, i)));
 
+  const { income, spending, count } = getTxnSummary(transactions);
+
   return (
-    <div className="table-responsive">
+    <>
+      <div className="d-flex flex-wrap gap-4 mb-3 small">
+        <span>Income: <strong>{formatCurrency(income)}</strong></span>
+        <span>Spending: <strong>{formatCurrency(spending)}</strong></span>
+        <span><strong>{count.toLocaleString()}</strong> transactions</span>
+      </div>
+      <div className="table-responsive">
       <table className="table table-sm table-striped align-middle mb-0">
         <thead>
           <tr>
@@ -117,5 +136,6 @@ export default function TransactionTable({
         </tbody>
       </table>
     </div>
+    </>
   );
 }

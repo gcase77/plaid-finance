@@ -32,12 +32,16 @@ export default function AppliedFiltersBar({ filters }: AppliedFiltersBarProps) {
         actions.setMerchantMode("contains");
       }
     },
-    state.amountMode && state.amountFilter.trim() && {
+    (state.amountMin.trim() || state.amountMax.trim()) && {
       id: "amount",
-      label: `Amount ${state.amountMode === "gt" ? ">" : "<"} ${state.amountFilter}`,
+      label: state.amountMin.trim() && state.amountMax.trim()
+        ? `Amount ${state.amountMin} – ${state.amountMax}`
+        : state.amountMin.trim()
+          ? `Amount ≥ ${state.amountMin}`
+          : `Amount ≤ ${state.amountMax}`,
       onClear: () => {
-        actions.setAmountMode("");
-        actions.setAmountFilter("");
+        actions.setAmountMin("");
+        actions.setAmountMax("");
       }
     },
     (state.dateStart || state.dateEnd) && {

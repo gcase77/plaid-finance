@@ -254,8 +254,16 @@ export default function TransactionsFilterSection({ filters, tags }: Transaction
         : "any"
   ].join(", ");
 
+  const hasMin = state.amountMin.trim() !== "";
+  const hasMax = state.amountMax.trim() !== "";
   const amountSummary =
-    state.amountMode && state.amountFilter.trim() ? `${state.amountMode === "gt" ? ">" : "<"} ${state.amountFilter}` : "any";
+    hasMin && hasMax
+      ? `${state.amountMin} – ${state.amountMax}`
+      : hasMin
+        ? `≥ ${state.amountMin}`
+        : hasMax
+          ? `≤ ${state.amountMax}`
+          : "any";
   const sourceSummary = `${state.selectedBanks.length ? `${state.selectedBanks.length} bank` : "any"}, ${
     state.selectedAccounts.length ? `${state.selectedAccounts.length} account` : "any"
   }`;
@@ -345,8 +353,12 @@ export default function TransactionsFilterSection({ filters, tags }: Transaction
         <FilterAccordionSection label="Amount" summary={amountSummary}>
           <div className="mb-2">
             <SegmentedButtons
-              value={state.amountMode || ""}
-              onChange={actions.setAmountMode}
+              value={state.amountMin.trim() || state.amountMax.trim() ? (state.amountMin.trim() ? "gt" : "lt") : ""}
+              onChange={(v) => {
+                if (v === "") { actions.setAmountMin(""); actions.setAmountMax(""); }
+                else if (v === "gt") actions.setAmountMax("");
+                else actions.setAmountMin("");
+              }}
               options={[
                 { value: "", label: "Any" },
                 { value: "gt", label: ">" },
@@ -354,26 +366,39 @@ export default function TransactionsFilterSection({ filters, tags }: Transaction
               ]}
             />
           </div>
-          <input
-            className="form-control mb-2"
-            value={state.amountFilter}
-            onChange={(e) => actions.setAmountFilter(e.target.value)}
-            placeholder="0"
-          />
+          <div className="row g-2 mb-2">
+            <div className="col-6">
+              <label className="form-label small mb-0">Min</label>
+              <input
+                type="number"
+                step="any"
+                className="form-control form-control-sm"
+                value={state.amountMin}
+                onChange={(e) => actions.setAmountMin(e.target.value)}
+                placeholder="0"
+              />
+            </div>
+            <div className="col-6">
+              <label className="form-label small mb-0">Max</label>
+              <input
+                type="number"
+                step="any"
+                className="form-control form-control-sm"
+                value={state.amountMax}
+                onChange={(e) => actions.setAmountMax(e.target.value)}
+                placeholder="0"
+              />
+            </div>
+          </div>
           <SegmentedButtons
-            value={state.amountMode === "lt" && state.amountFilter.trim() === "0" ? "income" : "spending"}
+            value={state.amountMax.trim() === "0" && !state.amountMin.trim() ? "income" : "spending"}
             onChange={(v) => {
-              if (v === "spending") {
-                actions.setAmountMode("gt");
-                actions.setAmountFilter("0");
-              } else {
-                actions.setAmountMode("lt");
-                actions.setAmountFilter("0");
-              }
+              if (v === "spending") { actions.setAmountMin("0"); actions.setAmountMax(""); }
+              else { actions.setAmountMin(""); actions.setAmountMax("0"); }
             }}
             options={[
-              { value: "spending", label: "Spending" },
-              { value: "income", label: "Income" }
+              { value: "spending", label: "Outflow" },
+              { value: "income", label: "Inflow" }
             ]}
           />
         </FilterAccordionSection>
