@@ -10,9 +10,11 @@ type Period = {
 };
 
 type BudgetRuleCacheEntry = Period & {
-  associated_spending: number;
-  associated_income: number | null;
-  rollover: number | null;
+  base_budget: number | null;
+  effective_budget: number | null;
+  balance: number | null;
+  associated_spend: number;
+  associated_income: number;
 };
 
 const toISODate = (d: Date) =>
@@ -95,6 +97,23 @@ const resolvePeriodIndex = (isoDate: string, periods: Period[]) => {
   return -1;
 };
 
+const clamp = (value: number, lower: number, upper: number) =>
+  Math.min(Math.max(value, lower), upper);
+
+const getBalanceBounds = (rolloverOption: RolloverOption) => {
+  switch (rolloverOption) {
+    case RolloverOption.none:
+      return { lower: 0, upper: 0 };
+    case RolloverOption.surplus:
+      return { lower: 0, upper: Number.POSITIVE_INFINITY };
+    case RolloverOption.deficit:
+      return { lower: Number.NEGATIVE_INFINITY, upper: 0 };
+    case RolloverOption.both:
+    default:
+      return { lower: Number.NEGATIVE_INFINITY, upper: Number.POSITIVE_INFINITY };
+  }
+};
+
 const ensureSpendingTag = async (prisma: ServerRequest["prisma"], userId: string, tagId: number) => {
   const tag = await prisma.tags.findFirst({
     where: { id: tagId, user_id: userId },
@@ -114,6 +133,7 @@ export const buildBudgetRuleCache = async (
   startDateStr: string,
   window: CalendarWindow,
   ruleType: BudgetRuleType,
+  rolloverOption: RolloverOption,
   flatAmount: number | null,
   percentAmount: number | null
 ): Promise<BudgetRuleCacheEntry[]> => {
@@ -147,9 +167,11 @@ export const buildBudgetRuleCache = async (
 
   const cache = periods.map<BudgetRuleCacheEntry>((period) => ({
     ...period,
-    associated_spending: 0,
-    associated_income: ruleType === BudgetRuleType.percent_of_income ? 0 : null,
-    rollover: 0
+    base_budget: null,
+    effective_budget: null,
+    balance: null,
+    associated_spend: 0,
+    associated_income: 0
   }));
 
   for (const row of rows) {
@@ -159,20 +181,32 @@ export const buildBudgetRuleCache = async (
     const idx = resolvePeriodIndex(toISODate(date), periods);
     if (idx < 0) continue;
 
-    if (amount < 0 && row.transaction_meta?.account_transfer_group == null && cache[idx].associated_income != null) {
+    if (amount < 0 && row.transaction_meta?.account_transfer_group == null) {
       cache[idx].associated_income += Math.abs(amount);
     }
 
     const taggedToRule = row.transaction_meta?.bucket_1_tag_id === tagId || row.transaction_meta?.bucket_2_tag_id === tagId;
     if (taggedToRule) {
-      cache[idx].associated_spending += amount;
+      cache[idx].associated_spend += amount;
     }
   }
 
+  // Period 0 is reference-only for budget math: budgets/balance stay null.
+
+  const { lower, upper } = getBalanceBounds(rolloverOption);
+  let previousBalance = 0;
   for (let i = 1; i < cache.length; i += 1) {
-    cache[i].rollover = ruleType === BudgetRuleType.flat_rate
-      ? (flatAmount ?? 0) - cache[i].associated_spending
-      : (((percentAmount ?? 0) / 100) * (cache[i - 1].associated_income ?? 0)) - cache[i].associated_spending;
+    const baseBudget = ruleType === BudgetRuleType.flat_rate
+      ? (flatAmount ?? 0)
+      : (((percentAmount ?? 0) / 100) * cache[i - 1].associated_income);
+    const effectiveBudget = baseBudget + previousBalance;
+    const rawBalance = effectiveBudget - cache[i].associated_spend;
+    const balance = clamp(rawBalance, lower, upper);
+
+    cache[i].base_budget = baseBudget;
+    cache[i].effective_budget = effectiveBudget;
+    cache[i].balance = balance;
+    previousBalance = balance;
   }
 
   return cache;
@@ -239,6 +273,7 @@ router.post("/budget_rules", async (req, res) => {
       startDate.raw,
       windowType,
       ruleType,
+      rolloverType,
       ruleType === BudgetRuleType.flat_rate ? parsedFlat : null,
       ruleType === BudgetRuleType.percent_of_income ? parsedPercent : null
     );
@@ -301,6 +336,9 @@ router.patch("/budget_rules/:id", async (req, res) => {
       || req.body?.calendar_window != null
       || req.body?.type != null
       || req.body?.tag_id != null
+      || req.body?.flat_amount != null
+      || req.body?.percent != null
+      || req.body?.rollover_options != null
       || req.body?.cache == null;
     const nextCache = req.body?.cache ?? (shouldRebuildCache
       ? await buildBudgetRuleCache(
@@ -310,6 +348,7 @@ router.patch("/budget_rules/:id", async (req, res) => {
         parsedStart.raw,
         nextWindow,
         nextType,
+        req.body?.rollover_options ?? existing.rollover_options,
         nextType === BudgetRuleType.flat_rate ? nextFlat : null,
         nextType === BudgetRuleType.percent_of_income ? nextPercent : null
       )

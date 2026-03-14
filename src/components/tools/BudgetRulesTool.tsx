@@ -219,21 +219,25 @@ function CacheTable({ cache, ruleType }: { cache: BudgetRuleCacheEntry[]; ruleTy
         <thead>
           <tr>
             <th>Period</th>
-            <th className="text-end">Spending</th>
+            <th className="text-end">Base</th>
+            <th className="text-end">Effective</th>
+            <th className="text-end">Spend</th>
             {ruleType === "percent_of_income" && <th className="text-end">Income</th>}
-            <th className="text-end">Rollover</th>
+            <th className="text-end">Balance</th>
           </tr>
         </thead>
         <tbody>
           {cache.map((e, i) => (
             <tr key={i}>
               <td className="text-nowrap">{e.start_date} – {e.end_date}</td>
-              <td className="text-end">${e.associated_spending.toFixed(2)}</td>
+              <td className="text-end">{e.base_budget == null ? "—" : `$${e.base_budget.toFixed(2)}`}</td>
+              <td className="text-end">{e.effective_budget == null ? "—" : `$${e.effective_budget.toFixed(2)}`}</td>
+              <td className="text-end">${e.associated_spend.toFixed(2)}</td>
               {ruleType === "percent_of_income" && (
-                <td className="text-end">{e.associated_income != null ? `$${e.associated_income.toFixed(2)}` : "—"}</td>
+                <td className="text-end">${e.associated_income.toFixed(2)}</td>
               )}
-              <td className={`text-end ${e.rollover == null ? "text-muted" : e.rollover >= 0 ? "text-success" : "text-danger"}`}>
-                {e.rollover == null ? "—" : `${e.rollover >= 0 ? "+" : "-"}$${Math.abs(e.rollover).toFixed(2)}`}
+              <td className={`text-end ${e.balance == null ? "text-muted" : e.balance >= 0 ? "text-success" : "text-danger"}`}>
+                {e.balance == null ? "—" : `${e.balance >= 0 ? "+" : "-"}$${Math.abs(e.balance).toFixed(2)}`}
               </td>
             </tr>
           ))}

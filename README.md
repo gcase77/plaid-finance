@@ -145,6 +145,25 @@ class
 | POST   | [api/transaction_meta/transfer_group](server/routes/transaction_meta.ts#L37) | query: — body: `{ transaction_ids: [id1, id2] }` | `{ account_transfer_group: uuid }` |
 | DELETE | [api/transaction_meta/transfer_group](server/routes/transaction_meta.ts#L62) | query: — body: `{ transaction_ids: [id1, id2] }` | `{ success: true }` |
 
+### Budget Calculation
+
+$$
+\text{effective\_budget}_i = \text{base\_budget}_i + \text{balance}_{i-1}
+$$
+
+$$
+\text{balance}_i =
+\operatorname{clamp}\!\left(
+\text{effective\_budget}_i - \text{spend}_i,
+L, U
+\right)
+$$
+
+**If budget rule is percent of income type:**
+$$
+\text{base\_budget}_i =
+\text{percent} \cdot \text{income}_{i-1}
+$$
 
 # Random
 
