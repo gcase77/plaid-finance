@@ -125,45 +125,44 @@ class
 
 ### Server endpoints
 
-
-| Method | Path                                                        | Request Data                        | Response                                                       |
-| ------ | ----------------------------------------------------------- | ----------------------------------- | -------------------------------------------------------------- |
-| GET    | [api/items](server/routes/items.ts#L9)                      | query: — body: —                    | `Item[]`                                                       |
-| GET    | [api/accounts/:itemId](server/routes/accounts.ts#L9)        | query: — body: —                    | `Account[]`                                                    |
-| POST   | [api/link/token](server/routes/link.ts#L11)                 | query: — body: `{ daysRequested? }` | `{ link_token, ... }`                                          |
-| POST   | [api/link/exchange](server/routes/link.ts#L36)              | query: — body: `{ publicToken }`    | `{ success: true }`                                            |
-| GET    | [api/transactions](server/routes/transactions.ts#L277)      | query: `includeRemoved?` body: —    | transaction array                                              |
-| POST   | [api/transactions/sync](server/routes/transactions.ts#L265) | query: — body: —                    | `{ success: true, items_processed, added, modified, removed }` |
-| GET    | [api/transaction_meta](server/routes/transaction_meta.ts#L8) | query: — body: —                    | `{ transaction_id, account_transfer_group, bucket_1_tag_id, bucket_2_tag_id, meta_tag_id }[]` |
-| POST   | [api/tags](server/routes/tags.ts#L12)                        | query: — body: `{ name, type }`     | created tag object |
-| DELETE | [api/tags/:id](server/routes/tags.ts#L25)                    | query: — body: —                    | `{ success: true }` |
-| GET    | [api/budget_rules](server/routes/budget_rules.ts#L73)        | query: — body: —                    | budget rule array |
-| POST   | [api/budget_rules](server/routes/budget_rules.ts#L87)        | query: — body: `{ tag_id, name, start_date, type, flat_amount?, percent?, calendar_window, rollover_options }` | created budget rule object |
-| PATCH  | [api/budget_rules/:id](server/routes/budget_rules.ts#L129)   | query: — body: partial budget rule object | updated budget rule object |
-| DELETE | [api/budget_rules/:id](server/routes/budget_rules.ts#L193)   | query: — body: —                    | `{ success: true }` |
-| PATCH  | [api/transaction_meta/tags](server/routes/transaction_meta.ts#L107) | query: — body: `MetaTagUpdate[]`    | `{ success: true }` |
-| POST   | [api/transaction_meta/transfer_group](server/routes/transaction_meta.ts#L37) | query: — body: `{ transaction_ids: [id1, id2] }` | `{ account_transfer_group: uuid }` |
-| DELETE | [api/transaction_meta/transfer_group](server/routes/transaction_meta.ts#L62) | query: — body: `{ transaction_ids: [id1, id2] }` | `{ success: true }` |
+| Method | Path                                                                 | Request Data                        | Response                                                       |
+| ------ | -------------------------------------------------------------------- | ----------------------------------- | -------------------------------------------------------------- |
+| POST   | [api/link/token](server/routes/link.ts#L8)                           | query: — body: `{ daysRequested? }` | `{ link_token, ... }`                                          |
+| POST   | [api/link/exchange](server/routes/link.ts#L33)                        | query: — body: `{ publicToken }`    | `{ success: true }`                                            |
+| GET    | [api/items](server/routes/items.ts#L6)                               | query: — body: —                    | `Item[]`                                                       |
+| GET    | [api/accounts/:itemId](server/routes/accounts.ts#L6)                   | query: — body: —                    | `Account[]`                                                    |
+| GET    | [api/transactions](server/routes/transactions.ts#L282)                 | query: `includeRemoved?` body: —    | transaction array                                              |
+| POST   | [api/transactions/sync](server/routes/transactions.ts#L270)            | query: — body: —                    | `{ success: true, items_processed, added, modified, removed }`  |
+| GET    | [api/transaction_meta](server/routes/transaction_meta.ts#L19)         | query: — body: —                    | `{ transaction_id, account_transfer_group, bucket_1_tag_id, bucket_2_tag_id, meta_tag_id }[]` |
+| POST   | [api/transaction_meta/transfer_group](server/routes/transaction_meta.ts#L51) | query: — body: `{ transaction_ids: [id1, id2] }` | `{ account_transfer_group: uuid }` |
+| DELETE | [api/transaction_meta/transfer_group](server/routes/transaction_meta.ts#L82) | query: — body: `{ transaction_ids: [id1, id2] }` | `{ success: true }` |
+| PATCH  | [api/transaction_meta/tags](server/routes/transaction_meta.ts#L107)    | query: — body: `MetaTagUpdate[]`    | `{ success: true }`                                            |
+| GET    | [api/tags](server/routes/tags.ts#L10)                                 | query: — body: —                    | tag array                                                      |
+| POST   | [api/tags](server/routes/tags.ts#L23)                                 | query: — body: `{ name, type }`     | created tag object                                             |
+| DELETE | [api/tags/:id](server/routes/tags.ts#L37)                              | query: — body: —                    | `{ success: true }`                                            |
+| GET    | [api/budget_rules](server/routes/budget_rules.ts#L227)                 | query: — body: —                    | budget rule array                                              |
+| POST   | [api/budget_rules](server/routes/budget_rules.ts#L240)                 | query: — body: `{ tag_id, name, start_date, type, flat_amount?, percent?, calendar_window, rollover_options }` | created budget rule object |
+| PATCH  | [api/budget_rules/:id](server/routes/budget_rules.ts#L301)              | query: — body: partial budget rule object | updated budget rule object                    |
+| DELETE | [api/budget_rules/:id](server/routes/budget_rules.ts#L379)             | query: — body: —                    | `{ success: true }`                                            |
 
 ### Budget Calculation
 
-$$
+```latex
 \text{effective\_budget}_i = \text{base\_budget}_i + \text{balance}_{i-1}
-$$
-
-$$
+\qquad
 \text{balance}_i =
 \operatorname{clamp}\!\left(
 \text{effective\_budget}_i - \text{spend}_i,
 L, U
 \right)
-$$
+```
 
 **If budget rule is percent of income type:**
-$$
+
+```latex
 \text{base\_budget}_i =
 \text{percent} \cdot \text{income}_{i-1}
-$$
+```
 
 # Random
 
