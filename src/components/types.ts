@@ -104,9 +104,11 @@ export type RolloverOption = "none" | "surplus" | "deficit" | "both";
 export type BudgetRuleCacheEntry = {
   start_date: string;
   end_date: string;
-  associated_spending: number;
-  associated_income: number | null;
-  rollover: number | null;
+  base_budget: number | null;
+  effective_budget: number | null;
+  balance: number | null;
+  associated_spend: number;
+  associated_income: number;
 };
 
 export type BudgetRule = {
