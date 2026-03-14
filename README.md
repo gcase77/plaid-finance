@@ -151,7 +151,7 @@ class
 \text{effective\_budget}_i = \text{base\_budget}_i + \text{balance}_{i-1}
 \qquad
 \text{balance}_i =
-\operatorname{clamp}\!\left(
+\mathop{\text{clamp}}\!\left(
 \text{effective\_budget}_i - \text{spend}_i,
 L, U
 \right)
