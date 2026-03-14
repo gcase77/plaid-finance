@@ -68,7 +68,8 @@ const ON_BUDGET_EPS = 0.01;
 
 const MONTH_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 function toShortDate(iso: string): string {
-  const parts = iso.split("-");
+  const iso10 = iso.slice(0, 10); // keep YYYY-MM-DD, ignore time / timezone
+  const parts = iso10.split("-");
   if (parts.length !== 3) return iso;
   const m = Number(parts[1]);
   const d = Number(parts[2]);
