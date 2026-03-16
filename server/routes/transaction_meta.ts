@@ -11,7 +11,7 @@ type MetaTagUpdate = {
   transaction_id: string;
   bucket_1_tag_id?: number | null;
   bucket_2_tag_id?: number | null;
-  meta_tag_id?: number | null;
+  meta_tag_ids?: number[] | null;
 };
 
 const router = express.Router();
@@ -37,12 +37,20 @@ router.get("/transaction_meta", async (req, res) => {
         account_transfer_group: true,
         bucket_1_tag_id: true,
         bucket_2_tag_id: true,
-        meta_tag_id: true
+        meta_tags: { select: { tag_id: true } }
       }
     });
 
-    transactionMetaCache.set(userId, { rows });
-    res.json(rows);
+    const mappedRows = rows.map((row) => ({
+      transaction_id: row.transaction_id,
+      account_transfer_group: row.account_transfer_group,
+      bucket_1_tag_id: row.bucket_1_tag_id,
+      bucket_2_tag_id: row.bucket_2_tag_id,
+      meta_tag_ids: row.meta_tags.map((link) => link.tag_id)
+    }));
+
+    transactionMetaCache.set(userId, { rows: mappedRows });
+    res.json(mappedRows);
   } catch (e: any) {
     res.status(500).json({ error: e.message });
   }
@@ -110,23 +118,31 @@ router.patch("/transaction_meta/tags", async (req, res) => {
     const items: MetaTagUpdate[] = req.body;
     if (!Array.isArray(items) || items.length === 0)
       return res.status(400).json({ error: "Body must be a non-empty array" });
+    for (const item of items) {
+      if (typeof item.transaction_id !== "string" || !item.transaction_id)
+        return res.status(400).json({ error: "Each item must include a valid transaction_id" });
+      if ("meta_tag_ids" in item && item.meta_tag_ids != null && !Array.isArray(item.meta_tag_ids))
+        return res.status(400).json({ error: "meta_tag_ids must be an array when provided" });
+      if (Array.isArray(item.meta_tag_ids) && !item.meta_tag_ids.every((v) => Number.isInteger(v)))
+        return res.status(400).json({ error: "meta_tag_ids must contain integer ids only" });
+    }
 
     const transactionIds = items.map(i => i.transaction_id);
     const tagIds = [
       ...new Set(
         items
-          .flatMap(i => [i.bucket_1_tag_id, i.bucket_2_tag_id, i.meta_tag_id])
+          .flatMap(i => [i.bucket_1_tag_id, i.bucket_2_tag_id, ...(i.meta_tag_ids ?? [])])
           .filter((v): v is number => v != null)
       )
     ];
 
     const [transactions, tags] = await Promise.all([
       prisma.transactions.findMany({
-        where: { id: { in: transactionIds }, is_removed: false },
+        where: { id: { in: transactionIds }, user_id: user.id, is_removed: false },
         select: { id: true, amount: true }
       }),
       tagIds.length > 0
-        ? prisma.tags.findMany({ where: { id: { in: tagIds } }, select: { id: true, type: true } })
+        ? prisma.tags.findMany({ where: { id: { in: tagIds }, user_id: user.id }, select: { id: true, type: true } })
         : Promise.resolve([])
     ]);
 
@@ -150,23 +166,34 @@ router.patch("/transaction_meta/tags", async (req, res) => {
         if (SPENDING_TYPES.has(type) && amount < 0)
           return res.status(422).json({ error: `Tag ${tagId} is a spending tag but transaction ${item.transaction_id} is a credit` });
       }
-      if (item.meta_tag_id != null && tagTypeMap.get(item.meta_tag_id) !== TagType.meta)
-        return res.status(422).json({ error: `Tag ${item.meta_tag_id} is not a meta tag and cannot be assigned to the meta slot` });
+      for (const metaTagId of item.meta_tag_ids ?? []) {
+        if (tagTypeMap.get(metaTagId) !== TagType.meta)
+          return res.status(422).json({ error: `Tag ${metaTagId} is not a meta tag and cannot be assigned to the meta slot` });
+      }
     }
 
-    await prisma.$transaction(
-      items.map(item => {
-        const data: Partial<Omit<MetaTagUpdate, "transaction_id">> = {};
+    await prisma.$transaction(async (tx) => {
+      for (const item of items) {
+        const data: { bucket_1_tag_id?: number | null; bucket_2_tag_id?: number | null } = {};
         if ("bucket_1_tag_id" in item) data.bucket_1_tag_id = item.bucket_1_tag_id;
         if ("bucket_2_tag_id" in item) data.bucket_2_tag_id = item.bucket_2_tag_id;
-        if ("meta_tag_id" in item) data.meta_tag_id = item.meta_tag_id;
-        return prisma.transaction_meta.upsert({
+        await tx.transaction_meta.upsert({
           where: { transaction_id: item.transaction_id },
           create: { transaction_id: item.transaction_id, ...data },
           update: data
         });
-      })
-    );
+        if ("meta_tag_ids" in item) {
+          const uniqueMetaTagIds = [...new Set(item.meta_tag_ids ?? [])];
+          await tx.transaction_tags.deleteMany({ where: { transaction_id: item.transaction_id } });
+          if (uniqueMetaTagIds.length > 0) {
+            await tx.transaction_tags.createMany({
+              data: uniqueMetaTagIds.map((tag_id) => ({ transaction_id: item.transaction_id, tag_id })),
+              skipDuplicates: true
+            });
+          }
+        }
+      }
+    });
 
     clearTransactionMetaCache(user.id);
     res.json({ success: true });

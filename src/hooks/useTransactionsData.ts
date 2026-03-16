@@ -77,7 +77,7 @@ export function useTransactionsData(token: string | null): UseTransactionsDataRe
         account_transfer_group: meta?.account_transfer_group ?? null,
         bucket_1_tag_id: meta?.bucket_1_tag_id ?? null,
         bucket_2_tag_id: meta?.bucket_2_tag_id ?? null,
-        meta_tag_id: meta?.meta_tag_id ?? null
+        meta_tag_ids: meta?.meta_tag_ids ?? []
       };
     });
   }, [txQuery.data, metaQuery.data]);

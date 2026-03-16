@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { buildAuthHeaders } from "../../lib/auth";
+import { getDisplayTagColor, getTextColorForBackground } from "../../utils/transactionUtils";
 import type {
   BudgetRule,
   BudgetRuleCacheEntry,
@@ -254,22 +255,20 @@ function RuleForm({ form, setForm, spendingTags, useEarliestStart, setUseEarlies
 
 function BudgetStatusBlock({ cache }: { cache: BudgetRuleCacheEntry[] }) {
   const periods = useMemo(() => cache.slice(1), [cache]);
-  const [windowStart, setWindowStart] = useState(0);
+  const [windowStart, setWindowStart] = useState(() => Math.max(0, cache.length - 1 - WINDOW_SIZE));
   const [hoveredRow, setHoveredRow] = useState<number | null>(null);
-
-  useEffect(() => {
-    setWindowStart(Math.max(0, periods.length - WINDOW_SIZE));
-  }, [periods.length]);
 
   if (!periods.length) return <div className="text-muted small py-2">No period data yet.</div>;
 
-  const visible = periods.slice(windowStart, windowStart + WINDOW_SIZE);
+  const maxWindowStart = Math.max(0, periods.length - WINDOW_SIZE);
+  const safeWindowStart = Math.min(windowStart, maxWindowStart);
+  const visible = periods.slice(safeWindowStart, safeWindowStart + WINDOW_SIZE);
   const maxVal = Math.max(
     ...visible.map((p) => Math.max(p.effective_budget ?? 0, p.associated_spend)),
     1
   );
-  const canUp = windowStart > 0;
-  const canDown = windowStart + WINDOW_SIZE < periods.length;
+  const canUp = safeWindowStart > 0;
+  const canDown = safeWindowStart + WINDOW_SIZE < periods.length;
   const newestPeriod = periods[periods.length - 1];
   const summaryDiff = newestPeriod ? budgetDiff(newestPeriod) : null;
   const summaryEnd = newestPeriod ? toShortDate(newestPeriod.end_date) : null;
@@ -308,7 +307,7 @@ function BudgetStatusBlock({ cache }: { cache: BudgetRuleCacheEntry[] }) {
         </div>
       </div>
       <style>{`.budget-window-enter { animation: budgetWindowFade 0.2s ease; } @keyframes budgetWindowFade { from { opacity: 0; } to { opacity: 1; } }`}</style>
-      <div key={windowStart} className="border rounded bg-light px-2 py-2 budget-window-enter" style={{ maxHeight: 220, overflowY: "auto" }}>
+      <div key={safeWindowStart} className="border rounded bg-light px-2 py-2 budget-window-enter" style={{ maxHeight: 220, overflowY: "auto" }}>
         {[...visible].reverse().map((e, revI) => {
           const i = visible.length - 1 - revI;
           const colorKey = statusColor(e);
@@ -378,7 +377,7 @@ function CacheTable({ cache, ruleType }: { cache: BudgetRuleCacheEntry[]; ruleTy
           </tr>
         </thead>
         <tbody>
-          {[...cache].reverse().map((e, i) => (
+          {[...cache].reverse().map((e) => (
             <tr key={e.end_date}>
               <td className="text-nowrap">{e.start_date} – {e.end_date}</td>
               <td className="text-end">{e.base_budget == null ? "—" : `$${e.base_budget.toFixed(2)}`}</td>
@@ -602,7 +601,18 @@ export default function BudgetRulesTool({ token }: Props) {
                     <>
                       <div className="d-flex align-items-center gap-2 p-2 px-3 flex-wrap">
                         <span className="fw-semibold small">{rule.name}</span>
-                        {tag && <span className="badge bg-secondary">{tag.name}</span>}
+                        {tag && (
+                          <span
+                            className="badge"
+                            style={{
+                              backgroundColor: getDisplayTagColor(tag.type, tag.color),
+                              color: getTextColorForBackground(getDisplayTagColor(tag.type, tag.color)),
+                              border: "1px solid rgba(0,0,0,0.12)"
+                            }}
+                          >
+                            {tag.name}
+                          </span>
+                        )}
                         <span className="badge bg-light text-dark border">
                           {rule.type === "flat_rate"
                             ? `$${rule.flat_amount?.toLocaleString() ?? "—"}`

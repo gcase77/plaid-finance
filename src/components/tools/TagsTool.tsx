@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTransactionFilters } from "../../hooks/useTransactionFilters";
 import { buildAuthHeaders } from "../../lib/auth";
+import { getDefaultTagColor, getDisplayTagColor, getTextColorForBackground, TAG_COLOR_PALETTE } from "../../utils/transactionUtils";
 import type { Tag, TagType, Txn } from "../types";
 import LoadingSpinner from "../shared/LoadingSpinner";
 import AppliedFiltersBar from "../shared/AppliedFiltersBar";
@@ -18,10 +19,9 @@ type PatchTagItem = {
   transaction_id: string;
   bucket_1_tag_id?: number | null;
   bucket_2_tag_id?: number | null;
-  meta_tag_id?: number | null;
+  meta_tag_ids?: number[] | null;
 };
 
-const TAG_TYPES: TagType[] = ["income_bucket_1", "income_bucket_2", "spending_bucket_1", "spending_bucket_2", "meta"];
 type TagUiKind = "income" | "spending" | "meta";
 const TAG_UI_KIND_LABEL: Record<TagUiKind, string> = {
   income: "Income",
@@ -114,22 +114,20 @@ function KindSelect({ value, onChange }: { value: TagUiKind; onChange: (k: TagUi
   );
 }
 
-const NO_CHANGE = "__no_change__";
-const CLEAR = "__clear__";
-
-function parseSelectValue(value: string): number | null | undefined {
-  if (value === NO_CHANGE) return undefined;
-  if (value === CLEAR) return null;
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : undefined;
-}
-
 function friendlyApplyError(raw: string): string {
   if (/income tag/i.test(raw) && /debit/i.test(raw))
     return "You cannot apply income tags to outflow transactions.";
   if (/spending tag/i.test(raw) && /credit/i.test(raw))
     return "You cannot apply spending tags to inflow transactions.";
   return raw;
+}
+
+function colorBadgeStyle(color: string) {
+  return {
+    backgroundColor: color,
+    color: getTextColorForBackground(color),
+    border: "1px solid rgba(0,0,0,0.12)"
+  } as const;
 }
 
 export default function TagsTool({ transactions, token, invalidateTransactionMeta }: Props) {
@@ -139,11 +137,8 @@ export default function TagsTool({ transactions, token, invalidateTransactionMet
   const [myTagsMode, setMyTagsMode] = useState<MyTagsMode>("default");
   const [createName, setCreateName] = useState("");
   const [createKind, setCreateKind] = useState<TagUiKind>("spending");
+  const [createColor, setCreateColor] = useState(getDefaultTagColor(TAG_UI_KIND_TO_TYPE.spending));
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [bucket1Value, setBucket1Value] = useState(NO_CHANGE);
-  const [bucket2Value, setBucket2Value] = useState(NO_CHANGE);
-  const [metaValue, setMetaValue] = useState(NO_CHANGE);
-  const [actionError, setActionError] = useState<string | null>(null);
   const [applyOpen, setApplyOpen] = useState(false);
   const applyRef = useRef<HTMLDivElement>(null);
   const [removeOpen, setRemoveOpen] = useState(false);
@@ -165,7 +160,7 @@ export default function TagsTool({ transactions, token, invalidateTransactionMet
       const res = await fetch("/api/tags", {
         method: "POST",
         headers: { "Content-Type": "application/json", ...buildAuthHeaders(token) },
-        body: JSON.stringify({ name: createName.trim(), type: TAG_UI_KIND_TO_TYPE[createKind] })
+        body: JSON.stringify({ name: createName.trim(), type: TAG_UI_KIND_TO_TYPE[createKind], color: createColor })
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -174,6 +169,7 @@ export default function TagsTool({ transactions, token, invalidateTransactionMet
     },
     onSuccess: async () => {
       setCreateName("");
+      setCreateColor(getDefaultTagColor(TAG_UI_KIND_TO_TYPE[createKind]));
       await queryClient.invalidateQueries({ queryKey: ["tags"] });
     }
   });
@@ -214,7 +210,6 @@ export default function TagsTool({ transactions, token, invalidateTransactionMet
   });
 
   const tags = useMemo(() => tagsQuery.data ?? [], [tagsQuery.data]);
-  const bucketTags = useMemo(() => tags.filter((t) => t.type !== "meta"), [tags]);
   const metaTags = useMemo(() => tags.filter((t) => t.type === "meta"), [tags]);
   const incomeTags = useMemo(
     () => tags.filter((t) => t.type === "income_bucket_1" || t.type === "income_bucket_2"),
@@ -237,42 +232,14 @@ export default function TagsTool({ transactions, token, invalidateTransactionMet
       .forEach((t) => {
         if (t.bucket_1_tag_id != null) ids.add(t.bucket_1_tag_id);
         if (t.bucket_2_tag_id != null) ids.add(t.bucket_2_tag_id);
-        if (t.meta_tag_id != null) ids.add(t.meta_tag_id);
+        (t.meta_tag_ids ?? []).forEach((metaId) => ids.add(metaId));
       });
     return tags.filter((tag) => ids.has(tag.id));
   }, [selectableTransactions, selectedIds, tags]);
 
-  const tagByType = useMemo(() => {
-    const groups = new Map<TagType, Tag[]>();
-    TAG_TYPES.forEach((type) => groups.set(type, []));
-    tags.forEach((tag) => groups.get(tag.type)?.push(tag));
-    return groups;
-  }, [tags]);
-
-  const onApplyTags = async () => {
-    setActionError(null);
-    const bucket1Tag = parseSelectValue(bucket1Value);
-    const bucket2Tag = parseSelectValue(bucket2Value);
-    const metaTag = parseSelectValue(metaValue);
-    const hasChange = bucket1Tag !== undefined || bucket2Tag !== undefined || metaTag !== undefined;
-    if (!hasChange) {
-      setActionError("Choose at least one tag slot to update.");
-      return;
-    }
-    const ids = [...selectedIds];
-    if (!ids.length) {
-      setActionError("Select at least one transaction.");
-      return;
-    }
-    const items = ids.map((transaction_id) => {
-      const item: PatchTagItem = { transaction_id };
-      if (bucket1Tag !== undefined) item.bucket_1_tag_id = bucket1Tag;
-      if (bucket2Tag !== undefined) item.bucket_2_tag_id = bucket2Tag;
-      if (metaTag !== undefined) item.meta_tag_id = metaTag;
-      return item;
-    });
-    await applyTagsMutation.mutateAsync(items);
-  };
+  useEffect(() => {
+    setCreateColor(getDefaultTagColor(TAG_UI_KIND_TO_TYPE[createKind]));
+  }, [createKind]);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -290,7 +257,10 @@ export default function TagsTool({ transactions, token, invalidateTransactionMet
     if (!ids.length) return;
     const items = ids.map((transaction_id) => {
       const item: PatchTagItem = { transaction_id };
-      if (tag.type === "meta") item.meta_tag_id = tag.id;
+      if (tag.type === "meta") {
+        const txn = selectableTransactions.find((t) => t.transaction_id === transaction_id);
+        item.meta_tag_ids = [...new Set([...(txn?.meta_tag_ids ?? []), tag.id])];
+      }
       else if (tag.type === "income_bucket_2" || tag.type === "spending_bucket_2") item.bucket_2_tag_id = tag.id;
       else item.bucket_1_tag_id = tag.id;
       return item;
@@ -306,8 +276,8 @@ export default function TagsTool({ transactions, token, invalidateTransactionMet
       const item: PatchTagItem = { transaction_id };
       if (txn.bucket_1_tag_id === tagId) item.bucket_1_tag_id = null;
       if (txn.bucket_2_tag_id === tagId) item.bucket_2_tag_id = null;
-      if (txn.meta_tag_id === tagId) item.meta_tag_id = null;
-      return item.bucket_1_tag_id !== undefined || item.bucket_2_tag_id !== undefined || item.meta_tag_id !== undefined
+      if ((txn.meta_tag_ids ?? []).includes(tagId)) item.meta_tag_ids = (txn.meta_tag_ids ?? []).filter((id) => id !== tagId);
+      return item.bucket_1_tag_id !== undefined || item.bucket_2_tag_id !== undefined || item.meta_tag_ids !== undefined
         ? [item] : [];
     });
     if (!items.length) return;
@@ -320,7 +290,7 @@ export default function TagsTool({ transactions, token, invalidateTransactionMet
       transaction_id,
       bucket_1_tag_id: null,
       bucket_2_tag_id: null,
-      meta_tag_id: null
+      meta_tag_ids: []
     }));
     await applyTagsMutation.mutateAsync(items);
     setRemoveOpen(false);
@@ -364,6 +334,22 @@ export default function TagsTool({ transactions, token, invalidateTransactionMet
                   <label className="form-label small mb-1">Type</label>
                   <KindSelect value={createKind} onChange={setCreateKind} />
                 </div>
+                <div style={{ flex: "1 1 220px", minWidth: 220 }}>
+                  <label className="form-label small mb-1">Color</label>
+                  <div className="d-flex flex-wrap gap-1">
+                    {TAG_COLOR_PALETTE.map((color) => (
+                      <button
+                        key={color}
+                        type="button"
+                        className={`btn btn-sm ${createColor === color ? "btn-dark" : "btn-outline-secondary"}`}
+                        style={{ width: 26, height: 26, padding: 0, backgroundColor: color }}
+                        onClick={() => setCreateColor(color)}
+                        aria-label={`Select ${color}`}
+                        title={color}
+                      />
+                    ))}
+                  </div>
+                </div>
                 <button
                   className="btn btn-sm btn-primary px-3"
                   style={{ minWidth: 110 }}
@@ -377,7 +363,7 @@ export default function TagsTool({ transactions, token, invalidateTransactionMet
                 <button
                   className="btn btn-sm btn-outline-secondary px-3"
                   style={{ minWidth: 110 }}
-                  onClick={() => { setCreateName(""); setMyTagsMode("default"); }}
+                  onClick={() => { setCreateName(""); setCreateColor(getDefaultTagColor(TAG_UI_KIND_TO_TYPE[createKind])); setMyTagsMode("default"); }}
                 >
                   Cancel
                 </button>
@@ -430,8 +416,8 @@ export default function TagsTool({ transactions, token, invalidateTransactionMet
                         <ul className="list-unstyled mb-0 small">
                           {list.map((tag) => (
                             <li key={tag.id} className="d-flex justify-content-between align-items-center py-1 border-bottom">
-                              <div>
-                                <div>{tag.name}</div>
+                              <div className="d-flex align-items-center gap-2">
+                                <span className="badge" style={colorBadgeStyle(getDisplayTagColor(tag.type, tag.color))}>{tag.name}</span>
                               </div>
                               {myTagsMode === "deleting" && (
                                 <button
@@ -456,7 +442,6 @@ export default function TagsTool({ transactions, token, invalidateTransactionMet
 
         {tab === "tag-transactions" && (
           <>
-            {actionError && <div className="alert alert-warning py-1 small">{actionError}</div>}
             {applyTagsMutation.error && <div className="alert alert-danger py-1 small">{(applyTagsMutation.error as Error).message}</div>}
 
             <div className="row">
@@ -501,7 +486,7 @@ export default function TagsTool({ transactions, token, invalidateTransactionMet
                                   onClick={() => applySingleTag(t.id)}
                                 >
                                   <div className="d-flex justify-content-between align-items-center">
-                                    <span className="small">{t.name}</span>
+                                    <span className="badge" style={colorBadgeStyle(getDisplayTagColor(t.type, t.color))}>{t.name}</span>
                                     <span className="badge bg-light text-muted">{t.type === "meta" ? "Meta" : t.type.startsWith("income") ? "Income" : "Spending"}</span>
                                   </div>
                                 </button>
@@ -552,7 +537,7 @@ export default function TagsTool({ transactions, token, invalidateTransactionMet
                                 onClick={() => removeTag(t.id)}
                               >
                                 <div className="d-flex justify-content-between align-items-center">
-                                  <span className="small">{t.name}</span>
+                                  <span className="badge" style={colorBadgeStyle(getDisplayTagColor(t.type, t.color))}>{t.name}</span>
                                   <span className="badge bg-light text-muted">{t.type === "meta" ? "Meta" : t.type.startsWith("income") ? "Income" : "Spending"}</span>
                                 </div>
                               </button>
