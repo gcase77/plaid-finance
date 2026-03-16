@@ -1,5 +1,5 @@
 import type { Tag, Txn } from "../types";
-import { getTxnIconUrl, formatTxnDate, formatTxnAmount, formatTxnDetectedCategory } from "../../utils/transactionUtils";
+import { getTxnIconUrl, formatTxnDate, formatTxnAmount, formatTxnDetectedCategory, getDisplayTagColor, getTextColorForBackground } from "../../utils/transactionUtils";
 
 function getTxnSummary(transactions: Txn[]) {
   const nonTransfer = transactions.filter((t) => !t.account_transfer_group);
@@ -20,22 +20,51 @@ function formatAccountDisplay(institution: string, account: string): string {
   return acct.toLowerCase().includes(inst) ? acct : `${institution} | ${acct}`;
 }
 
-function getTxnTagLabels(t: Txn, tagMap: Map<number, string>): string[] {
-  const labels = new Set<string>();
-  if (t.account_transfer_group) labels.add("account_transfer");
-  if (t.bucket_1_tag_id != null) labels.add(tagMap.get(t.bucket_1_tag_id) || String(t.bucket_1_tag_id));
-  if (t.bucket_2_tag_id != null) labels.add(tagMap.get(t.bucket_2_tag_id) || String(t.bucket_2_tag_id));
-  if (t.meta_tag_id != null) labels.add(tagMap.get(t.meta_tag_id) || String(t.meta_tag_id));
-  return [...labels];
+type TagBadge = { key: string; label: string; color?: string; accountTransfer?: boolean };
+
+function getTxnTagBadges(t: Txn, tagMap: Map<number, Tag>): TagBadge[] {
+  const badges: TagBadge[] = [];
+  const seen = new Set<string>();
+  if (t.account_transfer_group) {
+    badges.push({ key: "account_transfer", label: "account_transfer", accountTransfer: true });
+    seen.add("account_transfer");
+  }
+  const addById = (tagId: number) => {
+    const tag = tagMap.get(tagId);
+    if (!tag) {
+      const fallback = String(tagId);
+      if (seen.has(fallback)) return;
+      seen.add(fallback);
+      badges.push({ key: fallback, label: fallback });
+      return;
+    }
+    if (seen.has(tag.name)) return;
+    seen.add(tag.name);
+    badges.push({
+      key: String(tag.id),
+      label: tag.name,
+      color: getDisplayTagColor(tag.type, tag.color)
+    });
+  };
+  if (t.bucket_1_tag_id != null) addById(t.bucket_1_tag_id);
+  if (t.bucket_2_tag_id != null) addById(t.bucket_2_tag_id);
+  (t.meta_tag_ids ?? []).forEach(addById);
+  return badges;
 }
 
-function TagBadges({ labels }: { labels: string[] }) {
-  if (!labels.length) return <span className="text-muted small">—</span>;
+function TagBadges({ badges }: { badges: TagBadge[] }) {
+  if (!badges.length) return <span className="text-muted small">—</span>;
   return (
     <div className="d-flex flex-wrap gap-1">
-      {labels.map((label) => (
-        <span key={label} className={`badge ${label === "account_transfer" ? "bg-dark" : "bg-secondary"}`}>
-          {label}
+      {badges.map((badge) => (
+        <span
+          key={badge.key}
+          className={`badge ${badge.accountTransfer ? "bg-dark" : ""}`}
+          style={badge.accountTransfer || !badge.color
+            ? undefined
+            : { backgroundColor: badge.color, color: getTextColorForBackground(badge.color), border: "1px solid rgba(0,0,0,0.12)" }}
+        >
+          {badge.label}
         </span>
       ))}
     </div>
@@ -63,7 +92,7 @@ export default function TransactionTable({
 }: TransactionTableProps) {
   if (!transactions.length) return <div className="text-muted">{emptyMessage}</div>;
 
-  const tagMap = new Map(tags.map((t) => [t.id, t.name]));
+  const tagMap = new Map(tags.map((t) => [t.id, t]));
 
   const txnId = (t: Txn, idx: number) => t.transaction_id || `${keyPrefix}-${idx}`;
 
@@ -124,7 +153,7 @@ export default function TransactionTable({
                 )}
                 <td>{getTxnIconUrl(t) ? <img src={getTxnIconUrl(t)} alt="icon" style={{ width: 24, height: 24 }} /> : ""}</td>
                 <td>{formatTxnDate(t)}</td>
-                <td><TagBadges labels={getTxnTagLabels(t, tagMap)} /></td>
+                <td><TagBadges badges={getTxnTagBadges(t, tagMap)} /></td>
                 <td>{(t.original_description || "").trim() || t.name || ""}</td>
                 <td>{t.merchant_name || ""}</td>
                 <td className="text-end">{formatTxnAmount(t)}</td>

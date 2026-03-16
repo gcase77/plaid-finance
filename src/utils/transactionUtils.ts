@@ -1,4 +1,4 @@
-import type { Txn } from "../components/types";
+import type { TagType, Txn } from "../components/types";
 
 export const getTxnDateValue = (t: Txn) => t.datetime || t.authorized_datetime || "";
 export const getTxnDateOnly = (t: Txn) => {
@@ -80,3 +80,45 @@ export const formatTxnDetectedCategory = (category?: Txn["personal_finance_categ
   if (!detailedLabel || detailedLabel === primaryLabel) return primaryLabel;
   return `${primaryLabel}, ${detailedLabel}`;
 };
+
+export const TAG_COLOR_PALETTE = [
+  "#e63946",
+  "#ff6b35",
+  "#ffbe0b",
+  "#2a9d8f",
+  "#00a6fb",
+  "#4361ee",
+  "#7209b7",
+  "#b5179e",
+  "#f15bb5",
+  "#8ac926",
+  "#198754",
+  "#6c757d"
+] as const;
+
+const DEFAULT_TAG_COLORS: Record<TagType, string> = {
+  income_bucket_1: "#198754",
+  income_bucket_2: "#2a9d8f",
+  spending_bucket_1: "#e63946",
+  spending_bucket_2: "#ff6b35",
+  meta: "#6c757d"
+};
+
+export function getDefaultTagColor(type: TagType): string {
+  return DEFAULT_TAG_COLORS[type];
+}
+
+export function getDisplayTagColor(type: TagType, color?: string | null): string {
+  return color && color.trim() ? color : getDefaultTagColor(type);
+}
+
+export function getTextColorForBackground(hexColor: string): "#000" | "#fff" {
+  const hex = hexColor.replace("#", "");
+  if (hex.length !== 6) return "#fff";
+  const rgb = parseInt(hex, 16);
+  const r = (rgb >> 16) & 255;
+  const g = (rgb >> 8) & 255;
+  const b = rgb & 255;
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  return luminance > 0.65 ? "#000" : "#fff";
+}

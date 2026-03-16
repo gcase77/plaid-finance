@@ -88,12 +88,11 @@ model transaction_meta {
   account_transfer_group String?
   bucket_1_tag_id        Int?
   bucket_2_tag_id        Int?
-  meta_tag_id            Int?
 
   transaction  transactions @relation(fields: [transaction_id], references: [id], onDelete: Cascade)
   bucket_1_tag tags?        @relation("Bucket1Tag", fields: [bucket_1_tag_id], references: [id])
   bucket_2_tag tags?        @relation("Bucket2Tag", fields: [bucket_2_tag_id], references: [id])
-  meta_tag     tags?        @relation("MetaTag", fields: [meta_tag_id], references: [id])
+  meta_tags    transaction_tags[]
 
   @@index([account_transfer_group])
 }
@@ -128,14 +127,25 @@ model tags {
   name    String
   type    TagType
   user_id String  @db.Uuid
+  color   String?
 
-  bucket_1_meta transaction_meta[] @relation("Bucket1Tag")
-  bucket_2_meta transaction_meta[] @relation("Bucket2Tag")
-  meta_meta     transaction_meta[] @relation("MetaTag")
-  budget_rules  budget_rules[]
-  users         users              @relation(fields: [user_id], references: [id])
+  bucket_1_meta     transaction_meta[]  @relation("Bucket1Tag")
+  bucket_2_meta     transaction_meta[]  @relation("Bucket2Tag")
+  transaction_tags  transaction_tags[]
+  budget_rules      budget_rules[]
+  users             users               @relation(fields: [user_id], references: [id])
 
   @@unique([name, user_id])
+}
+
+model transaction_tags {
+  transaction_id String
+  tag_id         Int
+
+  transaction_meta transaction_meta @relation(fields: [transaction_id], references: [transaction_id], onDelete: Cascade)
+  tag              tags             @relation(fields: [tag_id], references: [id], onDelete: Cascade)
+
+  @@id([transaction_id, tag_id])
 }
 
 model budget_rules {

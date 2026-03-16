@@ -121,7 +121,7 @@ export function useTransactionFilters(transactions: Txn[]): UseTransactionFilter
         const hasAnyTag = t.account_transfer_group != null
           || t.bucket_1_tag_id != null
           || t.bucket_2_tag_id != null
-          || t.meta_tag_id != null;
+          || (t.meta_tag_ids?.length ?? 0) > 0;
         if (tagStateFilter === "untagged") return !hasAnyTag;
         if (tagStateFilter === "tagged") return hasAnyTag;
         return true;
@@ -131,7 +131,7 @@ export function useTransactionFilters(transactions: Txn[]): UseTransactionFilter
       predicates.push((t) =>
         selectedTagIds.includes(t.bucket_1_tag_id ?? -1)
         || selectedTagIds.includes(t.bucket_2_tag_id ?? -1)
-        || selectedTagIds.includes(t.meta_tag_id ?? -1)
+        || selectedTagIds.some((id) => t.meta_tag_ids?.includes(id) ?? false)
       );
     }
 
