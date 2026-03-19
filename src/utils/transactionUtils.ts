@@ -45,6 +45,14 @@ export const getTxnIconUrl = (t: Txn) => {
 export const formatTxnAmount = (t: Txn) => 
   `${String(t.iso_currency_code || "").toUpperCase() === "USD" ? "$" : ""} ${Number(t.amount || 0).toFixed(2)}`;
 
+export const normalizeDetectedCategoryValue = (value?: string | null): string =>
+  String(value || "")
+    .trim()
+    .replace(/[\s-]+/g, "_")
+    .replace(/_+/g, "_")
+    .replace(/^_+|_+$/g, "")
+    .toUpperCase();
+
 const LOWERCASE_CATEGORY_WORDS = new Set(["and", "of", "from"]);
 
 export const formatCategoryLabel = (value?: string | null): string => {

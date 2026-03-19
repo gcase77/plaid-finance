@@ -99,6 +99,7 @@ export type RecognizedTransfersResponse = {
 export type BudgetRuleType = "flat_rate" | "percent_of_income";
 export type CalendarWindow = "week" | "month";
 export type RolloverOption = "none" | "surplus" | "deficit" | "both";
+export type BudgetRuleSourceType = "tag" | "detected_category";
 
 export type BudgetRuleCacheEntry = {
   start_date: string;
@@ -113,7 +114,9 @@ export type BudgetRuleCacheEntry = {
 export type BudgetRule = {
   id: number;
   user_id: string;
-  tag_id: number;
+  rule_source_type: BudgetRuleSourceType;
+  tag_id: number | null;
+  detected_category: string | null;
   name: string;
   start_date: string;
   type: BudgetRuleType;
