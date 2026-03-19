@@ -35,6 +35,8 @@ export default function TransactionsPage() {
       filters={filters}
       loadingTxns={transactionData.loadingTxns || tagsQuery.isLoading}
       tags={tagsQuery.data ?? []}
+      token={token}
+      invalidateTransactionMeta={transactionData.invalidateTransactionMeta}
     />
   );
 }

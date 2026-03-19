@@ -9,9 +9,7 @@ type UseTransactionsDataReturn = {
   syncStatus: string;
   errorMessage: string | null;
   syncTransactions: () => Promise<void>;
-  invalidateTransactions: () => Promise<void>;
   invalidateTransactionMeta: () => Promise<void>;
-  invalidateAllTransactionData: () => Promise<void>;
 };
 
 const TRANSACTIONS_QUERY_KEY = ["transactions", { includeRemoved: false }] as const;
@@ -44,7 +42,7 @@ const syncTransactionsRequest = async (token: string | null): Promise<{ added?: 
 
 export function useTransactionsData(token: string | null): UseTransactionsDataReturn {
   const queryClient = useQueryClient();
-  const [syncStatus, setSyncStatus] = useState("No sync yet");
+  const [syncStatus, setSyncStatus] = useState("No recent sync");
 
   const txQuery = useQuery({
     queryKey: TRANSACTIONS_QUERY_KEY,
@@ -93,13 +91,6 @@ export function useTransactionsData(token: string | null): UseTransactionsDataRe
     syncStatus,
     errorMessage,
     syncTransactions: async () => { await syncMutation.mutateAsync(); },
-    invalidateTransactions: async () => { await queryClient.invalidateQueries({ queryKey: ["transactions"] }); },
-    invalidateTransactionMeta: async () => { await queryClient.invalidateQueries({ queryKey: TRANSACTION_META_QUERY_KEY }); },
-    invalidateAllTransactionData: async () => {
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["transactions"] }),
-        queryClient.invalidateQueries({ queryKey: TRANSACTION_META_QUERY_KEY })
-      ]);
-    }
+    invalidateTransactionMeta: async () => { await queryClient.invalidateQueries({ queryKey: TRANSACTION_META_QUERY_KEY }); }
   };
 }
