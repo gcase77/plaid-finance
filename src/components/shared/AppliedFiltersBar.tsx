@@ -62,6 +62,11 @@ export default function AppliedFiltersBar({ filters }: AppliedFiltersBarProps) {
       label: `Accounts: ${state.selectedAccounts.length}`,
       onClear: () => actions.setSelectedAccounts([])
     },
+    state.selectedTagIds.length > 0 && {
+      id: "tags",
+      label: `Tags: ${state.selectedTagIds.length}`,
+      onClear: () => actions.setSelectedTagIds([])
+    },
     state.selectedCategories.length > 0 && {
       id: "categories",
       label: `Detected: ${state.selectedCategories.length}`,

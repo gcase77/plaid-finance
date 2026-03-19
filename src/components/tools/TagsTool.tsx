@@ -15,7 +15,7 @@ type Props = {
   invalidateTransactionMeta: () => Promise<void>;
 };
 
-type PatchTagItem = {
+type TransactionTagChange = {
   transaction_id: string;
   bucket_1_tag_id?: number | null;
   bucket_2_tag_id?: number | null;
@@ -192,9 +192,9 @@ export default function TagsTool({ transactions, token, invalidateTransactionMet
   });
 
   const applyTagsMutation = useMutation({
-    mutationFn: async (items: PatchTagItem[]) => {
+    mutationFn: async (items: TransactionTagChange[]) => {
       const res = await fetch("/api/transaction_meta/tags", {
-        method: "PATCH",
+        method: "POST",
         headers: { "Content-Type": "application/json", ...buildAuthHeaders(token) },
         body: JSON.stringify(items)
       });
@@ -256,7 +256,7 @@ export default function TagsTool({ transactions, token, invalidateTransactionMet
     const ids = [...selectedIds];
     if (!ids.length) return;
     const items = ids.map((transaction_id) => {
-      const item: PatchTagItem = { transaction_id };
+      const item: TransactionTagChange = { transaction_id };
       if (tag.type === "meta") {
         const txn = selectableTransactions.find((t) => t.transaction_id === transaction_id);
         item.meta_tag_ids = [...new Set([...(txn?.meta_tag_ids ?? []), tag.id])];
@@ -273,26 +273,62 @@ export default function TagsTool({ transactions, token, invalidateTransactionMet
     const items = [...selectedIds].flatMap((transaction_id) => {
       const txn = selectableTransactions.find((t) => t.transaction_id === transaction_id);
       if (!txn) return [];
-      const item: PatchTagItem = { transaction_id };
-      if (txn.bucket_1_tag_id === tagId) item.bucket_1_tag_id = null;
-      if (txn.bucket_2_tag_id === tagId) item.bucket_2_tag_id = null;
-      if ((txn.meta_tag_ids ?? []).includes(tagId)) item.meta_tag_ids = (txn.meta_tag_ids ?? []).filter((id) => id !== tagId);
-      return item.bucket_1_tag_id !== undefined || item.bucket_2_tag_id !== undefined || item.meta_tag_ids !== undefined
-        ? [item] : [];
+      const item: TransactionTagChange = { transaction_id };
+      if (txn.bucket_1_tag_id === tagId) item.bucket_1_tag_id = tagId;
+      if (txn.bucket_2_tag_id === tagId) item.bucket_2_tag_id = tagId;
+      if ((txn.meta_tag_ids ?? []).includes(tagId)) item.meta_tag_ids = [tagId];
+      return item.bucket_1_tag_id !== undefined || item.bucket_2_tag_id !== undefined || item.meta_tag_ids !== undefined ? [item] : [];
     });
     if (!items.length) return;
-    await applyTagsMutation.mutateAsync(items);
+    const res = await fetch("/api/transaction_meta/tags", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json", ...buildAuthHeaders(token) },
+      body: JSON.stringify(items)
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(friendlyApplyError(data?.error || `Failed to remove tag (${res.status})`));
+    }
+    await invalidateTransactionMeta();
+    setSelectedIds(new Set());
     setRemoveOpen(false);
   };
 
   const clearAllTags = async () => {
-    const items = [...selectedIds].map((transaction_id) => ({
-      transaction_id,
-      bucket_1_tag_id: null,
-      bucket_2_tag_id: null,
-      meta_tag_ids: []
-    }));
-    await applyTagsMutation.mutateAsync(items);
+    const items: TransactionTagChange[] = [...selectedIds].flatMap((transaction_id) => {
+      const txn = selectableTransactions.find((t) => t.transaction_id === transaction_id);
+      if (!txn) return [];
+      const bucketIds: number[] = [];
+      if (txn.bucket_1_tag_id != null) bucketIds.push(txn.bucket_1_tag_id);
+      if (txn.bucket_2_tag_id != null) bucketIds.push(txn.bucket_2_tag_id);
+      const metaIds = txn.meta_tag_ids ?? [];
+      if (bucketIds.length === 0 && metaIds.length === 0) return [];
+      const uniqueMetaIds = [...new Set(metaIds)];
+      const uniqueBucketIds = [...new Set(bucketIds)];
+      return [
+        {
+          transaction_id,
+          bucket_1_tag_id: uniqueBucketIds[0],
+          bucket_2_tag_id: uniqueBucketIds[1],
+          meta_tag_ids: uniqueMetaIds
+        }
+      ];
+    });
+    if (items.length === 0) {
+      setRemoveOpen(false);
+      return;
+    }
+    const res = await fetch("/api/transaction_meta/tags", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json", ...buildAuthHeaders(token) },
+      body: JSON.stringify(items)
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(friendlyApplyError(data?.error || `Failed to clear tags (${res.status})`));
+    }
+    await invalidateTransactionMeta();
+    setSelectedIds(new Set());
     setRemoveOpen(false);
   };
 
