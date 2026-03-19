@@ -1,5 +1,6 @@
 import express from "express";
 import { BudgetRuleType, CalendarWindow, RolloverOption, TagType } from "../../generated/prisma/client";
+import type { BudgetRuleSourceType } from "../../generated/prisma/client";
 import type { ServerRequest } from "../middleware/auth";
 
 const router = express.Router();
@@ -126,10 +127,30 @@ const ensureSpendingTag = async (prisma: ServerRequest["prisma"], userId: string
   return { ok: true as const };
 };
 
+const normalizeDetectedCategory = (raw: unknown): string | null => {
+  const normalized = String(raw ?? "")
+    .trim()
+    .replace(/[\s-]+/g, "_")
+    .replace(/_+/g, "_")
+    .replace(/^_+|_+$/g, "")
+    .toUpperCase();
+  return normalized || null;
+};
+
+const getTxnDetectedCategory = (rawCategory: unknown): string | null => {
+  if (!rawCategory || typeof rawCategory !== "object") return null;
+  const category = rawCategory as { primary?: unknown; detailed?: unknown };
+  return normalizeDetectedCategory(category.detailed ?? category.primary);
+};
+
+type RuleSource =
+  | { rule_source_type: "tag"; tag_id: number; detected_category: null }
+  | { rule_source_type: "detected_category"; tag_id: null; detected_category: string };
+
 export const buildBudgetRuleCache = async (
   prisma: ServerRequest["prisma"],
   userId: string,
-  tagId: number,
+  source: RuleSource,
   startDateStr: string,
   window: CalendarWindow,
   ruleType: BudgetRuleType,
@@ -155,6 +176,7 @@ export const buildBudgetRuleCache = async (
       amount: true,
       datetime: true,
       authorized_datetime: true,
+      personal_finance_category: true,
       transaction_meta: {
         select: {
           account_transfer_group: true,
@@ -185,8 +207,10 @@ export const buildBudgetRuleCache = async (
       cache[idx].associated_income += Math.abs(amount);
     }
 
-    const taggedToRule = row.transaction_meta?.bucket_1_tag_id === tagId || row.transaction_meta?.bucket_2_tag_id === tagId;
-    if (taggedToRule) {
+    const matchesRule = source.rule_source_type === "tag"
+      ? row.transaction_meta?.bucket_1_tag_id === source.tag_id || row.transaction_meta?.bucket_2_tag_id === source.tag_id
+      : getTxnDetectedCategory(row.personal_finance_category) === source.detected_category;
+    if (matchesRule && amount > 0) {
       cache[idx].associated_spend += amount;
     }
   }
@@ -240,19 +264,37 @@ router.get("/budget_rules", async (req, res) => {
 router.post("/budget_rules", async (req, res) => {
   try {
     const { user, prisma } = req as unknown as ServerRequest;
-    const { tag_id, name, start_date, type, flat_amount, percent, calendar_window, rollover_options } = req.body ?? {};
-    if (!tag_id || !name || !start_date || !type || !calendar_window || !rollover_options) {
-      return res.status(400).json({ error: "tag_id, name, start_date, type, calendar_window, and rollover_options are required" });
+    const { rule_source_type, tag_id, detected_category, name, start_date, type, flat_amount, percent, calendar_window, rollover_options } = req.body ?? {};
+    if (!rule_source_type || !name || !start_date || !type || !calendar_window || !rollover_options) {
+      return res.status(400).json({ error: "rule_source_type, name, start_date, type, calendar_window, and rollover_options are required" });
+    }
+    if (rule_source_type !== "tag" && rule_source_type !== "detected_category") {
+      return res.status(400).json({ error: "Invalid rule_source_type" });
     }
     if (!validTypes.has(type)) return res.status(400).json({ error: "Invalid budget rule type" });
     if (!validWindows.has(calendar_window)) return res.status(400).json({ error: "Invalid calendar window" });
     if (!validRollover.has(rollover_options)) return res.status(400).json({ error: "Invalid rollover option" });
     const startDate = parseISODate(start_date);
     if (!startDate) return res.status(400).json({ error: "Invalid start_date" });
-    if (!Number.isInteger(Number(tag_id))) return res.status(400).json({ error: "Invalid tag_id" });
-    const numericTagId = Number(tag_id);
-    const tagCheck = await ensureSpendingTag(prisma, user.id, numericTagId);
-    if (!tagCheck.ok) return res.status(tagCheck.status).json({ error: tagCheck.error });
+    const normalizedDetectedCategory = normalizeDetectedCategory(detected_category);
+
+    let source: RuleSource;
+    if (rule_source_type === "tag") {
+      if (normalizedDetectedCategory) return res.status(400).json({ error: "detected_category must be null when rule_source_type is tag" });
+      if (!Number.isInteger(Number(tag_id))) return res.status(400).json({ error: "Invalid tag_id" });
+      const numericTagId = Number(tag_id);
+      const tagCheck = await ensureSpendingTag(prisma, user.id, numericTagId);
+      if (!tagCheck.ok) return res.status(tagCheck.status).json({ error: tagCheck.error });
+      source = { rule_source_type: "tag", tag_id: numericTagId, detected_category: null };
+    } else {
+      if (tag_id != null) return res.status(400).json({ error: "tag_id must be null when rule_source_type is detected_category" });
+      if (!normalizedDetectedCategory) return res.status(400).json({ error: "detected_category is required when rule_source_type is detected_category" });
+      source = {
+        rule_source_type: "detected_category",
+        tag_id: null,
+        detected_category: normalizedDetectedCategory
+      };
+    }
 
     const parsedFlat = flat_amount == null ? null : Number(flat_amount);
     const parsedPercent = percent == null ? null : Number(percent);
@@ -269,7 +311,7 @@ router.post("/budget_rules", async (req, res) => {
     const cache = await buildBudgetRuleCache(
       prisma,
       user.id,
-      numericTagId,
+      source,
       startDate.raw,
       windowType,
       ruleType,
@@ -280,7 +322,9 @@ router.post("/budget_rules", async (req, res) => {
     const created = await prisma.budget_rules.create({
       data: {
         user_id: user.id,
-        tag_id: numericTagId,
+        rule_source_type: source.rule_source_type,
+        tag_id: source.tag_id,
+        detected_category: source.detected_category,
         name: String(name),
         start_date: startDate.date,
         type: ruleType,
@@ -305,12 +349,13 @@ router.patch("/budget_rules/:id", async (req, res) => {
     if (!Number.isInteger(id)) return res.status(400).json({ error: "Invalid budget rule id" });
     const existing = await prisma.budget_rules.findFirst({ where: { id, user_id: user.id } });
     if (!existing) return res.status(404).json({ error: "Budget rule not found" });
+    if (req.body?.rule_source_type != null || req.body?.tag_id != null || req.body?.detected_category != null) {
+      return res.status(400).json({ error: "rule source cannot be changed after creation" });
+    }
 
     const nextType = req.body?.type ?? existing.type;
     const nextWindow = req.body?.calendar_window ?? existing.calendar_window;
-    const nextTagId = req.body?.tag_id != null ? Number(req.body.tag_id) : existing.tag_id;
     const nextStartRaw = req.body?.start_date ?? toISODate(existing.start_date);
-    if (!Number.isInteger(nextTagId)) return res.status(400).json({ error: "Invalid tag_id" });
     const parsedStart = parseISODate(nextStartRaw);
     if (!parsedStart) return res.status(400).json({ error: "Invalid start_date" });
     if (!validTypes.has(nextType)) return res.status(400).json({ error: "Invalid budget rule type" });
@@ -318,8 +363,19 @@ router.patch("/budget_rules/:id", async (req, res) => {
     if (req.body?.rollover_options && !validRollover.has(req.body.rollover_options)) {
       return res.status(400).json({ error: "Invalid rollover option" });
     }
-    const tagCheck = await ensureSpendingTag(prisma, user.id, nextTagId);
-    if (!tagCheck.ok) return res.status(tagCheck.status).json({ error: tagCheck.error });
+    let existingSource: RuleSource;
+    if (existing.rule_source_type === "tag") {
+      if (!Number.isInteger(existing.tag_id)) return res.status(500).json({ error: "Invalid existing rule source" });
+      existingSource = { rule_source_type: "tag", tag_id: existing.tag_id, detected_category: null };
+    } else {
+      const normalizedExistingDetectedCategory = normalizeDetectedCategory(existing.detected_category);
+      if (!normalizedExistingDetectedCategory) return res.status(500).json({ error: "Invalid existing rule source" });
+      existingSource = {
+        rule_source_type: "detected_category",
+        tag_id: null,
+        detected_category: normalizedExistingDetectedCategory
+      };
+    }
 
     const rawFlat = req.body?.flat_amount ?? existing.flat_amount;
     const rawPercent = req.body?.percent ?? existing.percent;
@@ -335,7 +391,6 @@ router.patch("/budget_rules/:id", async (req, res) => {
     const shouldRebuildCache = req.body?.start_date != null
       || req.body?.calendar_window != null
       || req.body?.type != null
-      || req.body?.tag_id != null
       || req.body?.flat_amount != null
       || req.body?.percent != null
       || req.body?.rollover_options != null
@@ -344,7 +399,7 @@ router.patch("/budget_rules/:id", async (req, res) => {
       ? await buildBudgetRuleCache(
         prisma,
         user.id,
-        nextTagId,
+        existingSource,
         parsedStart.raw,
         nextWindow,
         nextType,
@@ -357,7 +412,6 @@ router.patch("/budget_rules/:id", async (req, res) => {
     const updated = await prisma.budget_rules.update({
       where: { id: existing.id },
       data: {
-        ...(req.body?.tag_id != null ? { tag_id: nextTagId } : {}),
         ...(req.body?.name != null ? { name: String(req.body.name) } : {}),
         ...(req.body?.start_date != null ? { start_date: parsedStart.date } : {}),
         ...(req.body?.type != null ? { type: nextType } : {}),

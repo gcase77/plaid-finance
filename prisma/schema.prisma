@@ -122,6 +122,11 @@ enum RolloverOption {
   both
 }
 
+enum BudgetRuleSourceType {
+  tag
+  detected_category
+}
+
 model tags {
   id      Int     @id @default(autoincrement())
   name    String
@@ -151,7 +156,9 @@ model transaction_tags {
 model budget_rules {
   id               Int            @id @default(autoincrement())
   user_id          String         @db.Uuid
-  tag_id           Int
+  rule_source_type BudgetRuleSourceType @default(tag)
+  tag_id           Int?
+  detected_category String?
   name             String
   start_date       DateTime
   type             BudgetRuleType
@@ -162,7 +169,9 @@ model budget_rules {
   cache            Json?
 
   users users @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  tag   tags  @relation(fields: [tag_id], references: [id], onDelete: Cascade)
+  tag   tags? @relation(fields: [tag_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id, detected_category])
 }
 
 model system_logs {
