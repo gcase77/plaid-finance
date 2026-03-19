@@ -68,8 +68,8 @@ export function useTransactionFilters(transactions: Txn[]): UseTransactionFilter
   const [selectedBanks, setSelectedBanks] = useState<string[]>([]);
   const [selectedAccounts, setSelectedAccounts] = useState<string[]>([]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [amountMin, setAmountMin] = useState("");
-  const [amountMax, setAmountMax] = useState("");
+  const [amountMin, setAmountMin] = useState<string>("");
+  const [amountMax, setAmountMax] = useState<string>("");
   const [dateStart, setDateStart] = useState("");
   const [dateEnd, setDateEnd] = useState("");
   const [tagStateFilter, setTagStateFilter] = useState<TagStateFilter>("all");
@@ -97,12 +97,17 @@ export function useTransactionFilters(transactions: Txn[]): UseTransactionFilter
       const cat = t.personal_finance_category?.detailed || t.personal_finance_category?.primary || "";
       return selectedCategories.includes(cat);
     });
-    if ((minVal !== null && Number.isFinite(minVal)) || (maxVal !== null && Number.isFinite(maxVal))) {
+    if (minVal !== null && Number.isFinite(minVal)) {
       predicates.push((t) => {
-        const amt = Number(t.amount ?? 0);
-        if (minVal !== null && Number.isFinite(minVal) && amt < minVal) return false;
-        if (maxVal !== null && Number.isFinite(maxVal) && amt > maxVal) return false;
-        return true;
+        const amt = Number(t.amount || 0);
+        // Inclusive bounds: UI labels use "≥"/"≤".
+        return amt >= minVal;
+      });
+    }
+    if (maxVal !== null && Number.isFinite(maxVal)) {
+      predicates.push((t) => {
+        const amt = Number(t.amount || 0);
+        return amt <= maxVal;
       });
     }
     if (dateStart || dateEnd) {
@@ -131,7 +136,7 @@ export function useTransactionFilters(transactions: Txn[]): UseTransactionFilter
       predicates.push((t) =>
         selectedTagIds.includes(t.bucket_1_tag_id ?? -1)
         || selectedTagIds.includes(t.bucket_2_tag_id ?? -1)
-        || selectedTagIds.some((id) => t.meta_tag_ids?.includes(id) ?? false)
+        || (t.meta_tag_ids?.some((id) => selectedTagIds.includes(id)) ?? false)
       );
     }
 
