@@ -127,7 +127,7 @@ export default function TransactionTable({
             {taggingMode && <th style={{ width: 32 }}><input type="checkbox" className="form-check-input" checked={allSelected} onChange={(e) => toggleAll(e.target.checked)} /></th>}
             <th style={{ width: 40 }}></th>
             <th>Date</th>
-            <th>Tags</th>
+            <th className="visually-hidden">Tags</th>
             <th>Name</th>
             <th>Merchant</th>
             <th className="text-end">Amount</th>
