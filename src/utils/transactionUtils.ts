@@ -43,7 +43,7 @@ export const getTxnIconUrl = (t: Txn) => {
 };
 
 export const formatTxnAmount = (t: Txn) => 
-  `${String(t.iso_currency_code || "").toUpperCase() === "USD" ? "$" : ""} ${Number(t.amount || 0).toFixed(2)}`;
+  `${String(t.iso_currency_code || "").toUpperCase() === "USD" ? "$" : ""} ${Number(t.amount || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 export const normalizeDetectedCategoryValue = (value?: string | null): string =>
   String(value || "")

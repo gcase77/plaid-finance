@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { UseTransactionFiltersReturn } from "../../hooks/useTransactionFilters";
 import type { Tag } from "../types";
 import { DATE_RANGE_PRESETS, formatDateRangeLabel } from "./dateRangeUtils";
+import { getDisplayTagColor, getTextColorForBackground } from "../../utils/transactionUtils";
 
 type TransactionsFilterSectionProps = {
   filters: UseTransactionFiltersReturn;
@@ -9,6 +10,7 @@ type TransactionsFilterSectionProps = {
 };
 
 type SegmentOption<T extends string> = { value: T; label: string };
+const tagRank = (type: Tag["type"]) => (type === "meta" ? 0 : type.startsWith("spending") ? 1 : 2);
 
 function FilterAccordionSection({
   label,
@@ -68,13 +70,13 @@ function CheckboxFilter<T extends string | number>({
   tertiaryAction
 }: {
   label: string;
-  options: T[] | Array<[T, string]>;
+  options: T[] | Array<[T, React.ReactNode]>;
   selected: T[];
   onChange: (selected: T[]) => void;
   tertiaryAction?: { label: string; onClick: () => void; active?: boolean };
 }) {
-  const normalizedOptions: Array<[T, string]> = options.map((opt) =>
-    Array.isArray(opt) ? (opt as [T, string]) : ([opt, opt] as [T, string])
+  const normalizedOptions: Array<[T, React.ReactNode]> = options.map((opt) =>
+    Array.isArray(opt) ? (opt as [T, React.ReactNode]) : ([opt, String(opt)] as [T, React.ReactNode])
   );
 
   const handleSelectAll = () => onChange(normalizedOptions.map(([id]) => id));
@@ -244,6 +246,11 @@ function DateRangeDropdown({
 
 export default function TransactionsFilterSection({ filters, tags }: TransactionsFilterSectionProps) {
   const { state, actions, derived } = filters;
+  const sortedTags = [...tags].sort((a, b) => {
+    const rankDiff = tagRank(a.type) - tagRank(b.type);
+    if (rankDiff) return rankDiff;
+    return a.name.localeCompare(b.name);
+  });
 
   const searchSummary = [
     state.nameFilter.trim() ? `name: ${state.nameMode === "not" ? "not" : "contains"}` : "any",
@@ -424,7 +431,24 @@ export default function TransactionsFilterSection({ filters, tags }: Transaction
           <div className="mb-2">
             <CheckboxFilter
               label="Tags"
-              options={tags.map((tag) => [tag.id, tag.name] as [number, string])}
+              options={sortedTags.map((tag) => {
+                const color = getDisplayTagColor(tag.type, tag.color);
+                return [tag.id, (
+                  <span
+                    key={tag.id}
+                    className="badge"
+                    style={{
+                      fontSize: "0.7rem",
+                      padding: "0.2rem 0.45rem",
+                      backgroundColor: color,
+                      color: getTextColorForBackground(color),
+                      border: "1px solid rgba(0,0,0,0.12)"
+                    }}
+                  >
+                    {tag.name}
+                  </span>
+                )] as [number, React.ReactNode];
+              })}
               selected={state.selectedTagIds}
               onChange={(ids) => {
                 actions.setTagStateFilter("all");
