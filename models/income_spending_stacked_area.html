@@ -1,0 +1,98 @@
+
+<div style="padding: 1rem 0;">
+  <div style="display: flex; gap: 16px; margin-bottom: 12px; font-size: 12px; color: var(--color-text-secondary); flex-wrap: wrap;">
+    <span style="display:flex;align-items:center;gap:6px;"><span style="width:14px;height:14px;background:rgba(29,158,117,0.25);border:2px solid #1D9E75;border-radius:2px;display:inline-block;"></span> savings (gap)</span>
+    <span style="display:flex;align-items:center;gap:6px;"><span style="width:14px;height:14px;background:rgba(216,90,48,0.3);border:2px solid #D85A30;border-radius:2px;display:inline-block;"></span> spending</span>
+    <span style="display:flex;align-items:center;gap:6px;"><span style="width:14px;height:14px;background:rgba(186,117,23,0.3);border:2px solid #BA7517;border-radius:2px;display:inline-block;"></span> deficit</span>
+  </div>
+
+  <div style="position: relative; width: 100%; height: 340px;">
+    <canvas id="areaChart"></canvas>
+  </div>
+
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; flex-wrap: wrap; gap: 8px;">
+    <div style="display: flex; gap: 8px;" id="view-btns">
+      <button onclick="setView('area')" id="btn-area" style="background:var(--color-background-info);color:var(--color-text-info);border:0.5px solid var(--color-border-info);border-radius:var(--border-radius-md);padding:6px 14px;font-size:13px;cursor:pointer;">area</button>
+      <button onclick="setView('net')" id="btn-net" style="background:transparent;color:var(--color-text-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:6px 14px;font-size:13px;cursor:pointer;">net savings bar</button>
+    </div>
+    <span style="font-size: 12px; color: var(--color-text-secondary);" id="annotation">hover a month to see details</span>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const months = ['Jan 24','Feb 24','Mar 24','Apr 24','May 24','Jun 24','Jul 24','Aug 24','Sep 24','Oct 24','Nov 24','Dec 24','Jan 25','Feb 25','Mar 25','Apr 25','May 25','Jun 25','Jul 25','Aug 25','Sep 25','Oct 25','Nov 25','Dec 25'];
+const income   = [5200,5400,5800,6100,5900,6300,5700,6000,6200,5500,6800,7200,5300,5500,5900,6200,6000,6400,5800,6100,6300,5600,6900,7300];
+const spending = [4100,3900,4400,4800,4200,5100,4300,4500,4600,4200,5800,6200,4000,3800,4500,4700,4100,5000,4200,4400,4500,4100,5700,6100];
+const net = income.map((v,i) => v - spending[i]);
+
+let chart, currentView = 'area';
+
+function buildArea() {
+  if (chart) chart.destroy();
+  const barColors = net.map(v => v >= 0 ? 'rgba(29,158,117,0.7)' : 'rgba(216,90,48,0.7)');
+  const borderColors = net.map(v => v >= 0 ? '#1D9E75' : '#D85A30');
+
+  chart = new Chart(document.getElementById('areaChart'), {
+    type: currentView === 'area' ? 'line' : 'bar',
+    data: currentView === 'area' ? {
+      labels: months,
+      datasets: [
+        { label: 'Income', data: income, borderColor: '#1D9E75', backgroundColor: 'rgba(29,158,117,0.15)', borderWidth: 2, tension: 0.35, fill: 'origin', pointRadius: 2.5, pointHoverRadius: 5 },
+        { label: 'Spending', data: spending, borderColor: '#D85A30', backgroundColor: 'rgba(216,90,48,0.2)', borderWidth: 2, tension: 0.35, fill: 'origin', pointRadius: 2.5, pointHoverRadius: 5 }
+      ]
+    } : {
+      labels: months,
+      datasets: [{ label: 'Net savings', data: net, backgroundColor: barColors, borderColor: borderColors, borderWidth: 1, borderRadius: 4 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => {
+              if (currentView === 'net') return (ctx.parsed.y >= 0 ? ' saved ' : ' over by ') + '$' + Math.abs(ctx.parsed.y).toLocaleString();
+              return ' $' + ctx.parsed.y.toLocaleString();
+            },
+            afterBody: (items) => {
+              if (currentView === 'area' && items.length >= 2) {
+                const inc = items.find(i=>i.dataset.label==='Income');
+                const sp = items.find(i=>i.dataset.label==='Spending');
+                if (inc && sp) {
+                  const diff = inc.parsed.y - sp.parsed.y;
+                  return ['', diff >= 0 ? `  saved $${diff.toLocaleString()}` : `  over by $${Math.abs(diff).toLocaleString()}`];
+                }
+              }
+              return [];
+            }
+          }
+        }
+      },
+      scales: {
+        x: { grid: { color: 'rgba(128,128,128,0.1)' }, ticks: { color: '#888780', font: { size: 11 }, maxRotation: 45, autoSkip: true, maxTicksLimit: 12 } },
+        y: { grid: { color: 'rgba(128,128,128,0.1)' }, ticks: { color: '#888780', font: { size: 11 }, callback: v => '$' + (v/1000).toFixed(0) + 'k' } }
+      },
+      onHover: (_, els) => {
+        if (els.length && currentView === 'area') {
+          const i = els[0].index;
+          const diff = income[i] - spending[i];
+          document.getElementById('annotation').textContent = months[i] + ': ' + (diff >= 0 ? 'saved $' + diff.toLocaleString() : 'over by $' + Math.abs(diff).toLocaleString());
+        }
+      }
+    }
+  });
+}
+
+function setView(v) {
+  currentView = v;
+  document.querySelectorAll('#view-btns button').forEach(b => {
+    b.style.background = 'transparent'; b.style.color = 'var(--color-text-secondary)'; b.style.borderColor = 'var(--color-border-tertiary)';
+  });
+  const active = document.getElementById('btn-' + v);
+  active.style.background = 'var(--color-background-info)'; active.style.color = 'var(--color-text-info)'; active.style.borderColor = 'var(--color-border-info)';
+  buildArea();
+}
+
+buildArea();
+</script>

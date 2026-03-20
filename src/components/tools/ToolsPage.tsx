@@ -4,12 +4,14 @@ import { supabase } from "../../lib/supabase";
 import { useTransactionsData } from "../../hooks/useTransactionsData";
 import TransferGroupTool from "./TransferGroupTool";
 import BudgetRulesTool from "./BudgetRulesTool";
+import VisualizeTrendsTool from "./VisualizeTrendsTool";
 
-type ToolKey = "budget-rules" | "account-transfers";
+type ToolKey = "budget-rules" | "account-transfers" | "visualize-trends";
 
 const TOOLS: { key: ToolKey; label: string }[] = [
   { key: "budget-rules", label: "Budget Rules" },
-  { key: "account-transfers", label: "Find Transfers" }
+  { key: "account-transfers", label: "Find Transfers" },
+  { key: "visualize-trends", label: "Visualize Trends" }
 ];
 
 export default function ToolsPage() {
@@ -51,6 +53,9 @@ export default function ToolsPage() {
             token={token}
             invalidateTransactionMeta={invalidateTransactionMeta}
           />
+        )}
+        {active === "visualize-trends" && (
+          <VisualizeTrendsTool transactions={transactions} token={token} />
         )}
       </div>
     </div>
