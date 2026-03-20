@@ -2,7 +2,7 @@ import { useMemo, useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import type { Tag, Txn } from "../types";
 import { buildAuthHeaders } from "../../lib/auth";
-import { DATE_RANGE_PRESETS, formatDateRangeLabel } from "../shared/dateRangeUtils";
+import { DATE_RANGE_PRESETS } from "../shared/dateRangeUtils";
 import TransactionTable from "../shared/TransactionTable";
 import { buildDatePreset } from "../../utils/datePresets";
 import FlowSankeySvg from "./FlowSankeySvg";
@@ -165,14 +165,11 @@ export default function VisualizeTrendsTool({ transactions, token }: Props) {
     <div className="card">
       <div className="card-body">
         <h6 className="card-title mb-1">Visualize Trends</h6>
-        <p className="text-muted small mb-2">Account transfers are excluded. Date range applies to every view in this tool.</p>
+        <p className="text-muted small mb-2">Click graphs to view transactions</p>
 
-        <div className="mb-3 pb-3 border-bottom">
-          <div className="d-flex flex-wrap align-items-baseline justify-content-between gap-2 mb-2">
-            <span className="small text-muted">Date range</span>
-            <span className="small text-muted" style={{ opacity: 0.85 }}>{formatDateRangeLabel(startDate, endDate)}</span>
-          </div>
-          <div className="btn-group btn-group-sm w-100 flex-wrap mb-2" role="group">
+        <div className="mb-3 pb-2 border-bottom small">
+          <div className="fw-medium text-body-secondary mb-2">Date range</div>
+          <div className="d-flex flex-wrap gap-1 mb-2" role="group">
             {DATE_RANGE_PRESETS.map(({ value, label }) => (
               <button key={value} type="button" className="btn btn-outline-secondary btn-sm"
                 onClick={() => {
@@ -183,16 +180,12 @@ export default function VisualizeTrendsTool({ transactions, token }: Props) {
               </button>
             ))}
           </div>
-          <div className="small text-muted mb-1" style={{ opacity: 0.9 }}>Custom range</div>
-          <div className="row g-1">
-            <div className="col-6 col-md-3">
-              <input type="date" className="form-control form-control-sm" value={startDate}
-                onChange={(e) => bumpRange(e.target.value, endDate)} />
-            </div>
-            <div className="col-6 col-md-3">
-              <input type="date" className="form-control form-control-sm" value={endDate}
-                onChange={(e) => bumpRange(startDate, e.target.value)} />
-            </div>
+          <div className="d-flex flex-wrap align-items-center gap-2">
+            <input type="date" className="form-control form-control-sm" style={{ width: "auto", minWidth: "8rem" }} value={startDate}
+              onChange={(e) => bumpRange(e.target.value, endDate)} />
+            <span className="text-body-secondary user-select-none">–</span>
+            <input type="date" className="form-control form-control-sm" style={{ width: "auto", minWidth: "8rem" }} value={endDate}
+              onChange={(e) => bumpRange(startDate, e.target.value)} />
           </div>
         </div>
 
@@ -252,19 +245,11 @@ export default function VisualizeTrendsTool({ transactions, token }: Props) {
           <>
             {flowModel ? (
               <div className="border rounded p-2 mb-3" style={{ background: "var(--bs-tertiary-bg)" }}>
-                <p className="text-muted small mb-2 mb-md-0">
-                  {flowGrouping === "detected"
-                    ? "Income categories → bridge → spending categories."
-                    : "Income meta → income buckets → bridge → spending buckets → spending meta."}{" "}
-                  <span className="text-nowrap">Income ${flowModel.totalIncome.toFixed(2)}</span>
-                  <span className="text-muted mx-1">·</span>
-                  <span className="text-nowrap">Spending ${flowModel.totalSpending.toFixed(2)}</span>
-                </p>
-                <div className="overflow-x-auto mt-2">
+                <div className="overflow-x-auto">
                   <FlowSankeySvg
                     model={flowModel}
                     width={1200}
-                    height={Math.max(420, Math.min(160 + flowModel.nodes.length * 18, 720))}
+                    height={Math.max(448, Math.min(232 + flowModel.nodes.length * 18, 820))}
                     selectedId={flowNodeId}
                     onSelectNode={setFlowNodeId}
                   />

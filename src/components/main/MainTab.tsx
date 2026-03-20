@@ -53,7 +53,7 @@ export default function MainTab(props: MainTabProps) {
                   </div>
                   <div className="d-flex justify-content-between small text-muted mb-2"><span>1</span><span>730</span></div>
                   <div className="d-flex gap-2">
-                    <button className="btn btn-success btn-sm" onClick={() => { linkBank(historyDays); setShowHistoryPicker(false); }}>Continue to Plaid</button>
+                    <button className="btn btn-success btn-sm" onClick={() => { linkBank(historyDays); setShowHistoryPicker(false); }}>Link via Plaid</button>
                     <button className="btn btn-outline-secondary btn-sm" onClick={() => setShowHistoryPicker(false)}>Cancel</button>
                   </div>
                 </div>

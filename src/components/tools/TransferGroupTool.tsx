@@ -170,7 +170,7 @@ export default function TransferGroupTool({ transactions, token, invalidateTrans
     <div className="card">
       <div className="card-body">
         <h6 className="card-title mb-1">Account Transfers</h6>
-        <p className="text-muted small mb-3">Recognized transfers will be ignored from income and spending calculations.</p>
+        <p className="text-muted small mb-3">Add transfer pairs between your accounts. These transactions are excluded from income and spending calculations.</p>
 
         {error && <div className="alert alert-danger py-1 small">{error}</div>}
 

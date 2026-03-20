@@ -187,7 +187,7 @@ export function layoutFlowSankey(model: FlowSankeyModel, width: number, height: 
   const padX = 8;
   const padY = 12;
   const nodeW = 14;
-  const labelGutter = 110;
+  const labelGutter = 148;
   const innerW = width - 2 * padX - labelGutter;
   const innerH = height - 2 * padY;
   const maxCol = Math.max(0, model.layerColumns - 1);
@@ -208,11 +208,19 @@ export function layoutFlowSankey(model: FlowSankeyModel, width: number, height: 
     const gapBetween = 3;
     const totalGap = Math.max(0, arr.length - 1) * gapBetween;
     const usable = innerH - totalGap;
+    const sortedCol = [...arr].sort((a, b) => b.value - a.value);
+    let rawHs = sortedCol.map((n) => {
+      const frac = Math.max(n.value, 0) / sum;
+      const minH = n.value > 0 ? 4 : 2;
+      return Math.max(frac * usable, minH);
+    });
+    const rawSum = rawHs.reduce((s, h) => s + h, 0);
+    if (rawSum > Math.max(1, usable))
+      rawHs = rawHs.map((h) => (h * usable) / rawSum);
     let y = padY;
     const x = padX + ci * colGap;
-    for (const n of [...arr].sort((a, b) => b.value - a.value)) {
-      const frac = Math.max(n.value, 0) / sum;
-      const h = Math.max(frac * usable, n.value > 0 ? 6 : 3);
+    for (const [i, n] of sortedCol.entries()) {
+      const h = rawHs[i];
       const ln: LaidOutNode = { ...n, x, y, w: nodeW, h };
       laidNodes.push(ln);
       laidMap.set(n.id, ln);

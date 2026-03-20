@@ -4,8 +4,9 @@ import TransactionTable from "../shared/TransactionTable";
 import { getTxnDateOnly } from "../../utils/transactionUtils";
 
 type TimelineView = "area" | "net";
+type Granularity = "month" | "week";
 
-type MonthRow = {
+type Row = {
   key: string;
   label: string;
   income: number;
@@ -24,8 +25,20 @@ function toMonthLabel(isoYYYYMM: string) {
   return dt.toLocaleDateString("en-US", { month: "short", year: "2-digit" });
 }
 
-function buildMonthlyRows(txns: Txn[]): MonthRow[] {
-  const map = new Map<string, MonthRow>();
+function mondayOf(isoDate: string) {
+  const d = new Date(`${isoDate}T12:00:00`);
+  const day = d.getDay();
+  d.setDate(d.getDate() + (day === 0 ? -6 : 1 - day));
+  return d.toISOString().slice(0, 10);
+}
+
+function weekLabel(mondayIso: string) {
+  const d = new Date(`${mondayIso}T12:00:00`);
+  return `Week of ${d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "2-digit" })}`;
+}
+
+function buildMonthlyRows(txns: Txn[]): Row[] {
+  const map = new Map<string, Row>();
   for (const t of txns) {
     const d = getTxnDateOnly(t);
     if (!d) continue;
@@ -33,6 +46,24 @@ function buildMonthlyRows(txns: Txn[]): MonthRow[] {
     const amt = t.amount ?? 0;
     if (amt === 0) continue;
     const row = map.get(key) ?? { key, label: toMonthLabel(key), income: 0, spending: 0, net: 0, transactions: [] };
+    if (amt < 0) row.income += Math.abs(amt);
+    else row.spending += amt;
+    row.net = row.income - row.spending;
+    row.transactions.push(t);
+    map.set(key, row);
+  }
+  return [...map.values()].sort((a, b) => a.key.localeCompare(b.key));
+}
+
+function buildWeeklyRows(txns: Txn[]): Row[] {
+  const map = new Map<string, Row>();
+  for (const t of txns) {
+    const d = getTxnDateOnly(t);
+    if (!d) continue;
+    const key = mondayOf(d);
+    const amt = t.amount ?? 0;
+    if (amt === 0) continue;
+    const row = map.get(key) ?? { key, label: weekLabel(key), income: 0, spending: 0, net: 0, transactions: [] };
     if (amt < 0) row.income += Math.abs(amt);
     else row.spending += amt;
     row.net = row.income - row.spending;
@@ -50,11 +81,23 @@ function xyPoint(i: number, value: number, len: number, vMax: number, w: number,
   return { x, y };
 }
 
+function LineSwatch({ stroke }: { stroke: string }) {
+  return (
+    <svg width={28} height={10} aria-hidden className="flex-shrink-0">
+      <line x1={0} y1={5} x2={28} y2={5} stroke={stroke} strokeWidth={2.5} strokeLinecap="round" />
+    </svg>
+  );
+}
+
 export default function TimelineTrendChart({ transactions, tags }: { transactions: Txn[]; tags: Tag[] }) {
   const [view, setView] = useState<TimelineView>("area");
-  const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
-  const rows = useMemo(() => buildMonthlyRows(transactions), [transactions]);
-  const selected = useMemo(() => rows.find((r) => r.key === selectedMonth) ?? null, [rows, selectedMonth]);
+  const [granularity, setGranularity] = useState<Granularity>("month");
+  const [selectedKey, setSelectedKey] = useState<string | null>(null);
+  const rows = useMemo(
+    () => (granularity === "month" ? buildMonthlyRows(transactions) : buildWeeklyRows(transactions)),
+    [transactions, granularity]
+  );
+  const selected = useMemo(() => rows.find((r) => r.key === selectedKey) ?? null, [rows, selectedKey]);
 
   const width = 1200;
   const height = 420;
@@ -75,18 +118,36 @@ export default function TimelineTrendChart({ transactions, tags }: { transaction
 
   const zeroY = height / 2;
   const barWidth = Math.max(8, (width - 2 * pad) / rows.length - 4);
+  const xSkip = Math.max(1, Math.ceil(rows.length / 12));
 
   return (
     <>
       <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
-        <div className="d-flex gap-3 small text-muted">
-          <span><span className="badge" style={{ background: "rgba(29,158,117,0.25)", color: "#1D9E75", border: "1px solid #1D9E75" }}> </span> savings (gap)</span>
-          <span><span className="badge" style={{ background: "rgba(216,90,48,0.25)", color: "#D85A30", border: "1px solid #D85A30" }}> </span> spending</span>
-          <span><span className="badge" style={{ background: "rgba(186,117,23,0.25)", color: "#BA7517", border: "1px solid #BA7517" }}> </span> deficit</span>
+        <div className="d-flex flex-column flex-sm-row gap-2 gap-sm-4 small">
+          <span className="d-flex align-items-center gap-2">
+            <LineSwatch stroke="#1D9E75" />
+            <span className="fw-semibold text-body">Income</span>
+          </span>
+          <span className="d-flex align-items-center gap-2">
+            <LineSwatch stroke="#D85A30" />
+            <span className="fw-semibold text-body">Spending</span>
+          </span>
         </div>
-        <div className="btn-group btn-group-sm" role="group">
-          <button type="button" className={`btn ${view === "area" ? "btn-secondary" : "btn-outline-secondary"}`} onClick={() => setView("area")}>Area</button>
-          <button type="button" className={`btn ${view === "net" ? "btn-secondary" : "btn-outline-secondary"}`} onClick={() => setView("net")}>Net savings bar</button>
+        <div className="d-flex flex-wrap gap-2 justify-content-end">
+          <div className="btn-group btn-group-sm" role="group">
+            <button type="button" className={`btn ${granularity === "week" ? "btn-secondary" : "btn-outline-secondary"}`}
+              onClick={() => { setGranularity("week"); setSelectedKey(null); }}>
+              Week
+            </button>
+            <button type="button" className={`btn ${granularity === "month" ? "btn-secondary" : "btn-outline-secondary"}`}
+              onClick={() => { setGranularity("month"); setSelectedKey(null); }}>
+              Month
+            </button>
+          </div>
+          <div className="btn-group btn-group-sm" role="group">
+            <button type="button" className={`btn ${view === "area" ? "btn-secondary" : "btn-outline-secondary"}`} onClick={() => setView("area")}>Area</button>
+            <button type="button" className={`btn ${view === "net" ? "btn-secondary" : "btn-outline-secondary"}`} onClick={() => setView("net")}>Net savings bar</button>
+          </div>
         </div>
       </div>
 
@@ -108,8 +169,8 @@ export default function TimelineTrendChart({ transactions, tags }: { transaction
               <path d={spendPath} fill="none" stroke="#D85A30" strokeWidth={2.5} />
               {rows.map((r, i) => (
                 <g key={`pt-${r.key}`}>
-                  <circle cx={incomePoints[i].x} cy={incomePoints[i].y} r={3} fill="#1D9E75" style={{ cursor: "pointer" }} onClick={() => setSelectedMonth(r.key)} />
-                  <circle cx={spendPoints[i].x} cy={spendPoints[i].y} r={3} fill="#D85A30" style={{ cursor: "pointer" }} onClick={() => setSelectedMonth(r.key)} />
+                  <circle cx={incomePoints[i].x} cy={incomePoints[i].y} r={3} fill="#1D9E75" style={{ cursor: "pointer" }} onClick={() => setSelectedKey(r.key)} />
+                  <circle cx={spendPoints[i].x} cy={spendPoints[i].y} r={3} fill="#D85A30" style={{ cursor: "pointer" }} onClick={() => setSelectedKey(r.key)} />
                 </g>
               ))}
             </>
@@ -132,7 +193,7 @@ export default function TimelineTrendChart({ transactions, tags }: { transaction
                     rx={3}
                     fill={r.net >= 0 ? "rgba(29,158,117,0.7)" : "rgba(216,90,48,0.7)"}
                     style={{ cursor: "pointer" }}
-                    onClick={() => setSelectedMonth(r.key)}
+                    onClick={() => setSelectedKey(r.key)}
                   />
                 );
               })}
@@ -141,21 +202,23 @@ export default function TimelineTrendChart({ transactions, tags }: { transaction
 
           {rows.map((r, i) => {
             const x = xyPoint(i, 0, rows.length, 1, width, height, pad).x;
-            if (i % Math.ceil(rows.length / 12) !== 0 && i !== rows.length - 1) return null;
+            if (i % xSkip !== 0 && i !== rows.length - 1) return null;
             return <text key={`xl-${r.key}`} x={x} y={height - 8} textAnchor="middle" fontSize="10" fill="var(--bs-secondary-color)">{r.label}</text>;
           })}
         </svg>
       </div>
 
-      <p className="text-muted small mt-2 mb-0">
-        {selected ? `${selected.label}: income ${fmt(selected.income)}, spending ${fmt(selected.spending)}, ${selected.net >= 0 ? `saved ${fmt(selected.net)}` : `deficit ${fmt(Math.abs(selected.net))}`}` : "Click a month point or bar to view composing transactions."}
-      </p>
+      {selected && (
+        <p className="text-muted small mt-2 mb-0">
+          {`${selected.label}: income ${fmt(selected.income)}, spending ${fmt(selected.spending)}, ${selected.net >= 0 ? `saved ${fmt(selected.net)}` : `deficit ${fmt(Math.abs(selected.net))}`}`}
+        </p>
+      )}
 
       {selected && (
         <div className="mt-3 border-top pt-3">
           <div className="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
             <h6 className="small mb-0 fw-semibold">{selected.label}</h6>
-            <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => setSelectedMonth(null)}>Clear</button>
+            <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => setSelectedKey(null)}>Clear</button>
           </div>
           <TransactionTable transactions={selected.transactions} tags={tags} keyPrefix="viz-timeline" />
         </div>
