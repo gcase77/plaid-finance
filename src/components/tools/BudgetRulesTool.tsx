@@ -88,7 +88,28 @@ const updateFormToBody = (f: FormState) => ({
 const ROLLOVER_OPTS: RolloverOption[] = ["none", "surplus", "deficit", "both"];
 const ROLLOVER_LABELS: Record<RolloverOption, string> = { none: "None", surplus: "Surplus", deficit: "Deficit", both: "Both" };
 const EMPTY_TAGS: Tag[] = [];
-const SOURCE_LABELS: Record<BudgetRuleSourceType, string> = { tag: "Tag", detected_category: "Detected category" };
+const BUDGET_INTRO =
+  "Set spending targets by tag or detected category. Choose a weekly or monthly budget. Set a fixed amount or base it on a percentage of last period’s income. Optionally roll over any surplus or deficit to the next period.";
+const BASED_ON_TIP =
+  "Track a spending tag or a detected category. Spending tags are recommended, since detected categories can be inaccurate.";
+const START_DATE_TIP = "The start of this budget rule. Rollover begins from this period onward.";
+
+function FieldInfoTip({ text, ariaLabel }: { text: string; ariaLabel: string }) {
+  const [on, setOn] = useState(false);
+  return (
+    <span className="position-relative d-inline-block ms-1" onMouseEnter={() => setOn(true)} onMouseLeave={() => setOn(false)}>
+      <span className="text-secondary" style={{ cursor: "help" }} aria-label={ariaLabel}>ⓘ</span>
+      {on && (
+        <span
+          className="position-absolute top-100 start-0 mt-1 p-2 rounded shadow-sm small text-white"
+          style={{ zIndex: 300, width: 280, whiteSpace: "pre-line", background: "#212529", pointerEvents: "none" }}
+        >
+          {text}
+        </span>
+      )}
+    </span>
+  );
+}
 
 const WINDOW_SIZE = 3;
 const ON_BUDGET_EPS = 0.01;
@@ -102,6 +123,28 @@ function toShortDate(iso: string): string {
   const d = Number(parts[2]);
   if (Number.isNaN(m) || Number.isNaN(d) || m < 1 || m > 12) return iso;
   return `${MONTH_SHORT[m - 1]} ${d}`;
+}
+
+/** Bar label: "Mar 21" or "Mar 21" + subtle ’25 when not current year. */
+function PeriodBarEndLabel({ endDate }: { endDate: string }) {
+  const iso10 = endDate.slice(0, 10);
+  const parts = iso10.split("-");
+  if (parts.length !== 3) return <span className="text-muted text-nowrap" style={{ minWidth: 44, fontSize: "0.75rem" }}>{endDate}</span>;
+  const y = Number(parts[0]);
+  const m = Number(parts[1]);
+  const d = Number(parts[2]);
+  if (Number.isNaN(m) || Number.isNaN(d) || m < 1 || m > 12) {
+    return <span className="text-muted text-nowrap" style={{ minWidth: 44, fontSize: "0.75rem" }}>{endDate}</span>;
+  }
+  const md = `${MONTH_SHORT[m - 1]} ${d}`;
+  const curY = new Date().getFullYear();
+  const showYr = !Number.isNaN(y) && y !== curY;
+  return (
+    <span className="text-muted text-nowrap" style={{ minWidth: 44, fontSize: "0.75rem" }}>
+      {md}
+      {showYr && <span style={{ fontSize: "0.58rem", opacity: 0.72, marginLeft: 1 }}>’{String(y).slice(-2)}</span>}
+    </span>
+  );
 }
 
 function budgetDiff(e: BudgetRuleCacheEntry): number {
@@ -122,13 +165,9 @@ function statusBadge(e: BudgetRuleCacheEntry): string {
 }
 
 function statusTooltip(e: BudgetRuleCacheEntry): string {
-  const budget = e.effective_budget ?? 0;
-  const diff = budgetDiff(e);
-  if (Math.abs(diff) < ON_BUDGET_EPS) return `Exactly on budget ($${budget.toFixed(2)})`;
-  const d = Math.abs(diff).toFixed(2);
-  return diff >= 0
-    ? `Under by $${d} — $${e.associated_spend.toFixed(2)} of $${budget.toFixed(2)}`
-    : `Over by $${d} of $${budget.toFixed(2)} budget`;
+  const spent = e.associated_spend.toFixed(2);
+  const cap = e.effective_budget == null ? "—" : `$${e.effective_budget.toFixed(2)}`;
+  return `$${spent} spent of ${cap} budget`;
 }
 
 function BtnGroup<T extends string>({
@@ -162,7 +201,10 @@ function RuleForm({
   onSave,
   onCancel,
   isPending,
-  error
+  error,
+  wizardPhase,
+  onWizardNext,
+  onWizardBack
 }: {
   form: FormState;
   setForm: React.Dispatch<React.SetStateAction<FormState>>;
@@ -177,6 +219,9 @@ function RuleForm({
   onCancel: () => void;
   isPending: boolean;
   error: string | null;
+  wizardPhase?: "source" | "details";
+  onWizardNext?: () => void;
+  onWizardBack?: () => void;
 }) {
   const set = (key: keyof FormState) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     if (key === "start_date" && useEarliestStart) setUseEarliestStart(false);
@@ -215,67 +260,102 @@ function RuleForm({
     setForm((prev) => ({ ...prev, start_date: earliest }));
   };
 
-  return (
-    <div className="border rounded p-3 mb-3 bg-light">
-      {error && <div className="alert alert-danger py-1 small mb-2">{error}</div>}
+  const sourceOk = form.rule_source_type === "tag" ? !!form.tag_id : !!form.detected_category;
+  const saveDisabled = isPending || !form.name.trim() || !sourceOk;
+
+  const basedOnSelect = (
+    <select
+      className="form-select form-select-sm"
+      id={`${checkboxId}-source-type`}
+      value={form.rule_source_type}
+      onChange={handleSourceTypeChange}
+      disabled={sourceLocked}
+    >
+      <option value="tag">Tag</option>
+      <option value="detected_category">Detected category</option>
+    </select>
+  );
+  const sourceValueSelect = form.rule_source_type === "tag" ? (
+    <select
+      className="form-select form-select-sm"
+      value={form.tag_id}
+      disabled={sourceLocked}
+      onChange={(e) => void handleSourceValueChange(e.target.value)}
+    >
+      <option value="">Select tag…</option>
+      {spendingTags.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+    </select>
+  ) : (
+    <select
+      className="form-select form-select-sm"
+      value={form.detected_category}
+      disabled={sourceLocked}
+      onChange={(e) => void handleSourceValueChange(e.target.value)}
+    >
+      <option value="">Select category…</option>
+      {detectedCategoryOptions.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+    </select>
+  );
+
+  const startDateCol = (
+    <div className={wizardPhase === "details" ? "col-12 col-md-6" : "col-12 col-md-4"}>
+      <div className="d-flex align-items-center gap-1 mb-1">
+        <label className="form-label small mb-0">Start Date</label>
+        <FieldInfoTip text={START_DATE_TIP} ariaLabel="About start date" />
+      </div>
+      <input type="date" className="form-control form-control-sm mb-1" value={form.start_date} onChange={set("start_date")} />
+      <div className="form-check">
+        <input
+          className="form-check-input"
+          type="checkbox"
+          id={checkboxId}
+          checked={useEarliestStart}
+          onChange={(e) => void handleUseEarliestChange(e.target.checked)}
+        />
+        <label className="form-check-label small" htmlFor={checkboxId}>
+          {form.rule_source_type === "tag" ? "Use earliest tagged transaction" : "Use earliest detected transaction"}
+        </label>
+      </div>
+    </div>
+  );
+  const detailsTop =
+    wizardPhase === "details" ? (
       <div className="row g-2 mb-2">
-        <div className="col-12 col-md-4">
+        <div className="col-12 col-md-6">
           <label className="form-label small mb-1">Name</label>
           <input className="form-control form-control-sm" value={form.name} onChange={set("name")} placeholder="Rule name" autoFocus />
         </div>
+        {startDateCol}
+      </div>
+    ) : (
+      <div className="row g-2 mb-2">
         <div className="col-12 col-md-4">
-          <label className="form-label small mb-1">Based On</label>
-          <select
-            className="form-select form-select-sm"
-            value={form.rule_source_type}
-            onChange={handleSourceTypeChange}
-            disabled={sourceLocked}
-          >
-            <option value="tag">Tag</option>
-            <option value="detected_category">Detected category</option>
-          </select>
+          <label className="form-label small mb-1">Name</label>
+          <input
+            className="form-control form-control-sm"
+            value={form.name}
+            onChange={set("name")}
+            placeholder="Rule name"
+            autoFocus={wizardPhase == null}
+          />
+        </div>
+        <div className="col-12 col-md-4">
+          <div className="d-flex align-items-center gap-1 mb-1">
+            <label className="form-label small mb-0" htmlFor={`${checkboxId}-source-type`}>Based On</label>
+            <FieldInfoTip text={BASED_ON_TIP} ariaLabel="About Based On" />
+          </div>
+          {basedOnSelect}
         </div>
         <div className="col-12 col-md-4">
           <label className="form-label small mb-1">{form.rule_source_type === "tag" ? "Tag" : "Detected Category"}</label>
-          {form.rule_source_type === "tag" ? (
-            <select
-              className="form-select form-select-sm"
-              value={form.tag_id}
-              disabled={sourceLocked}
-              onChange={(e) => void handleSourceValueChange(e.target.value)}
-            >
-              <option value="">Select tag…</option>
-              {spendingTags.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-            </select>
-          ) : (
-            <select
-              className="form-select form-select-sm"
-              value={form.detected_category}
-              disabled={sourceLocked}
-              onChange={(e) => void handleSourceValueChange(e.target.value)}
-            >
-              <option value="">Select category…</option>
-              {detectedCategoryOptions.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
-            </select>
-          )}
+          {sourceValueSelect}
         </div>
-        <div className="col-12 col-md-4">
-          <label className="form-label small mb-1">Start Date</label>
-          <input type="date" className="form-control form-control-sm mb-1" value={form.start_date} onChange={set("start_date")} />
-          <div className="form-check">
-            <input
-              className="form-check-input"
-              type="checkbox"
-              id={checkboxId}
-              checked={useEarliestStart}
-              onChange={(e) => void handleUseEarliestChange(e.target.checked)}
-            />
-            <label className="form-check-label small" htmlFor={checkboxId}>
-              {form.rule_source_type === "tag" ? "Use earliest tagged transaction" : "Use earliest detected transaction"}
-            </label>
-          </div>
-        </div>
+        {startDateCol}
       </div>
+    );
+  const detailsBlock = (
+    <>
+      {detailsTop}
       <div className="row g-2 mb-3 align-items-end">
         <div className="col-auto">
           <label className="form-label small mb-1">Type</label>
@@ -323,16 +403,61 @@ function RuleForm({
           </select>
         </div>
       </div>
-      <div className="d-flex gap-2">
-        <button
-          className="btn btn-sm btn-primary px-3"
-          disabled={isPending || !form.name.trim() || (form.rule_source_type === "tag" ? !form.tag_id : !form.detected_category)}
-          onClick={onSave}
-        >
-          {isPending ? "Saving…" : "Save"}
-        </button>
-        <button className="btn btn-sm btn-outline-secondary px-3" onClick={onCancel}>Cancel</button>
-      </div>
+    </>
+  );
+
+  return (
+    <div className="border rounded p-3 mb-3 bg-light">
+      {error && <div className="alert alert-danger py-1 small mb-2">{error}</div>}
+      {wizardPhase === "source" ? (
+        <>
+          <div className="row g-2 mb-3">
+            <div className="col-12 col-md-6">
+              <div className="d-flex align-items-center gap-1 mb-1">
+                <label className="form-label small mb-0" htmlFor={`${checkboxId}-source-type`}>Based On</label>
+                <FieldInfoTip text={BASED_ON_TIP} ariaLabel="About Based On" />
+              </div>
+              {basedOnSelect}
+            </div>
+            <div className="col-12 col-md-6">
+              <label className="form-label small mb-1">{form.rule_source_type === "tag" ? "Tag" : "Detected Category"}</label>
+              {sourceValueSelect}
+            </div>
+          </div>
+          <div className="d-flex gap-2">
+            <button type="button" className="btn btn-sm btn-primary px-3" disabled={!sourceOk} onClick={onWizardNext}>
+              Next
+            </button>
+            <button type="button" className="btn btn-sm btn-outline-secondary px-3" onClick={onCancel}>Cancel</button>
+          </div>
+        </>
+      ) : wizardPhase === "details" ? (
+        <>
+          {detailsBlock}
+          <div className="d-flex gap-2">
+            <button type="button" className="btn btn-sm btn-outline-secondary px-3" onClick={onWizardBack}>Back</button>
+            <button type="button" className="btn btn-sm btn-primary px-3" disabled={saveDisabled} onClick={onSave}>
+              {isPending ? "Saving…" : "Save"}
+            </button>
+            <button type="button" className="btn btn-sm btn-outline-secondary px-3" onClick={onCancel}>Cancel</button>
+          </div>
+        </>
+      ) : (
+        <>
+          {detailsBlock}
+          <div className="d-flex gap-2">
+            <button
+              type="button"
+              className="btn btn-sm btn-primary px-3"
+              disabled={saveDisabled}
+              onClick={onSave}
+            >
+              {isPending ? "Saving…" : "Save"}
+            </button>
+            <button type="button" className="btn btn-sm btn-outline-secondary px-3" onClick={onCancel}>Cancel</button>
+          </div>
+        </>
+      )}
     </div>
   );
 }
@@ -402,9 +527,7 @@ function BudgetStatusBlock({ cache }: { cache: BudgetRuleCacheEntry[] }) {
           const showTip = hoveredRow === i;
           return (
             <div key={`${e.end_date}-${i}`} className="d-flex align-items-center gap-2 mb-2 small">
-              <span className="text-muted text-nowrap" style={{ width: 44, fontSize: "0.75rem" }}>
-                {toShortDate(e.end_date)}
-              </span>
+              <PeriodBarEndLabel endDate={e.end_date} />
               <div
                 className="flex-grow-1 position-relative rounded bg-secondary bg-opacity-25"
                 style={{ height: 14, cursor: "help" }}
@@ -445,19 +568,29 @@ function BudgetStatusBlock({ cache }: { cache: BudgetRuleCacheEntry[] }) {
   );
 }
 
+function formatRuleAmountWindow(rule: Pick<BudgetRule, "type" | "flat_amount" | "percent" | "calendar_window">): string {
+  const w = rule.calendar_window === "month" ? "monthly" : "weekly";
+  if (rule.type === "flat_rate") {
+    const a = rule.flat_amount;
+    return a == null ? `— ${w}` : `$${a.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 })} ${w}`;
+  }
+  return `${rule.percent ?? "—"}% of income ${w}`;
+}
+
 function CacheTable({ cache, ruleType }: { cache: BudgetRuleCacheEntry[]; ruleType: BudgetRuleType }) {
   if (!cache.length) return <div className="text-muted small py-2">No period data yet.</div>;
+  const showIncome = ruleType === "percent_of_income";
   return (
     <div className="table-responsive">
-      <table className="table table-sm table-striped mb-0 small">
+      <table className="table table-sm table-striped mb-0 text-muted" style={{ fontSize: "0.78rem" }}>
         <thead>
           <tr>
             <th>Period</th>
-            <th className="text-end">Base</th>
-            <th className="text-end">Effective</th>
+            <th className="text-end">Base Budget</th>
+            <th className="text-end">Effective Budget</th>
+            {showIncome && <th className="text-end">Income</th>}
             <th className="text-end">Spend</th>
-            {ruleType === "percent_of_income" && <th className="text-end">Income</th>}
-            <th className="text-end">Balance</th>
+            <th className="text-end">Rollover Balance</th>
           </tr>
         </thead>
         <tbody>
@@ -466,10 +599,8 @@ function CacheTable({ cache, ruleType }: { cache: BudgetRuleCacheEntry[]; ruleTy
               <td className="text-nowrap">{e.start_date} – {e.end_date}</td>
               <td className="text-end">{e.base_budget == null ? "—" : `$${e.base_budget.toFixed(2)}`}</td>
               <td className="text-end">{e.effective_budget == null ? "—" : `$${e.effective_budget.toFixed(2)}`}</td>
+              {showIncome && <td className="text-end">${e.associated_income.toFixed(2)}</td>}
               <td className="text-end">${e.associated_spend.toFixed(2)}</td>
-              {ruleType === "percent_of_income" && (
-                <td className="text-end">${e.associated_income.toFixed(2)}</td>
-              )}
               <td className={`text-end ${e.balance == null ? "text-muted" : e.balance >= 0 ? "text-success" : "text-danger"}`}>
                 {e.balance == null ? "—" : `${e.balance >= 0 ? "+" : "-"}$${Math.abs(e.balance).toFixed(2)}`}
               </td>
@@ -491,6 +622,7 @@ export default function BudgetRulesTool({ token }: Props) {
   const [createError, setCreateError] = useState<string | null>(null);
   const [editError, setEditError] = useState<string | null>(null);
   const [createUseEarliestStart, setCreateUseEarliestStart] = useState(false);
+  const [createPhase, setCreatePhase] = useState<"source" | "details">("source");
   const [editUseEarliestStart, setEditUseEarliestStart] = useState(false);
 
   const rulesQuery = useQuery({
@@ -599,6 +731,7 @@ export default function BudgetRulesTool({ token }: Props) {
       setCreateForm(BLANK);
       setCreateError(null);
       setCreateUseEarliestStart(false);
+      setCreatePhase("source");
       await queryClient.invalidateQueries({ queryKey: ["budget_rules"] });
     },
     onError: (e: Error) => setCreateError(e.message)
@@ -647,7 +780,7 @@ export default function BudgetRulesTool({ token }: Props) {
     <div className="card">
       <div className="card-body">
         <h6 className="card-title mb-1">Budget Rules</h6>
-        <p className="text-muted small mb-3">Define spending targets per tag or detected category, tracked as rolling periods</p>
+        <p className="text-muted small mb-3">{BUDGET_INTRO}</p>
 
         {mode === "creating" ? (
           <RuleForm
@@ -661,16 +794,25 @@ export default function BudgetRulesTool({ token }: Props) {
             getEarliestStartDate={getEarliestStartDate}
             checkboxId="create-use-earliest-start-date"
             onSave={() => { setCreateError(null); createMutation.mutate(createFormToBody(createForm)); }}
-            onCancel={() => { setMode("default"); setCreateForm(BLANK); setCreateError(null); setCreateUseEarliestStart(false); }}
+            onCancel={() => {
+              setMode("default");
+              setCreateForm(BLANK);
+              setCreateError(null);
+              setCreateUseEarliestStart(false);
+              setCreatePhase("source");
+            }}
             isPending={createMutation.isPending}
             error={createError}
+            wizardPhase={createPhase}
+            onWizardNext={() => setCreatePhase("details")}
+            onWizardBack={() => setCreatePhase("source")}
           />
         ) : (
           <div className="d-flex gap-2 mb-3">
             <button
               className="btn btn-sm btn-outline-primary px-3"
               style={{ minWidth: 130 }}
-              onClick={() => { setMode("creating"); setCreateForm(BLANK); setCreateError(null); setCreateUseEarliestStart(false); }}
+              onClick={() => { setMode("creating"); setCreateForm(BLANK); setCreateError(null); setCreateUseEarliestStart(false); setCreatePhase("source"); }}
             >
               New rule
             </button>
@@ -728,7 +870,7 @@ export default function BudgetRulesTool({ token }: Props) {
                   ) : (
                     <>
                       <div className="d-flex align-items-center gap-2 p-2 px-3 flex-wrap">
-                        <span className="fw-semibold small">{rule.name}</span>
+                        <span className="fw-semibold" style={{ fontSize: "1.05rem" }}>{rule.name}</span>
                         {rule.rule_source_type === "tag" && tag && (
                           <span
                             className="badge"
@@ -746,15 +888,7 @@ export default function BudgetRulesTool({ token }: Props) {
                             {detectedCategoryLabel}
                           </span>
                         )}
-                        <span className="badge bg-light text-dark border">{SOURCE_LABELS[rule.rule_source_type]}</span>
-                        <span className="badge bg-light text-dark border">
-                          {rule.type === "flat_rate"
-                            ? `$${rule.flat_amount?.toLocaleString() ?? "—"}`
-                            : `${rule.percent ?? "—"}%`}
-                        </span>
-                        <span className="badge bg-light text-dark border">
-                          {rule.calendar_window === "month" ? "Monthly" : "Weekly"}
-                        </span>
+                        <span className="badge bg-light text-dark border">{formatRuleAmountWindow(rule)}</span>
                         <span className="badge bg-light text-dark border">Rollover: {ROLLOVER_LABELS[rule.rollover_options]}</span>
                         <div className="ms-auto d-flex gap-1">
                           <button
@@ -799,10 +933,7 @@ export default function BudgetRulesTool({ token }: Props) {
                       </div>
                       {isExpanded && (
                         <div className="border-top px-3 py-2">
-                          <CacheTable
-                            cache={(rule.cache as BudgetRuleCacheEntry[] | null) ?? []}
-                            ruleType={rule.type}
-                          />
+                          <CacheTable cache={(rule.cache as BudgetRuleCacheEntry[] | null) ?? []} ruleType={rule.type} />
                         </div>
                       )}
                     </>

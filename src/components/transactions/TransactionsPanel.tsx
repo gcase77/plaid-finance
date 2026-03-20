@@ -47,6 +47,37 @@ const KIND_INFO: Record<TagUiKind, string> = {
 
 type MyTagsMode = "default" | "creating" | "deleting";
 
+const SYNC_TXNS_HELP =
+  "Sync all new transactions.\nAfter linking a bank, it may take a few minutes before full history is ready. Recent transactions may also take a few days to appear.";
+
+/** Meta → spending → income, then name (for apply/remove pickers). */
+function sortTagsMetaSpendingIncomeName(tags: readonly Tag[]) {
+  const rank = (t: Tag) =>
+    t.type === "meta" ? 0 : t.type.startsWith("spending") ? 1 : t.type.startsWith("income") ? 2 : 3;
+  return [...tags].sort((a, b) => rank(a) - rank(b) || a.name.localeCompare(b.name));
+}
+
+function byName(a: Tag, b: Tag) {
+  return a.name.localeCompare(b.name);
+}
+
+function SyncTransactionsInfo() {
+  const [on, setOn] = useState(false);
+  return (
+    <span className="position-relative d-inline-block" onMouseEnter={() => setOn(true)} onMouseLeave={() => setOn(false)}>
+      <span className="text-secondary" style={{ cursor: "help" }} aria-label="About syncing">ⓘ</span>
+      {on && (
+        <span
+          className="position-absolute top-100 start-0 mt-1 p-2 rounded shadow-sm small text-white"
+          style={{ zIndex: 300, width: 280, whiteSpace: "pre-line", background: "#212529", pointerEvents: "none" }}
+        >
+          {SYNC_TXNS_HELP}
+        </span>
+      )}
+    </span>
+  );
+}
+
 function KindSelect({ value, onChange }: { value: TagUiKind; onChange: (k: TagUiKind) => void }) {
   const [open, setOpen] = useState(false);
   const [hovered, setHovered] = useState<TagUiKind | null>(null);
@@ -189,13 +220,16 @@ export default function TransactionsPanel({
   const removeRef = useRef<HTMLDivElement>(null);
 
   const tagsForUi = tags;
-  const metaTags = useMemo(() => tagsForUi.filter((t) => t.type === "meta"), [tagsForUi]);
+  const metaTags = useMemo(
+    () => tagsForUi.filter((t) => t.type === "meta").sort(byName),
+    [tagsForUi]
+  );
   const incomeTags = useMemo(
-    () => tagsForUi.filter((t) => t.type === "income_bucket_1" || t.type === "income_bucket_2"),
+    () => tagsForUi.filter((t) => t.type === "income_bucket_1" || t.type === "income_bucket_2").sort(byName),
     [tagsForUi]
   );
   const spendingTags = useMemo(
-    () => tagsForUi.filter((t) => t.type === "spending_bucket_1" || t.type === "spending_bucket_2"),
+    () => tagsForUi.filter((t) => t.type === "spending_bucket_1" || t.type === "spending_bucket_2").sort(byName),
     [tagsForUi]
   );
   const metaOnlyTags = metaTags;
@@ -214,7 +248,7 @@ export default function TransactionsPanel({
         if (t.bucket_2_tag_id != null) ids.add(t.bucket_2_tag_id);
         (t.meta_tag_ids ?? []).forEach((metaId) => ids.add(metaId));
       });
-    return tagsForUi.filter((tag) => ids.has(tag.id));
+    return sortTagsMetaSpendingIncomeName(tagsForUi.filter((tag) => ids.has(tag.id)));
   }, [selectableTransactions, selectedIds, tagsForUi]);
 
   useEffect(() => {
@@ -486,16 +520,32 @@ export default function TransactionsPanel({
             ) : (
               <div className="row g-3">
                 {([
-                  { label: "Income tags", list: incomeTags },
-                  { label: "Spending tags", list: spendingTags },
-                  { label: "Meta tags", list: metaOnlyTags }
-                ] as const).map(({ label, list }) => (
+                  {
+                    label: "Meta tags",
+                    list: metaOnlyTags,
+                    blurb:
+                      "Meta tags apply to either spending or income. You can add multiple per transaction. Use them to mark notable details."
+                  },
+                  {
+                    label: "Spending tags",
+                    list: spendingTags,
+                    blurb:
+                      'Spending tags apply only to money going out. Each transaction can only have one. Use them to put your spending into "buckets"'
+                  },
+                  {
+                    label: "Income tags",
+                    list: incomeTags,
+                    blurb:
+                      "Income tags apply only to money coming in. Each transaction can only have one. Use them to categorize income."
+                  }
+                ] as const).map(({ label, list, blurb }) => (
                   <div key={label} className="col-12 col-md-4">
                     <div className="border rounded p-2 h-100">
                       <div className="d-flex justify-content-between align-items-center mb-1">
                         <span className="small fw-semibold">{label}</span>
                         <span className="badge bg-light text-muted">{list.length}</span>
                       </div>
+                      <p className="text-muted small mb-2 pb-2 lh-sm border-bottom">{blurb}</p>
                       {list.length === 0 ? (
                         <div className="text-muted small">No {label.toLowerCase()} yet.</div>
                       ) : (
@@ -533,6 +583,7 @@ export default function TransactionsPanel({
                 <button className="btn btn-success" onClick={syncTransactions} disabled={loadingTxns}>
                   Sync Transactions
                 </button>
+                <SyncTransactionsInfo />
                 <span className="small text-muted">{syncStatus}</span>
               </div>
 
@@ -587,10 +638,7 @@ export default function TransactionsPanel({
                           {tagsForUi.length === 0 ? (
                             <div className="px-3 py-2 small text-muted">No tags yet.</div>
                           ) : (
-                            tagsForUi
-                              .slice()
-                              .sort((a, b) => a.name.localeCompare(b.name))
-                              .map((t) => (
+                            sortTagsMetaSpendingIncomeName(tagsForUi).map((t) => (
                                 <button
                                   key={t.id}
                                   type="button"

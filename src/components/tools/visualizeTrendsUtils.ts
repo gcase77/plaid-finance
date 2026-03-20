@@ -34,7 +34,8 @@ export function filterTrendsTransactions(txns: Txn[], startIso: string, endIso: 
 
 function metaComboLabel(sortedIds: number[], tagMap: Map<number, Tag>): string {
   if (!sortedIds.length) return "No meta tags";
-  const names = sortedIds.map((id) => tagMap.get(id)?.name ?? `#${id}`);
+  const q = (s: string) => `"${s}"`;
+  const names = sortedIds.map((id) => q(tagMap.get(id)?.name ?? `#${id}`));
   if (names.length === 1) return `only ${names[0]}`;
   if (names.length === 2) return `${names[0]} and ${names[1]}`;
   return `${names.slice(0, -1).join(", ")}, and ${names[names.length - 1]}`;
