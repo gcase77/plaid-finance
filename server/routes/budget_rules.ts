@@ -84,7 +84,7 @@ export const buildBudgetRulePeriods = (startDateStr: string, window: CalendarWin
   return periods;
 };
 
-const SPENDING_TYPES = new Set<TagType>([TagType.spending_bucket_1, TagType.spending_bucket_2]);
+const BUDGET_RULE_TAG_TYPES = new Set<TagType>([TagType.spending_bucket_1, TagType.spending_bucket_2, TagType.meta]);
 
 const getTxnDate = (txn: { datetime: Date | null; authorized_datetime: Date | null }) =>
   txn.datetime ?? txn.authorized_datetime;
@@ -115,14 +115,14 @@ const getBalanceBounds = (rolloverOption: RolloverOption) => {
   }
 };
 
-const ensureSpendingTag = async (prisma: ServerRequest["prisma"], userId: string, tagId: number) => {
+const ensureBudgetRuleTag = async (prisma: ServerRequest["prisma"], userId: string, tagId: number) => {
   const tag = await prisma.tags.findFirst({
     where: { id: tagId, user_id: userId },
     select: { type: true }
   });
   if (!tag) return { ok: false as const, status: 404, error: "Tag not found" };
-  if (!SPENDING_TYPES.has(tag.type)) {
-    return { ok: false as const, status: 422, error: "Budget rules can only be created for spending tags" };
+  if (!BUDGET_RULE_TAG_TYPES.has(tag.type)) {
+    return { ok: false as const, status: 422, error: "Budget rules can only be created for spending or meta tags" };
   }
   return { ok: true as const };
 };
@@ -181,7 +181,8 @@ export const buildBudgetRuleCache = async (
         select: {
           account_transfer_group: true,
           bucket_1_tag_id: true,
-          bucket_2_tag_id: true
+          bucket_2_tag_id: true,
+          meta_tags: { select: { tag_id: true } }
         }
       }
     }
@@ -202,13 +203,16 @@ export const buildBudgetRuleCache = async (
     if (!date || !isWithinRange(date, rangeStart, rangeEnd)) continue;
     const idx = resolvePeriodIndex(toISODate(date), periods);
     if (idx < 0) continue;
+    if (row.transaction_meta?.account_transfer_group != null) continue;
 
-    if (amount < 0 && row.transaction_meta?.account_transfer_group == null) {
+    if (amount < 0) {
       cache[idx].associated_income += Math.abs(amount);
     }
 
     const matchesRule = source.rule_source_type === "tag"
-      ? row.transaction_meta?.bucket_1_tag_id === source.tag_id || row.transaction_meta?.bucket_2_tag_id === source.tag_id
+      ? row.transaction_meta?.bucket_1_tag_id === source.tag_id
+        || row.transaction_meta?.bucket_2_tag_id === source.tag_id
+        || (row.transaction_meta?.meta_tags?.some((link) => link.tag_id === source.tag_id) ?? false)
       : getTxnDetectedCategory(row.personal_finance_category) === source.detected_category;
     if (matchesRule && amount > 0) {
       cache[idx].associated_spend += amount;
@@ -283,7 +287,7 @@ router.post("/budget_rules", async (req, res) => {
       if (normalizedDetectedCategory) return res.status(400).json({ error: "detected_category must be null when rule_source_type is tag" });
       if (!Number.isInteger(Number(tag_id))) return res.status(400).json({ error: "Invalid tag_id" });
       const numericTagId = Number(tag_id);
-      const tagCheck = await ensureSpendingTag(prisma, user.id, numericTagId);
+      const tagCheck = await ensureBudgetRuleTag(prisma, user.id, numericTagId);
       if (!tagCheck.ok) return res.status(tagCheck.status).json({ error: tagCheck.error });
       source = { rule_source_type: "tag", tag_id: numericTagId, detected_category: null };
     } else {
