@@ -48,7 +48,7 @@ const KIND_INFO: Record<TagUiKind, string> = {
 type MyTagsMode = "default" | "creating" | "deleting";
 
 const SYNC_TXNS_HELP =
-  "Sync all new transactions.\nAfter linking a bank, it may take a few minutes before full history is ready. Recent transactions may also take a few days to appear.";
+  "Money moving in to your accounts is negative and out of your accounts is positive.\nAfter linking a bank, it may take a few minutes before full history is ready. Recent transactions may also take a few days to appear.";
 
 /** Meta → spending → income, then name (for apply/remove pickers). */
 function sortTagsMetaSpendingIncomeName(tags: readonly Tag[]) {
