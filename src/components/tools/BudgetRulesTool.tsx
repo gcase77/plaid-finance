@@ -16,6 +16,7 @@ import type {
   CalendarWindow,
   RolloverOption,
   Tag,
+  TagType,
   TransactionBaseRow,
   TransactionMetaRow
 } from "../types";
@@ -111,6 +112,23 @@ function FieldInfoTip({ text, ariaLabel }: { text: string; ariaLabel: string }) 
   );
 }
 
+function getTagScopeLabel(type: TagType) {
+  if (type === "meta") return "Meta";
+  return type.startsWith("income") ? "Income" : "Spending";
+}
+
+function TagActionRow({ tag }: { tag: Tag }) {
+  const color = getDisplayTagColor(tag.type, tag.color);
+  return (
+    <div className="d-flex justify-content-between align-items-center">
+      <span className="badge" style={{ backgroundColor: color, color: getTextColorForBackground(color), border: "1px solid rgba(0,0,0,0.12)" }}>
+        {tag.name}
+      </span>
+      <span className="badge bg-light text-muted">{getTagScopeLabel(tag.type)}</span>
+    </div>
+  );
+}
+
 const WINDOW_SIZE = 3;
 const ON_BUDGET_EPS = 0.01;
 
@@ -191,7 +209,7 @@ function BtnGroup<T extends string>({
 function RuleForm({
   form,
   setForm,
-  spendingTags,
+  selectableTags,
   detectedCategoryOptions,
   sourceLocked,
   useEarliestStart,
@@ -208,7 +226,7 @@ function RuleForm({
 }: {
   form: FormState;
   setForm: React.Dispatch<React.SetStateAction<FormState>>;
-  spendingTags: Tag[];
+  selectableTags: Tag[];
   detectedCategoryOptions: Array<{ value: string; label: string }>;
   sourceLocked: boolean;
   useEarliestStart: boolean;
@@ -262,6 +280,8 @@ function RuleForm({
 
   const sourceOk = form.rule_source_type === "tag" ? !!form.tag_id : !!form.detected_category;
   const saveDisabled = isPending || !form.name.trim() || !sourceOk;
+  const selectedTag = form.rule_source_type === "tag" ? selectableTags.find((t) => String(t.id) === form.tag_id) : null;
+  const [tagMenuOpen, setTagMenuOpen] = useState(false);
 
   const basedOnSelect = (
     <select
@@ -276,15 +296,34 @@ function RuleForm({
     </select>
   );
   const sourceValueSelect = form.rule_source_type === "tag" ? (
-    <select
-      className="form-select form-select-sm"
-      value={form.tag_id}
-      disabled={sourceLocked}
-      onChange={(e) => void handleSourceValueChange(e.target.value)}
-    >
-      <option value="">Select tag…</option>
-      {spendingTags.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-    </select>
+    <div className="position-relative">
+      <button
+        type="button"
+        className="form-select form-select-sm text-start d-flex align-items-center justify-content-between"
+        disabled={sourceLocked}
+        onClick={() => setTagMenuOpen((v) => !v)}
+        aria-expanded={tagMenuOpen}
+      >
+        {selectedTag ? <TagActionRow tag={selectedTag} /> : <span className="text-muted">Select tag...</span>}
+      </button>
+      {tagMenuOpen && (
+        <div className="position-absolute w-100 bg-white border rounded shadow-sm mt-1" style={{ zIndex: 50, maxHeight: 220, overflowY: "auto" }}>
+          {selectableTags.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              className="btn btn-sm w-100 text-start border-0 rounded-0 py-1 px-2"
+              onClick={() => {
+                setTagMenuOpen(false);
+                void handleSourceValueChange(String(t.id));
+              }}
+            >
+              <TagActionRow tag={t} />
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
   ) : (
     <select
       className="form-select form-select-sm"
@@ -313,7 +352,7 @@ function RuleForm({
           onChange={(e) => void handleUseEarliestChange(e.target.checked)}
         />
         <label className="form-check-label small" htmlFor={checkboxId}>
-          {form.rule_source_type === "tag" ? "Use earliest tagged transaction" : "Use earliest detected transaction"}
+          {form.rule_source_type === "tag" ? "Use earliest transaction" : "Use earliest detected transaction"}
         </label>
       </div>
     </div>
@@ -577,6 +616,10 @@ function formatRuleAmountWindow(rule: Pick<BudgetRule, "type" | "flat_amount" | 
   return `${rule.percent ?? "—"}% of income ${w}`;
 }
 
+function formatMoney(value: number): string {
+  return `$${value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
 function CacheTable({ cache, ruleType }: { cache: BudgetRuleCacheEntry[]; ruleType: BudgetRuleType }) {
   if (!cache.length) return <div className="text-muted small py-2">No period data yet.</div>;
   const showIncome = ruleType === "percent_of_income";
@@ -597,12 +640,12 @@ function CacheTable({ cache, ruleType }: { cache: BudgetRuleCacheEntry[]; ruleTy
           {[...cache].reverse().map((e) => (
             <tr key={e.end_date}>
               <td className="text-nowrap">{e.start_date} – {e.end_date}</td>
-              <td className="text-end">{e.base_budget == null ? "—" : `$${e.base_budget.toFixed(2)}`}</td>
-              <td className="text-end">{e.effective_budget == null ? "—" : `$${e.effective_budget.toFixed(2)}`}</td>
-              {showIncome && <td className="text-end">${e.associated_income.toFixed(2)}</td>}
-              <td className="text-end">${e.associated_spend.toFixed(2)}</td>
+              <td className="text-end">{e.base_budget == null ? "—" : formatMoney(e.base_budget)}</td>
+              <td className="text-end">{e.effective_budget == null ? "—" : formatMoney(e.effective_budget)}</td>
+              {showIncome && <td className="text-end">{formatMoney(e.associated_income)}</td>}
+              <td className="text-end">{formatMoney(e.associated_spend)}</td>
               <td className={`text-end ${e.balance == null ? "text-muted" : e.balance >= 0 ? "text-success" : "text-danger"}`}>
-                {e.balance == null ? "—" : `${e.balance >= 0 ? "+" : "-"}$${Math.abs(e.balance).toFixed(2)}`}
+                {e.balance == null ? "—" : `${e.balance >= 0 ? "+" : "-"}${formatMoney(Math.abs(e.balance))}`}
               </td>
             </tr>
           ))}
@@ -649,7 +692,17 @@ export default function BudgetRulesTool({ token }: Props) {
 
   const tags = tagsQuery.data ?? EMPTY_TAGS;
   const tagsById = useMemo(() => new Map(tags.map(t => [t.id, t])), [tags]);
-  const spendingTags = useMemo(() => tags.filter(t => t.type.startsWith("spending")), [tags]);
+  const selectableTags = useMemo(
+    () => tags
+      .filter((t) => t.type === "meta" || t.type.startsWith("spending"))
+      .sort((a, b) => {
+        const rankA = a.type === "meta" ? 0 : 1;
+        const rankB = b.type === "meta" ? 0 : 1;
+        if (rankA !== rankB) return rankA - rankB;
+        return a.name.localeCompare(b.name);
+      }),
+    [tags]
+  );
   const txDataUpdatedAt = queryClient.getQueryState(["transactions"])?.dataUpdatedAt ?? 0;
   const detectedCategoryOptions = useMemo(() => {
     void txDataUpdatedAt;
@@ -695,11 +748,14 @@ export default function BudgetRulesTool({ token }: Props) {
     for (const txn of txRows) {
       const txnId = String(txn.transaction_id ?? "");
       if (!txnId) continue;
+      const meta = metaByTxnId.get(txnId);
+      if (meta?.account_transfer_group != null) continue;
       if (sourceType === "tag") {
-        const meta = metaByTxnId.get(txnId);
         if (!meta) continue;
         const tagId = Number(sourceValue);
-        if (meta.bucket_1_tag_id !== tagId && meta.bucket_2_tag_id !== tagId) continue;
+        const bucketMatch = meta.bucket_1_tag_id === tagId || meta.bucket_2_tag_id === tagId;
+        const metaMatch = Array.isArray(meta.meta_tag_ids) && meta.meta_tag_ids.includes(tagId);
+        if (!bucketMatch && !metaMatch) continue;
       } else {
         const categoryValue = normalizeDetectedCategoryValue(
           txn.personal_finance_category?.detailed ?? txn.personal_finance_category?.primary
@@ -786,7 +842,7 @@ export default function BudgetRulesTool({ token }: Props) {
           <RuleForm
             form={createForm}
             setForm={setCreateForm}
-            spendingTags={spendingTags}
+            selectableTags={selectableTags}
             detectedCategoryOptions={detectedCategoryOptions}
             sourceLocked={false}
             useEarliestStart={createUseEarliestStart}
@@ -854,7 +910,7 @@ export default function BudgetRulesTool({ token }: Props) {
                       <RuleForm
                         form={editForm}
                         setForm={setEditForm}
-                        spendingTags={spendingTags}
+                        selectableTags={selectableTags}
                         detectedCategoryOptions={detectedCategoryOptions}
                         sourceLocked
                         useEarliestStart={editUseEarliestStart}
