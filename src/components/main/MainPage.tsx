@@ -26,6 +26,7 @@ export default function MainPage() {
       userEmail={userEmail}
       signOut={() => supabase.auth.signOut()}
       linkBank={plaidData.linkBank}
+      deleteItem={plaidData.deleteItem}
       loadingItems={plaidData.loadingItems}
       items={plaidData.items}
       accountsByItem={plaidData.accountsByItem}
