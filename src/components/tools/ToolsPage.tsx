@@ -34,7 +34,11 @@ export default function ToolsPage() {
   useEffect(() => {
     if (typeof window === "undefined" || typeof window.matchMedia !== "function") return;
     const mq = window.matchMedia(NARROW_QUERY);
-    const handler = () => setIsNarrow(mq.matches);
+    const handler = () => {
+      const narrow = mq.matches;
+      setIsNarrow(narrow);
+      setSidebarOpen(!narrow);
+    };
     handler();
     if (mq.addEventListener) mq.addEventListener("change", handler);
     else mq.addListener(handler);
@@ -43,10 +47,6 @@ export default function ToolsPage() {
       else mq.removeListener(handler);
     };
   }, []);
-
-  useEffect(() => {
-    setSidebarOpen(!isNarrow);
-  }, [isNarrow]);
 
   return (
     <div className="d-flex gap-2 align-items-start" style={{ marginLeft: "-1rem" }}>

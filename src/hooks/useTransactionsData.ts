@@ -12,7 +12,8 @@ type UseTransactionsDataReturn = {
   invalidateTransactionMeta: () => Promise<void>;
 };
 
-const TRANSACTIONS_QUERY_KEY = ["transactions", { includeRemoved: false }] as const;
+/** Must match reads in BudgetRulesTool (detected categories from txn rows). */
+export const TRANSACTIONS_QUERY_KEY = ["transactions", { includeRemoved: false }] as const;
 const TRANSACTION_META_QUERY_KEY = ["transaction_meta"] as const;
 
 const fetchTransactions = async (token: string | null, includeRemoved = false): Promise<TransactionBaseRow[]> => {

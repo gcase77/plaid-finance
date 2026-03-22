@@ -5,7 +5,22 @@ export type TagStateFilter = "all" | "untagged" | "tagged";
 export type Tag = { id: number; name: string; type: TagType; user_id: string; color?: string | null };
 
 export type Item = { id: string; institution_name?: string | null };
-export type Account = { id: string; name?: string | null; official_name?: string | null; mask?: string | null; type?: string | null };
+/** Mirrors Plaid AccountBalances; stored as Json on `accounts.balances`. */
+export type AccountBalances = {
+  available?: number | null;
+  current?: number | null;
+  limit?: number | null;
+  iso_currency_code?: string | null;
+};
+export type Account = {
+  id: string;
+  name?: string | null;
+  official_name?: string | null;
+  mask?: string | null;
+  type?: string | null;
+  subtype?: string | null;
+  balances?: AccountBalances | null;
+};
 
 export type TransactionBaseRow = {
   transaction_id?: string;

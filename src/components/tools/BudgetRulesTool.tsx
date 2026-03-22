@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { buildAuthHeaders } from "../../lib/auth";
+import { TRANSACTIONS_QUERY_KEY } from "../../hooks/useTransactionsData";
 import {
   formatCategoryLabel,
   formatTxnDetectedCategory,
@@ -703,12 +704,10 @@ export default function BudgetRulesTool({ token }: Props) {
       }),
     [tags]
   );
-  const txDataUpdatedAt = queryClient.getQueryState(["transactions"])?.dataUpdatedAt ?? 0;
+  const txDataUpdatedAt = queryClient.getQueryState(TRANSACTIONS_QUERY_KEY)?.dataUpdatedAt ?? 0;
   const detectedCategoryOptions = useMemo(() => {
     void txDataUpdatedAt;
-    const txRows = queryClient
-      .getQueriesData<TransactionBaseRow[]>({ queryKey: ["transactions"] })
-      .flatMap(([, rows]) => (Array.isArray(rows) ? rows : []));
+    const txRows = queryClient.getQueryData<TransactionBaseRow[]>(TRANSACTIONS_QUERY_KEY) ?? [];
     const optionByValue = new Map<string, string>();
     for (const txn of txRows) {
       const primary = normalizeDetectedCategoryValue(txn.personal_finance_category?.primary);
@@ -735,9 +734,7 @@ export default function BudgetRulesTool({ token }: Props) {
     const normalizedSourceValue = sourceType === "detected_category" ? normalizeDetectedCategoryValue(sourceValue) : sourceValue;
     if (!normalizedSourceValue) return null;
 
-    const txRows = queryClient
-      .getQueriesData<TransactionBaseRow[]>({ queryKey: ["transactions"] })
-      .flatMap(([, rows]) => (Array.isArray(rows) ? rows : []));
+    const txRows = queryClient.getQueryData<TransactionBaseRow[]>(TRANSACTIONS_QUERY_KEY) ?? [];
     if (!txRows.length) return null;
     const metaRows = queryClient.getQueryData<TransactionMetaRow[]>(["transaction_meta"]) ?? [];
     if (sourceType === "tag" && !metaRows.length) return null;
