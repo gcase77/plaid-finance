@@ -2,12 +2,17 @@ import { useState } from "react";
 import type { Item, Account } from "../components/types";
 import { buildAuthHeaders } from "../lib/auth";
 
+export type DeleteItemResult =
+  | { ok: true; plaidRemoved: boolean; plaidError?: string }
+  | { ok: false; error: string };
+
 type UsePlaidDataReturn = {
   items: Item[];
   accountsByItem: Record<string, Account[]>;
   loadingItems: boolean;
   loadItems: (userId?: string | null, token?: string | null) => Promise<void>;
   linkBank: (daysRequested?: number) => Promise<void>;
+  deleteItem: (itemId: string) => Promise<DeleteItemResult>;
 };
 
 export function usePlaidData(userId: string | null, token: string | null): UsePlaidDataReturn {
@@ -66,11 +71,25 @@ export function usePlaidData(userId: string | null, token: string | null): UsePl
     }).open();
   };
 
+  const deleteItem = async (itemId: string): Promise<DeleteItemResult> => {
+    if (!token) return { ok: false, error: "Not signed in" };
+    const res = await fetchWithAuth(`/api/items/${encodeURIComponent(itemId)}/delete_all`, { method: "POST" });
+    const data = (await res.json().catch(() => ({}))) as {
+      error?: string;
+      plaid_removed?: boolean;
+      plaid_error?: string;
+    };
+    if (!res.ok) return { ok: false, error: data?.error || `Delete failed (${res.status})` };
+    await loadItems();
+    return { ok: true, plaidRemoved: data.plaid_removed !== false, plaidError: data.plaid_error };
+  };
+
   return {
     items,
     accountsByItem,
     loadingItems,
     loadItems,
-    linkBank
+    linkBank,
+    deleteItem
   };
 }

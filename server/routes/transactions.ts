@@ -3,6 +3,7 @@ import { createHash } from "crypto";
 import { Prisma } from "../../generated/prisma/client";
 import { plaid } from "../lib/plaid";
 import { logger } from "../logger";
+import { transactionsCache, transactionsCacheKey, clearTransactionsCache } from "../lib/caches";
 import type { ServerRequest } from "../middleware/auth";
 
 const PAGE_SIZE = 500;
@@ -72,14 +73,6 @@ const dateFilterSql = (alias: string, start: Date | null, end: Date | null) => {
 };
 
 const router = express.Router();
-const transactionsCache = new Map<string, { rows: unknown[] }>();
-
-const transactionsCacheKey = (userId: string, includeRemoved: boolean) => `${userId}:${includeRemoved ? "with-removed" : "active-only"}`;
-const invalidateTransactionsCache = (userId: string) => {
-  for (const key of transactionsCache.keys()) {
-    if (key.startsWith(`${userId}:`)) transactionsCache.delete(key);
-  }
-};
 
 const syncItemTransactions = async (prisma: ServerRequest["prisma"], userId: string, itemId: string) => {
     const item = await prisma.items.findFirst({
@@ -271,7 +264,7 @@ router.post("/transactions/sync", async (req, res) => {
   try {
     const { user, prisma } = req as unknown as ServerRequest;
     const result = await scheduleSyncForUser(prisma, user.id);
-    invalidateTransactionsCache(user.id);
+    clearTransactionsCache(user.id);
     res.json({ success: true, ...result });
   } catch (e: any) {
     logger.log("error", "sync transactions", { err: e, userId: (req as any).user?.id });

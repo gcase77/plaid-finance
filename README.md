@@ -129,8 +129,9 @@ class
 | ------ | -------------------------------------------------------------------- | ----------------------------------- | -------------------------------------------------------------- |
 | POST   | [api/link/token](server/routes/link.ts#L8)                           | query: — body: `{ daysRequested? }` | `{ link_token, ... }`                                          |
 | POST   | [api/link/exchange](server/routes/link.ts#L33)                        | query: — body: `{ publicToken }`    | `{ success: true }`                                            |
-| GET    | [api/items](server/routes/items.ts#L6)                               | query: — body: —                    | `Item[]`                                                       |
+| GET    | [api/items](server/routes/items.ts#L9)                               | query: — body: —                    | `Item[]` (`id`, `institution_name` only; no Plaid access token) |
 | GET    | [api/accounts/:itemId](server/routes/accounts.ts#L6)                   | query: — body: —                    | `Account[]`                                                    |
+| POST   | [api/items/:itemId/delete_all](server/routes/items.ts#L16)               | query: — body: —                    | `200` / `207`: `{ success: true, deleted: { item, accounts }, plaid_removed, plaid_error? }` (deletes item, its accounts, transactions; then Plaid `item/remove`; `207` if Plaid unlink fails) |
 | GET    | [api/transactions](server/routes/transactions.ts#L282)                 | query: `includeRemoved?` body: —    | transaction array                                              |
 | POST   | [api/transactions/sync](server/routes/transactions.ts#L270)            | query: — body: —                    | `{ success: true, items_processed, added, modified, removed }`  |
 | GET    | [api/transaction_meta](server/routes/transaction_meta.ts#L19)         | query: — body: —                    | `{ transaction_id, account_transfer_group, bucket_1_tag_id, bucket_2_tag_id, meta_tag_ids }[]` |
