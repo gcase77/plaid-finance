@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import type { Txn } from "../types";
 import { buildAuthHeaders } from "../../lib/auth";
 import { formatTxnDate, getTxnDateOnly } from "../../utils/transactionUtils";
@@ -104,7 +104,7 @@ export default function TransferGroupTool({ transactions, token, invalidateTrans
 
   const totalPairs = pairsByGap.reduce((s, [, ps]) => s + ps.length, 0);
 
-  const existingGroups = useMemo(() => {
+  const { existingGroups, brokenGroups } = useMemo(() => {
     const map = new Map<string, Txn[]>();
     for (const t of transactions) {
       if (t.account_transfer_group) {
@@ -113,10 +113,15 @@ export default function TransferGroupTool({ transactions, token, invalidateTrans
         map.set(t.account_transfer_group, arr);
       }
     }
-    return [...map.entries()].map(([id, txns]) => {
-      const [outflow, inflow] = (txns[0]?.amount ?? 0) > 0 ? [txns[0], txns[1]] : [txns[1], txns[0]];
-      return { id, outflow, inflow };
-    });
+    const existingGroups: { id: string; outflow: Txn; inflow: Txn }[] = [];
+    const brokenGroups: { id: string; t: Txn }[] = [];
+    for (const [id, txns] of map.entries()) {
+      if (txns.length >= 2) {
+        const [outflow, inflow] = (txns[0]?.amount ?? 0) > 0 ? [txns[0], txns[1]] : [txns[1], txns[0]];
+        existingGroups.push({ id, outflow, inflow });
+      } else if (txns.length === 1) brokenGroups.push({ id, t: txns[0] });
+    }
+    return { existingGroups, brokenGroups };
   }, [transactions]);
 
   const addGroup = async (pair: Pair) => {
@@ -137,14 +142,14 @@ export default function TransferGroupTool({ transactions, token, invalidateTrans
     }
   };
 
-  const removeGroup = async (groupId: string, outflow: Txn, inflow: Txn) => {
+  const removeGroup = async (groupId: string, transactionIds: string[]) => {
     setRemovingId(groupId);
     setError(null);
     try {
       const res = await fetch("/api/transaction_meta/transfer_group", {
         method: "DELETE",
         headers: { "Content-Type": "application/json", ...buildAuthHeaders(token) },
-        body: JSON.stringify({ transaction_ids: [outflow.transaction_id, inflow.transaction_id] })
+        body: JSON.stringify({ transaction_ids: transactionIds })
       });
       if (!res.ok) throw new Error((await res.json()).error ?? res.statusText);
       await invalidateTransactionMeta();
@@ -182,7 +187,9 @@ export default function TransferGroupTool({ transactions, token, invalidateTrans
           </li>
           <li className="nav-item">
             <button className={`nav-link ${tab === "existing" ? "active" : ""}`} onClick={() => setTab("existing")}>
-              Existing {existingGroups.length > 0 && <span className="badge bg-secondary ms-1">{existingGroups.length}</span>}
+              Existing {(existingGroups.length + brokenGroups.length) > 0 && (
+                <span className="badge bg-secondary ms-1">{existingGroups.length + brokenGroups.length}</span>
+              )}
             </button>
           </li>
         </ul>
@@ -220,8 +227,8 @@ export default function TransferGroupTool({ transactions, token, invalidateTrans
                   {tableHead}
                   <tbody>
                     {pairsByGap.map(([gap, gPairs]) => (
-                      <>
-                        <tr key={`gap-${gap}`} className="table-light">
+                      <Fragment key={`gap-${gap}`}>
+                        <tr className="table-light">
                           <td colSpan={COL_SPAN} className="py-1">
                             <h6 className="fw-bold mb-0 small">
                               {gap === 0 ? "Same day" : `${gap} day${gap > 1 ? "s" : ""} apart`}
@@ -249,7 +256,7 @@ export default function TransferGroupTool({ transactions, token, invalidateTrans
                             </tr>
                           );
                         })}
-                      </>
+                      </Fragment>
                     ))}
                   </tbody>
                 </table>
@@ -259,7 +266,7 @@ export default function TransferGroupTool({ transactions, token, invalidateTrans
         )}
 
         {tab === "existing" && (
-          existingGroups.length === 0 ? (
+          existingGroups.length === 0 && brokenGroups.length === 0 ? (
             <p className="text-muted small mb-0">No transfer groups yet.</p>
           ) : (
             <div className="table-responsive">
@@ -274,12 +281,44 @@ export default function TransferGroupTool({ transactions, token, invalidateTrans
                       <td className="text-end">
                         <button className="btn btn-sm btn-outline-danger"
                           disabled={removingId === id}
-                          onClick={() => removeGroup(id, outflow, inflow)}>
+                          onClick={() => removeGroup(id, [outflow.transaction_id!, inflow.transaction_id!])}>
                           {removingId === id ? "..." : "Remove"}
                         </button>
                       </td>
                     </tr>
                   ))}
+                  {brokenGroups.map(({ id, t }) => {
+                    const tid = t.transaction_id!;
+                    const isOut = (t.amount ?? 0) > 0;
+                    const amt = Math.abs(t.amount ?? 0);
+                    return (
+                      <tr key={`broken-${id}`} className="table-light" style={{ opacity: 0.92 }}>
+                        <td className="small text-nowrap" style={{ borderRight: "1px solid var(--bs-border-color)" }}>
+                          <div className="fw-semibold">${amt.toFixed(2)}</div>
+                          <div className="text-muted" style={{ fontSize: "0.65rem", letterSpacing: "0.04em", opacity: 0.75 }}>Incomplete pair</div>
+                          <div className="text-muted" style={{ fontSize: "0.8em" }}>{formatTxnDate(t)}</div>
+                        </td>
+                        {isOut ? (
+                          <>
+                            <TxnCols t={t} />
+                            <td className="small text-muted align-middle">—</td>
+                          </>
+                        ) : (
+                          <>
+                            <td className="small text-muted align-middle">—</td>
+                            <TxnCols t={t} />
+                          </>
+                        )}
+                        <td className="text-end">
+                          <button className="btn btn-sm btn-outline-danger"
+                            disabled={removingId === id}
+                            onClick={() => removeGroup(id, [tid])}>
+                            {removingId === id ? "..." : "Remove"}
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

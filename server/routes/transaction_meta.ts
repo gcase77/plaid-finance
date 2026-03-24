@@ -91,19 +91,43 @@ router.delete("/transaction_meta/transfer_group", async (req, res) => {
   try {
     const { user, prisma } = req as unknown as ServerRequest;
     const { transaction_ids }: { transaction_ids: string[] } = req.body;
-    if (!Array.isArray(transaction_ids) || transaction_ids.length !== 2)
-      return res.status(400).json({ error: "transaction_ids must be an array of exactly 2" });
+    if (!Array.isArray(transaction_ids) || (transaction_ids.length !== 1 && transaction_ids.length !== 2))
+      return res.status(400).json({ error: "transaction_ids must be an array of 1 or 2 ids" });
 
-    const txns = await prisma.transactions.findMany({
-      where: { id: { in: transaction_ids }, user_id: user.id, is_removed: false },
-      select: { id: true }
-    });
-    if (txns.length !== 2) return res.status(404).json({ error: "One or more transactions not found" });
+    if (transaction_ids.length === 2) {
+      const txns = await prisma.transactions.findMany({
+        where: { id: { in: transaction_ids }, user_id: user.id, is_removed: false },
+        select: { id: true }
+      });
+      if (txns.length !== 2) return res.status(404).json({ error: "One or more transactions not found" });
 
-    await prisma.transaction_meta.updateMany({
-      where: { transaction_id: { in: transaction_ids } },
-      data: { account_transfer_group: null }
-    });
+      await prisma.transaction_meta.updateMany({
+        where: { transaction_id: { in: transaction_ids } },
+        data: { account_transfer_group: null }
+      });
+    } else {
+      const id = transaction_ids[0];
+      if (typeof id !== "string" || !id)
+        return res.status(400).json({ error: "transaction_ids must be an array of 1 or 2 ids" });
+
+      const meta = await prisma.transaction_meta.findFirst({
+        where: {
+          transaction_id: id,
+          transaction: { user_id: user.id, is_removed: false }
+        },
+        select: { account_transfer_group: true }
+      });
+      const group = meta?.account_transfer_group;
+      if (!group) return res.status(404).json({ error: "Transfer group not found" });
+
+      await prisma.transaction_meta.updateMany({
+        where: {
+          account_transfer_group: group,
+          transaction: { user_id: user.id, is_removed: false }
+        },
+        data: { account_transfer_group: null }
+      });
+    }
 
     clearTransactionMetaCache(user.id);
     res.json({ success: true });
