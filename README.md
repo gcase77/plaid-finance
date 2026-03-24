@@ -136,7 +136,7 @@ class
 | POST   | [api/transactions/sync](server/routes/transactions.ts#L270)            | query: — body: —                    | `{ success: true, items_processed, added, modified, removed }`  |
 | GET    | [api/transaction_meta](server/routes/transaction_meta.ts#L19)         | query: — body: —                    | `{ transaction_id, account_transfer_group, bucket_1_tag_id, bucket_2_tag_id, meta_tag_ids }[]` |
 | POST   | [api/transaction_meta/transfer_group](server/routes/transaction_meta.ts#L51) | query: — body: `{ transaction_ids: [id1, id2] }` | `{ account_transfer_group: uuid }` |
-| DELETE | [api/transaction_meta/transfer_group](server/routes/transaction_meta.ts#L82) | query: — body: `{ transaction_ids: [id1, id2] }` | `{ success: true }` |
+| DELETE | [api/transaction_meta/transfer_group](server/routes/transaction_meta.ts#L82) | query: — body: `{ transaction_ids: [id1, id2] }` or `{ transaction_ids: [id] }` (clears whole group for that transfer) | `{ success: true }` |
 | POST   | [api/transaction_meta/tags](server/routes/transaction_meta.ts#L115)    | query: — body: `TransactionTagChange[]` (set bucket tags and add meta tags) | `{ success: true }` |
 | DELETE | [api/transaction_meta/tags](server/routes/transaction_meta.ts#L268)    | query: — body: `TransactionTagChange[]` (remove specified bucket/meta tags only) | `{ success: true }` |
 | GET    | [api/tags](server/routes/tags.ts#L10)                                 | query: — body: —                    | tag array                                                      |
