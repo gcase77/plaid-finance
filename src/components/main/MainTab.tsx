@@ -15,7 +15,7 @@ type MainTabProps = {
 };
 
 const DELETE_MODE_WARNING =
-  "This turns on removal for a single bank at a time. When you remove a bank, that bank’s accounts and all transaction history for it in this app are permanently deleted. You can link that bank again later, but past data will not be restored.";
+  "When you remove a bank, that bank’s accounts and all transaction history for it in this app are permanently deleted. You can link that bank again later, but past data will not be restored.";
 
 const NARROW_QUERY = "(max-width: 576px)";
 /** Wider than Tools sidebar so auth content fits comfortably */
@@ -390,11 +390,15 @@ export default function MainTab(props: MainTabProps) {
                             setRefreshingItemId(item.id);
                             const r = await refreshItemAccounts(item.id);
                             setRefreshingItemId(null);
-                            setRefreshFlash(
-                              r.ok
-                                ? `Refreshed ${r.updatedAccounts} account${r.updatedAccounts !== 1 ? "s" : ""} for ${label}.`
-                                : r.error
-                            );
+                            if (r.ok) {
+                              setRefreshFlash(
+                                `Refreshed ${r.updatedAccounts} account${r.updatedAccounts !== 1 ? "s" : ""} for ${label}.`
+                              );
+                            } else if ("error" in r) {
+                              setRefreshFlash(r.error);
+                            } else {
+                              setRefreshFlash("Refresh failed");
+                            }
                           }}>
                           {refreshingItemId === item.id ? "…" : "↻"}
                         </button>
