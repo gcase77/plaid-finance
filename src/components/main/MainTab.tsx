@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { DeleteItemResult } from "../../hooks/usePlaidData";
+import type { DeleteItemResult, RefreshAccountsResult } from "../../hooks/usePlaidData";
 import type { Account, AccountBalances, Item } from "../types";
 import LoadingSpinner from "../shared/LoadingSpinner";
 
@@ -8,6 +8,7 @@ type MainTabProps = {
   signOut: () => void;
   linkBank: (daysRequested?: number) => void;
   deleteItem: (itemId: string) => Promise<DeleteItemResult>;
+  refreshItemAccounts: (itemId: string) => Promise<RefreshAccountsResult>;
   loadingItems: boolean;
   items: Item[];
   accountsByItem: Record<string, Account[]>;
@@ -161,7 +162,7 @@ function AccountCard({ account }: { account: Account }) {
 }
 
 export default function MainTab(props: MainTabProps) {
-  const { userEmail, signOut, linkBank, deleteItem, loadingItems, items, accountsByItem } = props;
+  const { userEmail, signOut, linkBank, deleteItem, refreshItemAccounts, loadingItems, items, accountsByItem } = props;
   const narrowInit =
     typeof window !== "undefined" && typeof window.matchMedia === "function"
       ? window.matchMedia(NARROW_QUERY).matches
@@ -177,6 +178,8 @@ export default function MainTab(props: MainTabProps) {
   const [confirmDelete, setConfirmDelete] = useState<{ itemId: string; label: string; nAcc: number } | null>(null);
   const [deletingItemId, setDeletingItemId] = useState<string | null>(null);
   const [deleteFlash, setDeleteFlash] = useState<string | null>(null);
+  const [refreshFlash, setRefreshFlash] = useState<string | null>(null);
+  const [refreshingItemId, setRefreshingItemId] = useState<string | null>(null);
 
   useEffect(() => {
     if (typeof window === "undefined" || typeof window.matchMedia !== "function") return;
@@ -248,6 +251,17 @@ export default function MainTab(props: MainTabProps) {
         <div className="card">
           <div className="card-body">
             <h5 className="card-title">Your Banks</h5>
+            {refreshFlash && (
+              <div className="alert alert-info py-2 small mb-2 d-flex justify-content-between align-items-start gap-2" role="alert">
+                <span>{refreshFlash}</span>
+                <button
+                  type="button"
+                  className="btn-close flex-shrink-0"
+                  aria-label="Dismiss"
+                  onClick={() => setRefreshFlash(null)}
+                />
+              </div>
+            )}
             {deleteFlash && (
               <div
                 className="alert alert-warning py-2 small mb-2 d-flex justify-content-between align-items-start gap-2"
@@ -365,6 +379,24 @@ export default function MainTab(props: MainTabProps) {
                           <span className="text-muted small ms-2">
                             {nAcc} account{nAcc !== 1 ? "s" : ""}
                           </span>
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-outline-secondary py-0 text-nowrap flex-shrink-0"
+                          disabled={refreshingItemId === item.id || deletingItemId === item.id}
+                          aria-label={refreshingItemId === item.id ? "Refreshing accounts" : "Refresh accounts"}
+                          title={refreshingItemId === item.id ? "Refreshing..." : "Refresh"}
+                          onClick={async () => {
+                            setRefreshingItemId(item.id);
+                            const r = await refreshItemAccounts(item.id);
+                            setRefreshingItemId(null);
+                            setRefreshFlash(
+                              r.ok
+                                ? `Refreshed ${r.updatedAccounts} account${r.updatedAccounts !== 1 ? "s" : ""} for ${label}.`
+                                : r.error
+                            );
+                          }}>
+                          {refreshingItemId === item.id ? "…" : "↻"}
                         </button>
                         {deleteMode && (
                           <button
