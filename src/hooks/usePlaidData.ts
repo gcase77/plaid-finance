@@ -5,6 +5,9 @@ import { buildAuthHeaders } from "../lib/auth";
 export type DeleteItemResult =
   | { ok: true; plaidRemoved: boolean; plaidError?: string }
   | { ok: false; error: string };
+export type RefreshAccountsResult =
+  | { ok: true; updatedAccounts: number }
+  | { ok: false; error: string };
 
 type UsePlaidDataReturn = {
   items: Item[];
@@ -13,6 +16,7 @@ type UsePlaidDataReturn = {
   loadItems: (userId?: string | null, token?: string | null) => Promise<void>;
   linkBank: (daysRequested?: number) => Promise<void>;
   deleteItem: (itemId: string) => Promise<DeleteItemResult>;
+  refreshItemAccounts: (itemId: string) => Promise<RefreshAccountsResult>;
 };
 
 export function usePlaidData(userId: string | null, token: string | null): UsePlaidDataReturn {
@@ -38,7 +42,7 @@ export function usePlaidData(userId: string | null, token: string | null): UsePl
       const byItem: Record<string, Account[]> = {};
       await Promise.all(
         nextItems.map(async (item) => {
-          const r = await fetchWithAuth(`/api/accounts/${item.id}`, {}, tk);
+          const r = await fetchWithAuth(`/api/${item.id}/accounts`, {}, tk);
           byItem[item.id] = r.ok ? ((await r.json()) as Account[]) : [];
         })
       );
@@ -84,12 +88,21 @@ export function usePlaidData(userId: string | null, token: string | null): UsePl
     return { ok: true, plaidRemoved: data.plaid_removed !== false, plaidError: data.plaid_error };
   };
 
+  const refreshItemAccounts = async (itemId: string): Promise<RefreshAccountsResult> => {
+    const res = await fetchWithAuth(`/api/${encodeURIComponent(itemId)}/accounts/refresh`, { method: "POST" });
+    const data = (await res.json().catch(() => ({}))) as { error?: string; updated_accounts?: number };
+    if (!res.ok) return { ok: false, error: data.error || `Refresh failed (${res.status})` };
+    await loadItems();
+    return { ok: true, updatedAccounts: typeof data.updated_accounts === "number" ? data.updated_accounts : 0 };
+  };
+
   return {
     items,
     accountsByItem,
     loadingItems,
     loadItems,
     linkBank,
-    deleteItem
+    deleteItem,
+    refreshItemAccounts
   };
 }

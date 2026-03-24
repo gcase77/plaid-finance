@@ -130,7 +130,8 @@ class
 | POST   | [api/link/token](server/routes/link.ts#L8)                           | query: — body: `{ daysRequested? }` | `{ link_token, ... }`                                          |
 | POST   | [api/link/exchange](server/routes/link.ts#L33)                        | query: — body: `{ publicToken }`    | `{ success: true }`                                            |
 | GET    | [api/items](server/routes/items.ts#L9)                               | query: — body: —                    | `Item[]` (`id`, `institution_name` only; no Plaid access token) |
-| GET    | [api/accounts/:itemId](server/routes/accounts.ts#L6)                   | query: — body: —                    | `Account[]`                                                    |
+| GET    | [api/:itemId/accounts](server/routes/accounts.ts#L6)                   | query: — body: —                    | `Account[]`                                                    |
+| POST   | [api/:itemId/accounts/refresh](server/routes/accounts.ts#L12)          | query: — body: —                    | `{ success: true, item_id, updated_accounts }` (calls Plaid `accounts/get`; updates only `name`, `official_name`, `balances`; returns `409` if DB/Plaid account counts mismatch) |
 | POST   | [api/items/:itemId/delete_all](server/routes/items.ts#L16)               | query: — body: —                    | `200` / `207`: `{ success: true, deleted: { item, accounts }, plaid_removed, plaid_error? }` (deletes item, its accounts, transactions; then Plaid `item/remove`; `207` if Plaid unlink fails) |
 | GET    | [api/transactions](server/routes/transactions.ts#L282)                 | query: `includeRemoved?` body: —    | transaction array                                              |
 | POST   | [api/transactions/sync](server/routes/transactions.ts#L270)            | query: — body: —                    | `{ success: true, items_processed, added, modified, removed }`  |
