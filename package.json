@@ -3,9 +3,10 @@
   "version": "1.0.0",
   "main": "server/index.ts",
   "scripts": {
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
     "dev:server": "ts-node --transpile-only server/index.ts",
     "dev:client": "vite",
-    "start": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "start": "ts-node --transpile-only server/index.ts",
     "watch": "nodemon --watch server --ext ts --exec \"ts-node --transpile-only server/index.ts\"",
     "build": "vite build",
     "preview": "vite preview",
