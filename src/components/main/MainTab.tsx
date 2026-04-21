@@ -503,7 +503,7 @@ export default function MainTab(props: MainTabProps) {
                 </p>
                 <p className="mb-0 small text-muted">
                   This removes {confirmDelete.nAcc} linked account
-                  {confirmDelete.nAcc !== 1 ? "s" : ""} and all transactions for this bank in the app.
+                  {confirmDelete.nAcc !== 1 ? "s" : ""} and all transactions for this bank.
                 </p>
               </div>
               <div className="modal-footer">
@@ -528,7 +528,7 @@ export default function MainTab(props: MainTabProps) {
                     } else {
                       if (!r.plaidRemoved && r.plaidError)
                         setDeleteFlash(
-                          `Data was removed in this app, but unlinking the bank at Plaid failed: ${r.plaidError}`
+                          `Data was removed, but unlinking the bank at Plaid failed: ${r.plaidError}`
                         );
                       else setDeleteFlash(null);
                     }
