@@ -127,10 +127,11 @@ export default function TransactionTable({
             {taggingMode && <th style={{ width: 32 }}><input type="checkbox" className="form-check-input" checked={allSelected} onChange={(e) => toggleAll(e.target.checked)} /></th>}
             <th style={{ width: 40 }}></th>
             <th>Date</th>
-            <th>Tags</th>
+            {taggingMode && <th>Tags</th>}
             <th>Name</th>
             <th>Merchant</th>
             <th className="text-end">Amount</th>
+            {!taggingMode && <th>Tags</th>}
             <th>Account</th>
             <th>Detected</th>
           </tr>
@@ -153,10 +154,11 @@ export default function TransactionTable({
                 )}
                 <td>{getTxnIconUrl(t) ? <img src={getTxnIconUrl(t)} alt="icon" style={{ width: 24, height: 24 }} /> : ""}</td>
                 <td>{formatTxnDate(t)}</td>
-                <td><TagBadges badges={getTxnTagBadges(t, tagMap)} /></td>
+                {taggingMode && <td><TagBadges badges={getTxnTagBadges(t, tagMap)} /></td>}
                 <td>{(t.original_description || "").trim() || t.name || ""}</td>
                 <td>{t.merchant_name || ""}</td>
                 <td className="text-end">{formatTxnAmount(t)}</td>
+                {!taggingMode && <td><TagBadges badges={getTxnTagBadges(t, tagMap)} /></td>}
                 <td>{formatAccountDisplay(t.institution_name || "", t.account_name || t.account_official_name || "")}</td>
                 <td>{formatTxnDetectedCategory(t.personal_finance_category)}</td>
               </tr>
