@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 48" role="img" aria-labelledby="title">
+  <title id="title">Funds Up</title>
+  <rect width="180" height="48" rx="14" fill="#0d6efd"/>
+  <circle cx="27" cy="24" r="14" fill="#ffffff" opacity="0.95"/>
+  <path d="M21 27.5h4.2v-8h3.6v8H33L27 14l-6 13.5Z" fill="#0d6efd"/>
+  <text x="50" y="30" fill="#ffffff" font-family="Inter, Arial, sans-serif" font-size="20" font-weight="700">Funds ^ Up</text>
+</svg>
