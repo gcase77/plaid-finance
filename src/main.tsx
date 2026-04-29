@@ -7,6 +7,7 @@ import AuthPage from "./components/auth/AuthPage";
 import RequireAuth from "./components/auth/RequireAuth";
 import { LandingPage, PrivacyPolicyPage } from "./components/landing/LandingPage";
 import MainPage from "./components/main/MainPage";
+import NotFoundPage from "./components/NotFoundPage";
 import ToolsPage from "./components/tools/ToolsPage";
 import TransactionsPage from "./components/transactions/TransactionsPage";
 import { queryClient } from "./lib/queryClient";
@@ -30,6 +31,7 @@ createRoot(document.getElementById("root")!).render(
               <Route path="/tools" element={<ToolsPage />} />
             </Route>
           </Route>
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </BrowserRouter>
     </QueryClientProvider>
