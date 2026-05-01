@@ -5,7 +5,7 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import AppLayout from "./components/AppLayout";
 import AuthPage from "./components/auth/AuthPage";
 import RequireAuth from "./components/auth/RequireAuth";
-import { LandingPage, PrivacyPolicyPage } from "./components/landing/LandingPage";
+import { LandingPage, PrivacyPolicyPage, TermsPage } from "./components/landing/LandingPage";
 import MainPage from "./components/main/MainPage";
 import ToolsPage from "./components/tools/ToolsPage";
 import TransactionsPage from "./components/transactions/TransactionsPage";
@@ -18,6 +18,8 @@ createRoot(document.getElementById("root")!).render(
         <Routes>
           <Route path="/l" element={<LandingPage />} />
           <Route path="/l/privacy" element={<PrivacyPolicyPage />} />
+          <Route path="/privacy" element={<PrivacyPolicyPage />} />
+          <Route path="/terms" element={<TermsPage />} />
           <Route path="/auth" element={<AuthPage mode="signIn" />} />
           <Route path="/auth/sign-up" element={<AuthPage mode="signUp" />} />
           <Route path="/auth/forgot-password" element={<AuthPage mode="forgotPassword" />} />
