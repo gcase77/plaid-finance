@@ -74,7 +74,7 @@ The Service is provided "as is" and "as available." To the fullest extent permit
 
 To the fullest extent permitted by law, we will not be liable for indirect, incidental, special, consequential, exemplary, or punitive damages, or for lost profits, lost data, lost revenue, or financial losses arising from or related to the Service.
 
-To the fullest extent permitted by law, our total liability for any claim related to the Service will not exceed the greater of (a) the amount you paid us for the Service in the six months before the claim arose or (b) $100.
+To the fullest extent permitted by law, our total liability for any claim related to the Service will not exceed the amount you paid us for the Service in the six months before the claim arose.
 
 Some laws do not allow certain limitations, so parts of this section may not apply to you.
 
