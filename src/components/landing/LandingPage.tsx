@@ -1,9 +1,9 @@
 import { Link } from "react-router-dom";
 import "./LandingPage.css";
 
-const supportEmail = "support@demo.com";
+export const supportEmail = "griffinecase7@gmail.com";
 
-function LogoMark() {
+export function LogoMark() {
   return (
     <Link className="landing-logo" to="/l" aria-label="Funds Up landing page">
       <img src="/funds-up-logo.svg" alt="Funds Up" />
@@ -103,7 +103,8 @@ export function LandingPage() {
         <LogoMark />
         <div className="landing-nav-links">
           <a href={`mailto:${supportEmail}`}>Support</a>
-          <Link to="/l/privacy">Privacy</Link>
+          <Link to="/privacy">Privacy</Link>
+          <Link to="/terms">Terms</Link>
           <Link className="btn btn-primary btn-sm" to="/auth">Sign in</Link>
         </div>
       </nav>
@@ -139,60 +140,10 @@ export function LandingPage() {
         </div>
         <p>
           Funds Up is a focused demo environment for personal finance organization. Questions can be sent to{" "}
-          <a href={`mailto:${supportEmail}`}>{supportEmail}</a>. Review the <Link to="/l/privacy">privacy policy</Link>.
+          <a href={`mailto:${supportEmail}`}>{supportEmail}</a>. Review the <Link to="/privacy">privacy policy</Link> and{" "}
+          <Link to="/terms">terms</Link>.
         </p>
       </section>
-    </main>
-  );
-}
-
-export function PrivacyPolicyPage() {
-  return (
-    <main className="landing-page privacy-page">
-      <nav className="landing-nav">
-        <LogoMark />
-        <div className="landing-nav-links">
-          <Link to="/l">Landing</Link>
-          <a href={`mailto:${supportEmail}`}>Support</a>
-        </div>
-      </nav>
-
-      <article className="privacy-card">
-        <span className="eyebrow">Privacy Policy</span>
-        <h1>Funds Up Privacy Policy</h1>
-        <p className="privacy-muted">Last updated April 28, 2026</p>
-
-        <section>
-          <h2>Overview</h2>
-          <p>
-            Funds Up is a personal finance application that helps users view transactions, organize tags, and understand financial trends. This policy is a placeholder for sandbox and partner review.
-          </p>
-        </section>
-        <section>
-          <h2>Information we handle</h2>
-          <p>
-            The app may process account, balance, transaction, institution, tag, and authentication information needed to provide the product experience. Sandbox data is fake.
-          </p>
-        </section>
-        <section>
-          <h2>Security</h2>
-          <p>
-            We use bank-level security practices, authenticated access, encrypted network connections, and trusted infrastructure providers including Plaid and Supabase.
-          </p>
-        </section>
-        <section>
-          <h2>Data use</h2>
-          <p>
-            Financial data is used to display account insights, categorize transactions, and power visualization tools. We do not sell personal financial data.
-          </p>
-        </section>
-        <section>
-          <h2>Contact</h2>
-          <p>
-            For privacy or support questions, email <a href={`mailto:${supportEmail}`}>{supportEmail}</a>.
-          </p>
-        </section>
-      </article>
     </main>
   );
 }

@@ -310,6 +310,16 @@
   font-size: 1.1rem;
 }
 
+.privacy-card ul {
+  padding-left: 1.25rem;
+  color: var(--landing-muted);
+  line-height: 1.7;
+}
+
+.privacy-card li + li {
+  margin-top: 0.45rem;
+}
+
 .privacy-muted {
   font-size: 0.95rem;
 }
