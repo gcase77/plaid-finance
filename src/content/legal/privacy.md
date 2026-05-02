@@ -23,7 +23,7 @@ We do not intentionally collect Social Security numbers, government IDs, health 
 
 Funds Up uses Plaid to let you connect financial accounts. When you connect an account, Plaid may collect credentials or other information needed to authenticate with your financial institution. We receive the financial data needed to provide Funds Up, such as account, balance, institution, and transaction data. We do not receive your bank login credentials from Plaid.
 
-Your use of Plaid is also subject to Plaid's policies. You can review Plaid's privacy policy at https://plaid.com/legal/#end-user-privacy-policy.
+Your use of Plaid is also subject to Plaid's policies. You can review Plaid's privacy policy at https://plaid.com/legal/#end-user-privacy-policy
 
 ## How we use information
 
@@ -52,15 +52,17 @@ We share information only when needed to operate the service, comply with law, o
 
 We keep information for as long as needed to provide the service, maintain your account, comply with legal obligations, resolve disputes, enforce agreements, and keep reasonable backups. When information is no longer needed, we delete it or de-identify it where practical.
 
+You always have the option to delete a connected bank from your account. In this case, we permanently delete all information associated with that bank from active systems immediately.
+
 If you ask us to delete your account, we will delete or deactivate account information from active systems within a reasonable period, subject to legal, security, backup, fraud-prevention, and operational needs.
 
 ## Security
 
-We use reasonable technical and organizational safeguards designed to protect personal information, including authenticated access, encrypted connections, access controls, and trusted infrastructure providers. No online service can guarantee perfect security, so you should use a strong password, protect your devices, and contact us if you believe your account has been compromised.
+We use reasonable technical and organizational safeguards designed to protect personal information, including authenticated access, at-rest encryption, transport layer security, multi-factor authentication, access controls, and trusted infrastructure providers. No online service can guarantee perfect security, so you should use a strong password, protect your devices, and contact us if you believe your account has been compromised.
 
 ## Your choices and rights
 
-You may contact us to request access to, correction of, export of, or deletion of personal information associated with your account. You may also disconnect financial accounts through the service or by contacting us.
+You may contact us to request access to, correction of, export of, or deletion of personal information associated with your account. You may also disconnect financial accounts through the service or by contacting us. 
 
 Depending on where you live, you may have additional privacy rights, including rights to know what information we collect, request deletion or correction, receive a copy of your information, opt out of certain uses, or appeal a denied request. We will not discriminate against you for exercising privacy rights.
 
