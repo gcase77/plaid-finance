@@ -25,8 +25,13 @@ export type SupabaseClient = {
 declare global {
   interface Window {
     supabase?: { createClient?: (url: string, key: string) => SupabaseClient };
-    Plaid?: { 
-      create: (opts: { token: string; onSuccess: (publicToken: string) => void | Promise<void> }) => { open: () => void } 
+    Plaid?: {
+      create: (opts: {
+        token: string;
+        receivedRedirectUri?: string;
+        onSuccess: (publicToken: string) => void | Promise<void>;
+        onExit?: (err: unknown, meta: unknown) => void;
+      }) => { open: () => void; exit?: () => void };
     };
     Chart?: {
       new (canvas: HTMLCanvasElement, config: unknown): {
