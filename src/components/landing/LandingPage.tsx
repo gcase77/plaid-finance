@@ -3,6 +3,11 @@ import "./LandingPage.css";
 
 export const supportEmail = "griffinecase7@gmail.com";
 
+/**
+ * Render the site's clickable logo that navigates to the landing page.
+ *
+ * @returns A link element (to `/l`) containing the site logo image with an accessible label for the landing page.
+ */
 export function LogoMark() {
   return (
     <Link className="landing-logo" to="/l" aria-label="Funds Up landing page">
@@ -96,6 +101,9 @@ function TimelinePreview() {
   );
 }
 
+/**
+ * Renders the landing page layout with navigation, hero section, feature previews, and footer.
+ */
 export function LandingPage() {
   return (
     <main className="landing-page">

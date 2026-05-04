@@ -57,6 +57,12 @@ const parseMarkdown = (markdown: string): MarkdownBlock[] => {
   return blocks;
 };
 
+/**
+ * Renders a text string with any HTTP(S) URLs and email addresses converted into clickable links.
+ *
+ * @param text - The input text that may contain URLs or email addresses
+ * @returns A React fragment where detected `http(s)` URLs are rendered as `<a href="...">` anchors and detected email addresses are rendered as `mailto:` anchors; plain text is left unchanged
+ */
 function MarkdownText({ text }: { text: string }) {
   const parts = text.split(/(https?:\/\/[^\s]+|[\w.+-]+@[\w.-]+\.[A-Za-z]{2,})/g);
   return (
@@ -74,6 +80,15 @@ function MarkdownText({ text }: { text: string }) {
   );
 }
 
+/**
+ * Render a legal document page by parsing and displaying raw Markdown with site navigation and branding.
+ *
+ * Renders the parsed Markdown as semantic HTML (headings, paragraphs, and bulleted lists), wraps it in a styled article with an eyebrow label, and includes top navigation links and logo.
+ *
+ * @param markdown - Raw Markdown source for the legal document to be parsed and displayed.
+ * @param label - Short label used as the eyebrow text and the article's accessible aria-label.
+ * @returns A React element containing the navigation, branded header, and the rendered legal document content derived from `markdown`.
+ */
 function LegalDocumentPage({ markdown, label }: { markdown: string; label: string }) {
   const blocks = parseMarkdown(markdown);
 
@@ -113,10 +128,18 @@ function LegalDocumentPage({ markdown, label }: { markdown: string; label: strin
   );
 }
 
+/**
+ * Renders the Privacy Policy page using the privacy Markdown content.
+ */
 export function PrivacyPolicyPage() {
   return <LegalDocumentPage markdown={privacyMarkdown} label="Privacy Policy" />;
 }
 
+/**
+ * Render the Terms of Service legal document page.
+ *
+ * @returns A React element that displays the Terms of Service content within the legal document layout
+ */
 export function TermsPage() {
   return <LegalDocumentPage markdown={termsMarkdown} label="Terms of Service" />;
 }

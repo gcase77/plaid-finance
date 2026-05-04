@@ -1,5 +1,12 @@
 import { Link, NavLink, Outlet } from "react-router-dom";
 
+/**
+ * Renders the application's shared layout with a top navigation bar and main content area.
+ *
+ * The navigation bar includes a brand link (logo) to the landing page and navigation links for Home, Transactions, and Tools. The main content area is a fluid container that renders the active child route via React Router's Outlet.
+ *
+ * @returns The layout element containing the navbar and a container that renders child routes.
+ */
 export default function AppLayout() {
   return (
     <div>
