@@ -102,26 +102,20 @@ export function LandingPage() {
       <nav className="landing-nav">
         <LogoMark />
         <div className="landing-nav-links">
-          <a href={`mailto:${supportEmail}`}>Support</a>
           <Link to="/privacy">Privacy</Link>
           <Link to="/terms">Terms</Link>
-          <Link className="btn btn-primary btn-sm" to="/auth">Sign in</Link>
+          <Link className="btn btn-primary btn-sm" to="/">Sign in</Link>
         </div>
       </nav>
 
       <section className="landing-hero">
         <div className="landing-hero-copy">
-          <span className="eyebrow">Personal finance insights</span>
-          <h1>Bank-connected financial clarity for serious money decisions.</h1>
-          <p>
-            Funds Up helps users connect financial accounts, review transactions, tag cash flow, and visualize trends in a simple secure dashboard.
-          </p>
+          <h1>How wealth accumulators keep track of their finances</h1>
           <div className="hero-actions">
-            <Link className="btn btn-primary" to="/auth">Open sandbox app</Link>
-            <a className="btn btn-outline-primary" href={`mailto:${supportEmail}`}>Contact support</a>
+            <Link className="btn btn-primary" to="/">Sign in</Link>
           </div>
           <div className="security-note">
-            <strong>Bank-level security.</strong> Account connections use Plaid, sensitive data is protected in transit, and access is limited to authenticated users.
+            <strong>Bank-level security.</strong> Your data is encrypted at rest, protected during transit, and locked behind your MFA-secured account.
           </div>
         </div>
         <TransactionsPreview />
@@ -133,17 +127,13 @@ export function LandingPage() {
         <TimelinePreview />
       </section>
 
-      <section className="trust-section">
-        <div>
-          <span className="eyebrow">Built for responsible access</span>
-          <h2>Simple, transparent, and ready for API review.</h2>
-        </div>
-        <p>
-          Funds Up is a focused demo environment for personal finance organization. Questions can be sent to{" "}
-          <a href={`mailto:${supportEmail}`}>{supportEmail}</a>. Review the <Link to="/privacy">privacy policy</Link> and{" "}
-          <Link to="/terms">terms</Link>.
-        </p>
-      </section>
+      <footer className="landing-site-footer">
+        <nav className="landing-site-footer-nav" aria-label="Footer">
+          <Link to="/privacy">Privacy</Link>
+          <Link to="/terms">Terms</Link>
+          <a href={`mailto:${supportEmail}`}>Support: {supportEmail}</a>
+        </nav>
+      </footer>
     </main>
   );
 }
