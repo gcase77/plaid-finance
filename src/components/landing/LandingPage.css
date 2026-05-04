@@ -4,6 +4,8 @@
   --landing-ink: #102033;
   --landing-muted: #5d6b7a;
   --landing-line: rgba(13, 110, 253, 0.16);
+  display: flex;
+  flex-direction: column;
   min-height: 100vh;
   color: var(--landing-ink);
   background:
@@ -14,7 +16,7 @@
 .landing-nav,
 .landing-hero,
 .feature-grid,
-.trust-section,
+.landing-site-footer,
 .privacy-card {
   width: min(1120px, calc(100% - 32px));
   margin: 0 auto;
@@ -56,7 +58,6 @@
 }
 
 .landing-hero-copy h1,
-.trust-section h2,
 .privacy-card h1 {
   letter-spacing: -0.045em;
 }
@@ -69,7 +70,6 @@
 }
 
 .landing-hero-copy p,
-.trust-section p,
 .privacy-card p {
   color: var(--landing-muted);
   line-height: 1.7;
@@ -117,7 +117,6 @@
 }
 
 .feature-card,
-.trust-section,
 .privacy-card {
   border: 1px solid rgba(13, 110, 253, 0.12);
   border-radius: 1.25rem;
@@ -277,19 +276,30 @@
   fill: var(--landing-primary);
 }
 
-.trust-section {
-  display: grid;
-  grid-template-columns: 0.85fr 1.15fr;
-  gap: 1.5rem;
-  align-items: center;
-  margin-bottom: 3rem;
-  padding: 2rem;
-  background: linear-gradient(135deg, #ffffff, #eef5ff);
+.landing-site-footer {
+  margin-top: auto;
+  margin-bottom: 2rem;
+  padding: 1.5rem 0 0;
+  border-top: 1px solid var(--landing-line);
+  text-align: center;
 }
 
-.trust-section h2 {
-  margin: 0.7rem 0 0;
-  font-size: clamp(1.8rem, 4vw, 3rem);
+.landing-site-footer-nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem 1.25rem;
+  font-size: 0.94rem;
+}
+
+.landing-site-footer-nav a {
+  color: var(--landing-primary);
+  text-decoration: none;
+}
+
+.landing-site-footer-nav a:hover {
+  text-decoration: underline;
 }
 
 .privacy-page {
@@ -326,8 +336,7 @@
 
 @media (max-width: 900px) {
   .landing-hero,
-  .feature-grid,
-  .trust-section {
+  .feature-grid {
     grid-template-columns: 1fr;
   }
 

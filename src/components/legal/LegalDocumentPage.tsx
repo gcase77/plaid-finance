@@ -3,8 +3,6 @@ import privacyMarkdown from "../../content/legal/privacy.md?raw";
 import termsMarkdown from "../../content/legal/terms.md?raw";
 import "../landing/LandingPage.css";
 
-const supportEmail = "griffinecase7@gmail.com";
-
 type MarkdownBlock =
   | { type: "heading"; level: number; text: string }
   | { type: "paragraph"; text: string }
@@ -86,10 +84,8 @@ function LegalDocumentPage({ markdown, label }: { markdown: string; label: strin
           <img src="/funds-up-logo.svg" alt="Funds Up" />
         </Link>
         <div className="landing-nav-links">
-          <Link to="/l">Landing</Link>
           <Link to="/privacy">Privacy</Link>
           <Link to="/terms">Terms</Link>
-          <a href={`mailto:${supportEmail}`}>Support</a>
         </div>
       </nav>
 
