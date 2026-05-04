@@ -1,6 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { Item, Account } from "../components/types";
 import { buildAuthHeaders } from "../lib/auth";
+
+const PLAID_LINK_TOKEN_KEY = "plaid_link_token";
 
 export type DeleteItemResult =
   | { ok: true; plaidRemoved: boolean; plaidError?: string }
@@ -23,7 +25,6 @@ export function usePlaidData(userId: string | null, token: string | null): UsePl
   const [items, setItems] = useState<Item[]>([]);
   const [accountsByItem, setAccountsByItem] = useState<Record<string, Account[]>>({});
   const [loadingItems, setLoadingItems] = useState(false);
-
   const fetchWithAuth = async (url: string, options: RequestInit = {}, tokenOverride?: string | null) => {
     const resolvedToken = tokenOverride || token;
     return fetch(url, {
@@ -52,6 +53,34 @@ export function usePlaidData(userId: string | null, token: string | null): UsePl
     }
   };
 
+  useEffect(() => {
+    if (!userId || !token || !window.Plaid) return;
+    if (!new URLSearchParams(window.location.search).get("oauth_state_id")) return;
+    const linkToken = sessionStorage.getItem(PLAID_LINK_TOKEN_KEY);
+    if (!linkToken) return;
+    const handler = window.Plaid.create({
+      token: linkToken,
+      receivedRedirectUri: window.location.href,
+      onSuccess: async (publicToken: string) => {
+        await fetchWithAuth("/api/link/exchange", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ publicToken })
+        });
+        sessionStorage.removeItem(PLAID_LINK_TOKEN_KEY);
+        await loadItems(userId, token);
+        window.history.replaceState({}, "", window.location.pathname);
+      },
+      onExit: () => {
+        sessionStorage.removeItem(PLAID_LINK_TOKEN_KEY);
+        window.history.replaceState({}, "", window.location.pathname);
+      }
+    });
+    handler.open();
+    return () => handler.exit?.();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- OAuth return after session restore; omit loadItems/fetchWithAuth
+  }, [userId, token]);
+
   const linkBank = async (daysRequested = 730) => {
     if (!userId) return;
     const sanitizedDaysRequested = Math.min(730, Math.max(1, Number.isFinite(daysRequested) ? Math.floor(daysRequested) : 730));
@@ -62,6 +91,7 @@ export function usePlaidData(userId: string | null, token: string | null): UsePl
     });
     const data = await linkTokenRes.json();
     if (!data?.link_token || !window.Plaid) return;
+    sessionStorage.setItem(PLAID_LINK_TOKEN_KEY, data.link_token);
     window.Plaid.create({
       token: data.link_token,
       onSuccess: async (publicToken: string) => {
@@ -70,8 +100,10 @@ export function usePlaidData(userId: string | null, token: string | null): UsePl
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ publicToken })
         });
+        sessionStorage.removeItem(PLAID_LINK_TOKEN_KEY);
         await loadItems();
-      }
+      },
+      onExit: () => sessionStorage.removeItem(PLAID_LINK_TOKEN_KEY)
     }).open();
   };
 
