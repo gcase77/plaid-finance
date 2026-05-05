@@ -30,7 +30,13 @@ export default function RequireAuth() {
       const { data: assurance, error } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
       if (cancelled || refreshId !== refreshIdRef.current) return;
 
-      if (!error && assurance.nextLevel === "aal2" && assurance.currentLevel !== "aal2") {
+      if (error) {
+        console.error("MFA assurance level check error:", error);
+        setMfaState("required");
+        return;
+      }
+
+      if (assurance.nextLevel === "aal2" && assurance.currentLevel !== "aal2") {
         setMfaState("required");
         return;
       }
