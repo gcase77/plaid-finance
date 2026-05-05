@@ -14,6 +14,9 @@ model users {
   items        items[]
   accounts     accounts[]
   transactions transactions[]
+  investment_holdings investment_holdings[]
+  investment_transactions investment_transactions[]
+  securities securities[]
   tags         tags[]
   system_logs  system_logs[]
   budget_rules budget_rules[]
@@ -39,6 +42,9 @@ model items {
   accounts                accounts[]
   users                   users          @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   transactions            transactions[]
+  investment_holdings     investment_holdings[]
+  investment_transactions investment_transactions[]
+  securities              securities[]
 }
 
 model accounts {
@@ -56,6 +62,9 @@ model accounts {
   items           items?         @relation(fields: [item_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   users           users          @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   transactions    transactions[]
+  investment_holdings investment_holdings[]
+  investment_transactions investment_transactions[]
+  securities       securities[]
 }
 
 model transactions {
@@ -81,6 +90,106 @@ model transactions {
   items                              items    @relation(fields: [item_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   transaction_meta                   transaction_meta?
   users                              users    @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model investment_holdings {
+  account_id                 String
+  security_id                String
+  user_id                    String   @db.Uuid
+  item_id                    String
+  institution_price          Float
+  institution_price_as_of    DateTime?
+  institution_price_datetime DateTime?
+  institution_price_date     DateTime
+  institution_value          Float
+  cost_basis                 Float?
+  quantity                   Float
+  iso_currency_code          String?
+  unofficial_currency_code   String?
+  currency_code              String?
+  vested_quantity            Float?
+  vested_value               Float?
+  raw_payload                Json?
+  created_at                 DateTime @default(now())
+  updated_at                 DateTime @updatedAt
+
+  accounts  accounts   @relation(fields: [account_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  items     items      @relation(fields: [item_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  securities securities @relation(fields: [security_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users     users      @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([account_id, security_id])
+  @@index([user_id, item_id])
+}
+
+model investment_transactions {
+  id                       String   @id
+  user_id                  String   @db.Uuid
+  item_id                  String
+  account_id               String
+  security_id              String?
+  date                     DateTime
+  plaid_datetime           DateTime?
+  datetime                 DateTime
+  name                     String
+  quantity                 Float
+  amount                   Float
+  price                    Float
+  fees                     Float?
+  type                     String
+  subtype                  String
+  iso_currency_code        String?
+  unofficial_currency_code String?
+  currency_code            String?
+  raw_payload              Json?
+  created_at               DateTime @default(now())
+  updated_at               DateTime @updatedAt
+
+  accounts  accounts    @relation(fields: [account_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  items     items       @relation(fields: [item_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  securities securities? @relation(fields: [security_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users     users       @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([user_id, datetime])
+  @@index([account_id, security_id])
+}
+
+model securities {
+  id                       String   @id
+  user_id                  String   @db.Uuid
+  item_id                  String
+  account_id               String
+  institution_security_id  String?
+  institution_id           String?
+  proxy_security_id        String?
+  name                     String?
+  ticker_symbol            String?
+  is_cash_equivalent       Boolean?
+  type                     String?
+  subtype                  String?
+  close_price              Float?
+  close_price_as_of        DateTime?
+  update_datetime          DateTime?
+  iso_currency_code        String?
+  unofficial_currency_code String?
+  currency_code            String?
+  market_identifier_code   String?
+  sector                   String?
+  industry                 String?
+  option_contract          Json?
+  fixed_income             Json?
+  raw_payload              Json?
+  created_at               DateTime @default(now())
+  updated_at               DateTime @updatedAt
+
+  accounts accounts @relation(fields: [account_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  items    items    @relation(fields: [item_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users    users    @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  investment_holdings investment_holdings[]
+  investment_transactions investment_transactions[]
+
+  @@index([user_id, item_id])
+  @@index([ticker_symbol])
 }
 
 model transaction_meta {

@@ -11,6 +11,7 @@ export default function AppLayout() {
           <ul className="navbar-nav">
             <li className="nav-item"><NavLink className="nav-link" to="/" end>Home</NavLink></li>
             <li className="nav-item"><NavLink className="nav-link" to="/transactions">Transactions</NavLink></li>
+            <li className="nav-item"><NavLink className="nav-link" to="/investments">Investments</NavLink></li>
             <li className="nav-item"><NavLink className="nav-link" to="/tools">Tools</NavLink></li>
           </ul>
         </div>

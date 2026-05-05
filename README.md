@@ -123,6 +123,88 @@ class
 }
 ```
 
+### Investment Data Blueprint
+
+Plaid Investments returns three core object types from `/investments/holdings/get` and `/investments/transactions/get`. Proposed public tables should keep `user_id`, `item_id`, and raw payload/audit fields alongside the Plaid fields below; enable RLS before exposing them through Supabase.
+
+#### `investment_holdings`
+
+Current positions for investment accounts. Returned by `/investments/holdings/get` in `holdings`; related security metadata is returned separately in `securities`.
+
+| Field | Plaid type | Notes |
+| --- | --- | --- |
+| `account_id` | string | Plaid account ID for the holding. |
+| `security_id` | string | Joins to `securities.security_id`; may change after corporate actions. |
+| `institution_price` | number | Last institution-reported price for the security. |
+| `institution_price_as_of` | nullable date string | Date the institution price was current. |
+| `institution_price_datetime` | nullable date-time string | More precise timestamp when available. |
+| `institution_value` | number | Institution-reported holding value. |
+| `cost_basis` | nullable number | Total amount spent to acquire the currently held quantity. |
+| `quantity` | number | Total units held; options are typically contract count multiplied by 100. |
+| `iso_currency_code` | nullable string | Official currency code; mutually exclusive with `unofficial_currency_code`. |
+| `unofficial_currency_code` | nullable string | Non-ISO currency code, often for crypto or unsupported currencies. |
+| `vested_quantity` | nullable number | Vested equity quantity, when reported. |
+| `vested_value` | nullable number | Institution-reported vested value, when reported. |
+
+#### `investment_transactions`
+
+Historical investment activity. Returned by `/investments/transactions/get` in `investment_transactions`; results are paginated by `count` and `offset`.
+
+| Field | Plaid type | Notes |
+| --- | --- | --- |
+| `investment_transaction_id` | string | Plaid-unique investment transaction ID; primary key candidate. |
+| `account_id` | string | Plaid account ID the transaction posted against. |
+| `security_id` | nullable string | Joins to `securities.security_id`; null for some cash-only activity. |
+| `date` | date string | Posting date, typically settlement date. |
+| `datetime` | nullable date-time string | Order initiation timestamp when supplied by the institution. |
+| `name` | string | Institution description. |
+| `quantity` | number | Units involved; positive for buys, negative for sells. |
+| `amount` | number | Complete transaction value; positive for cash debits such as buys, negative for cash credits such as sells. |
+| `price` | number | Per-unit transaction price. |
+| `fees` | nullable number | Combined fees for the transaction. |
+| `type` | string | One of `buy`, `sell`, `cancel`, `cash`, `fee`, `transfer`. |
+| `subtype` | string | More specific activity such as `dividend`, `deposit`, `sell short`, `tax withheld`, `withdrawal`. |
+| `iso_currency_code` | nullable string | Official currency code; mutually exclusive with `unofficial_currency_code`. |
+| `unofficial_currency_code` | nullable string | Non-ISO currency code. |
+
+#### `securities`
+
+Reference data for holdings and transactions. Returned by both Investments endpoints in `securities`; security data is not user-account-specific, but Plaid does not guarantee the same security always has the same ID across institutions.
+
+| Field | Plaid type | Notes |
+| --- | --- | --- |
+| `security_id` | string | Plaid security ID; primary key candidate. |
+| `isin` | nullable string | Requires CUSIP Global Services license access. |
+| `cusip` | nullable string | Requires CUSIP Global Services license access. |
+| `sedol` | deprecated nullable string | UK security identifier. |
+| `institution_security_id` | nullable string | Institution-provided identifier. |
+| `institution_id` | nullable string | Institution that owns `institution_security_id`. |
+| `proxy_security_id` | nullable string | Plaid-modeled proxy for low-volume or private securities. |
+| `name` | nullable string | Display name. |
+| `ticker_symbol` | nullable string | Public ticker or short identifier. |
+| `is_cash_equivalent` | nullable boolean | Whether the security can be treated like cash. |
+| `type` | nullable string | Broad type: `cash`, `cryptocurrency`, `derivative`, `equity`, `etf`, `fixed income`, `loan`, `mutual fund`, `other`. |
+| `subtype` | nullable string | More specific type, such as `common stock`, `option`, `bill`, `bond`, `etf`, `mutual fund`. |
+| `close_price` | nullable number | Previous close price; null for non-public securities. |
+| `close_price_as_of` | nullable date string | Date for `close_price`. |
+| `update_datetime` | nullable date-time string | Last security price update time when available. |
+| `iso_currency_code` | nullable string | Official currency code for the price. |
+| `unofficial_currency_code` | nullable string | Non-ISO currency code. |
+| `market_identifier_code` | nullable string | ISO-10383 market/exchange code. |
+| `sector` | nullable string | Sector classification. |
+| `industry` | nullable string | Industry classification. |
+| `sector_code` | nullable string | ISO-10962 CFI code when provided. |
+| `option_contract` | nullable object | Option details: type, expiration, strike price, underlying ticker. |
+| `fixed_income` | nullable object | Fixed-income details such as yield rate/type, maturity date, and face value. |
+
+### `/investments` Interface Gameplan
+
+- Backend: add an `investments` product to Link for eligible Items, then create routes for `POST /api/investments/holdings/sync`, `POST /api/investments/transactions/sync`, and read endpoints for holdings, transactions, and securities joined to accounts/items.
+- Sync: fetch holdings as a full current snapshot, upsert securities first, then upsert holdings by `(account_id, security_id)` while preserving raw payloads. Fetch transactions by date range with Plaid pagination and upsert by `investment_transaction_id`.
+- Data model: make holdings user-scoped through account/item ownership, keep securities globally keyed by `security_id`, and add RLS policies on user-owned investment rows in `public`.
+- UI: create `/investments` as a focused page with tabs for Holdings, Activity, and Securities. Start with totals by account/institution, holding table with ticker/name/value/quantity/gain basis fields, and activity filters by account, security, type, subtype, and date.
+- Operations: add explicit refresh buttons for holdings and transactions. Treat `/investments/refresh` as optional/on-demand because Plaid notes it may trigger per-request billing and webhooks rather than immediately returning new data.
+
 ### Server endpoints
 
 | Method | Path                                                                 | Request Data                        | Response                                                       |
@@ -135,6 +217,9 @@ class
 | POST   | [api/items/:itemId/delete_all](server/routes/items.ts#L16)               | query: — body: —                    | `200` / `207`: `{ success: true, deleted: { item, accounts }, plaid_removed, plaid_error? }` (deletes item, its accounts, transactions; then Plaid `item/remove`; `207` if Plaid unlink fails) |
 | GET    | [api/transactions](server/routes/transactions.ts#L282)                 | query: `includeRemoved?` body: —    | transaction array                                              |
 | POST   | [api/transactions/sync](server/routes/transactions.ts#L270)            | query: — body: —                    | `{ success: true, items_processed, added, modified, removed }`  |
+| GET    | [api/investments](server/routes/investments.ts)                        | query: — body: —                    | `{ holdings, transactions, securities }` with joined account/item/security basics |
+| POST   | [api/investments/holdings/sync](server/routes/investments.ts)          | query: — body: —                    | `{ success: true, holdings, securities }` from Plaid `/investments/holdings/get` |
+| POST   | [api/investments/transactions/sync](server/routes/investments.ts)      | query: — body: `{ startDate?, endDate? }` | `{ success: true, transactions, securities }` from Plaid `/investments/transactions/get` |
 | GET    | [api/transaction_meta](server/routes/transaction_meta.ts#L19)         | query: — body: —                    | `{ transaction_id, account_transfer_group, bucket_1_tag_id, bucket_2_tag_id, meta_tag_ids }[]` |
 | POST   | [api/transaction_meta/transfer_group](server/routes/transaction_meta.ts#L51) | query: — body: `{ transaction_ids: [id1, id2] }` | `{ account_transfer_group: uuid }` |
 | DELETE | [api/transaction_meta/transfer_group](server/routes/transaction_meta.ts#L82) | query: — body: `{ transaction_ids: [id1, id2] }` or `{ transaction_ids: [id] }` (clears whole group for that transfer) | `{ success: true }` |
