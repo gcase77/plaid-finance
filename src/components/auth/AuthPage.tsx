@@ -20,6 +20,7 @@ export default function AuthPage({ mode }: AuthPageProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [acceptedLegalTerms, setAcceptedLegalTerms] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -35,6 +36,7 @@ export default function AuthPage({ mode }: AuthPageProps) {
     setError(null);
     setIsSubmitting(false);
     setSuccess(resetSuccess ? "Password updated. Please sign in with your new password." : null);
+    setAcceptedLegalTerms(false);
     if (isReset) {
       const recoveryState = getPasswordRecoveryState();
       if (recoveryState.status === "ready") {
@@ -139,6 +141,11 @@ export default function AuthPage({ mode }: AuthPageProps) {
       return;
     }
 
+    if (isSignUp && !acceptedLegalTerms) {
+      setError("You must confirm that you have read the Privacy Policy and Terms of Service.");
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       if (isSignIn) {
@@ -164,6 +171,7 @@ export default function AuthPage({ mode }: AuthPageProps) {
         setSuccess("Account created. You may now sign in");
         setPassword("");
         setConfirmPassword("");
+        setAcceptedLegalTerms(false);
         return;
       }
 
@@ -259,10 +267,34 @@ export default function AuthPage({ mode }: AuthPageProps) {
                   </div>
                 )}
 
+                {isSignUp && (
+                  <div className="form-check mb-3">
+                    <input
+                      id="acceptedLegalTerms"
+                      type="checkbox"
+                      className="form-check-input"
+                      checked={acceptedLegalTerms}
+                      onChange={(e) => setAcceptedLegalTerms(e.target.checked)}
+                      required
+                    />
+                    <label className="form-check-label small" htmlFor="acceptedLegalTerms">
+                      I have read the{" "}
+                      <Link to="/privacy" target="_blank" rel="noreferrer">
+                        Privacy Policy
+                      </Link>{" "}
+                      and{" "}
+                      <Link to="/terms" target="_blank" rel="noreferrer">
+                        Terms of Service
+                      </Link>
+                      .
+                    </label>
+                  </div>
+                )}
+
                 <button
                   type="submit"
                   className="btn btn-primary w-100"
-                  disabled={isSubmitting || (isReset && !canResetPassword)}
+                  disabled={isSubmitting || (isReset && !canResetPassword) || (isSignUp && !acceptedLegalTerms)}
                 >
                   {isSubmitting ? loadingText : submitText}
                 </button>
