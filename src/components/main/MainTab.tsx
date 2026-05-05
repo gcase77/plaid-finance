@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import type { DeleteItemResult, RefreshAccountsResult } from "../../hooks/usePlaidData";
 import type { Account, AccountBalances, Item } from "../types";
 import LoadingSpinner from "../shared/LoadingSpinner";
@@ -239,6 +240,9 @@ export default function MainTab(props: MainTabProps) {
               <p className="mb-2 small text-break">
                 Signed in as: <strong>{userEmail}</strong>
               </p>
+              <Link className="btn btn-success w-100 btn-sm mb-2" to="/account">
+                Enable MFA (recommended)
+              </Link>
               <button className="btn btn-outline-secondary w-100 btn-sm" onClick={signOut}>
                 Sign Out
               </button>

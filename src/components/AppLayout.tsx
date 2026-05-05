@@ -12,7 +12,6 @@ export default function AppLayout() {
             <li className="nav-item"><NavLink className="nav-link" to="/" end>Home</NavLink></li>
             <li className="nav-item"><NavLink className="nav-link" to="/transactions">Transactions</NavLink></li>
             <li className="nav-item"><NavLink className="nav-link" to="/tools">Tools</NavLink></li>
-            <li className="nav-item"><NavLink className="nav-link" to="/security">Security</NavLink></li>
           </ul>
         </div>
       </nav>

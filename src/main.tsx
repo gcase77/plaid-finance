@@ -34,7 +34,7 @@ createRoot(document.getElementById("root")!).render(
               <Route path="/main" element={<Navigate to="/" replace />} />
               <Route path="/transactions" element={<TransactionsPage />} />
               <Route path="/tools" element={<ToolsPage />} />
-              <Route path="/security" element={<SecurityPage />} />
+              <Route path="/account" element={<SecurityPage />} />
             </Route>
           </Route>
           <Route path="*" element={<NotFoundPage />} />
