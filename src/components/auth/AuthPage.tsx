@@ -24,6 +24,9 @@ export default function AuthPage({ mode }: AuthPageProps) {
   const [success, setSuccess] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [canResetPassword, setCanResetPassword] = useState(mode !== "resetPassword");
+  const [acceptedLegal, setAcceptedLegal] = useState(false);
+  const [mfaCode, setMfaCode] = useState("");
+  const [mfaFactorId, setMfaFactorId] = useState<string | null>(null);
 
   const isSignIn = mode === "signIn";
   const isSignUp = mode === "signUp";
@@ -139,14 +142,43 @@ export default function AuthPage({ mode }: AuthPageProps) {
       return;
     }
 
+    if (isSignUp && !acceptedLegal) {
+      setError("You must accept the Privacy Policy and Terms before creating an account.");
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       if (isSignIn) {
+        if (mfaFactorId) {
+          const { error: verifyError } = await supabase.auth.mfa.challengeAndVerify({ factorId: mfaFactorId, code: mfaCode });
+          if (verifyError) {
+            setError(verifyError.message || "Unable to verify MFA code.");
+            return;
+          }
+          navigate("/");
+          return;
+        }
+
         const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
         if (signInError) {
           setError(signInError.message || "Unable to sign in.");
           return;
         }
+
+        const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+        if (aalData.nextLevel === "aal2" && aalData.currentLevel !== "aal2") {
+          const { data: factorsData } = await supabase.auth.mfa.listFactors();
+          const factor = factorsData.totp[0];
+          if (!factor) {
+            setError("MFA is required, but no authenticator factor was found for this account.");
+            return;
+          }
+          setMfaFactorId(factor.id);
+          setSuccess("Enter your authenticator app code to finish signing in.");
+          return;
+        }
+
         navigate("/");
         return;
       }
@@ -254,6 +286,39 @@ export default function AuthPage({ mode }: AuthPageProps) {
                       className="form-control"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
+                      required
+                    />
+                  </div>
+                )}
+
+
+
+                {isSignUp && (
+                  <div className="form-check mb-3">
+                    <input
+                      id="legalConsent"
+                      type="checkbox"
+                      className="form-check-input"
+                      checked={acceptedLegal}
+                      onChange={(e) => setAcceptedLegal(e.target.checked)}
+                      required
+                    />
+                    <label className="form-check-label small" htmlFor="legalConsent">
+                      I have read and agree to the <Link to="/privacy">Privacy Policy</Link> and <Link to="/terms">Terms</Link>.
+                    </label>
+                  </div>
+                )}
+
+                {isSignIn && mfaFactorId && (
+                  <div className="mb-3">
+                    <label className="form-label" htmlFor="mfaCode">Authenticator code</label>
+                    <input
+                      id="mfaCode"
+                      inputMode="numeric"
+                      className="form-control"
+                      placeholder="123456"
+                      value={mfaCode}
+                      onChange={(e) => setMfaCode(e.target.value)}
                       required
                     />
                   </div>
