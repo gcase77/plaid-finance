@@ -10,7 +10,6 @@ export default function NotFoundPage() {
           <img src="/funds-up-logo.svg" alt="Funds Up" />
         </Link>
         <div className="landing-nav-links">
-          <Link to="/l">Landing</Link>
           <Link className="btn btn-primary btn-sm" to="/auth">Sign in</Link>
         </div>
       </nav>
