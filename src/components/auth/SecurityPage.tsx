@@ -27,10 +27,13 @@ export default function SecurityPage() {
   const [isVerifyingEnrollment, setIsVerifyingEnrollment] = useState(false);
   const [removingFactorId, setRemovingFactorId] = useState<string | null>(null);
 
-  const loadFactors = async () => {
+  const loadFactors = async (cancelled?: { current: boolean }) => {
+    if (cancelled && cancelled.current) return;
     setIsLoading(true);
+    if (cancelled && cancelled.current) return;
     setError(null);
     const { data, error: factorsError } = await supabase.auth.mfa.listFactors();
+    if (cancelled && cancelled.current) return;
     if (factorsError) {
       setError(factorsError.message || "Unable to load MFA settings.");
       setIsLoading(false);
@@ -54,7 +57,11 @@ export default function SecurityPage() {
   };
 
   useEffect(() => {
-    void loadFactors();
+    const cancelled = { current: false };
+    void loadFactors(cancelled);
+    return () => {
+      cancelled.current = true;
+    };
   }, []);
 
   const startEnrollment = async () => {
