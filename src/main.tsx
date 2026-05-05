@@ -5,6 +5,7 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import AppLayout from "./components/AppLayout";
 import AuthPage from "./components/auth/AuthPage";
 import RequireAuth from "./components/auth/RequireAuth";
+import SecurityPage from "./components/auth/SecurityPage";
 import { PrivacyPolicyPage, TermsPage } from "./components/legal/LegalDocumentPage";
 import { LandingPage } from "./components/landing/LandingPage";
 import MainPage from "./components/main/MainPage";
@@ -33,6 +34,7 @@ createRoot(document.getElementById("root")!).render(
               <Route path="/main" element={<Navigate to="/" replace />} />
               <Route path="/transactions" element={<TransactionsPage />} />
               <Route path="/tools" element={<ToolsPage />} />
+              <Route path="/account" element={<SecurityPage />} />
             </Route>
           </Route>
           <Route path="*" element={<NotFoundPage />} />
