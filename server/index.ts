@@ -12,7 +12,23 @@ import budgetRulesRouter from "./routes/budget_rules";
 import { requireAuth } from "./middleware/auth";
 
 const app = express();
+app.set("trust proxy", true);
 app.use(express.json());
+
+app.use((req, res, next) => {
+  const forwardedProto = req.get("x-forwarded-proto")?.split(",")[0]?.trim().toLowerCase();
+  const isSecure = req.secure || forwardedProto === "https";
+  const isLocalhost = req.hostname === "localhost" || req.hostname === "127.0.0.1";
+  const allowInsecure = process.env.ALLOW_INSECURE_HTTP === "true" || process.env.NODE_ENV !== "production";
+
+  if (!isSecure) {
+    if (allowInsecure && isLocalhost) return next();
+    return res.status(426).json({ error: "HTTPS is required" });
+  }
+
+  res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
+  return next();
+});
 
 const distPath = path.join(__dirname, "..", "dist");
 if (fs.existsSync(distPath)) {
