@@ -1,11 +1,10 @@
 import { Fragment, useMemo, useState } from "react";
 import type { Txn } from "../types";
-import { buildAuthHeaders } from "../../lib/auth";
+import { dataProvider } from "../../providers/dataProvider";
 import { formatTxnDate, getTxnDateOnly } from "../../utils/transactionUtils";
 
 type Props = {
   transactions: Txn[];
-  token: string | null;
   invalidateTransactionMeta: () => Promise<void>;
 };
 
@@ -61,7 +60,7 @@ function SummaryCol({ outflow, inflow }: { outflow: Txn; inflow: Txn }) {
 
 const COL_SPAN = 4; // summary + outflow + inflow + action
 
-export default function TransferGroupTool({ transactions, token, invalidateTransactionMeta }: Props) {
+export default function TransferGroupTool({ transactions, invalidateTransactionMeta }: Props) {
   const [tab, setTab] = useState<"find" | "existing">("find");
   const [maxDays, setMaxDays] = useState(3);
   const [amountTol, setAmountTol] = useState(0);
@@ -128,12 +127,11 @@ export default function TransferGroupTool({ transactions, token, invalidateTrans
     setSavingId(pair.pairId);
     setError(null);
     try {
-      const res = await fetch("/api/transaction_meta/transfer_group", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", ...buildAuthHeaders(token) },
-        body: JSON.stringify({ transaction_ids: [pair.outflow.transaction_id, pair.inflow.transaction_id] })
+      await dataProvider.custom?.({
+        url: "/api/transaction_meta/transfer_group",
+        method: "post",
+        payload: { transaction_ids: [pair.outflow.transaction_id, pair.inflow.transaction_id] }
       });
-      if (!res.ok) throw new Error((await res.json()).error ?? res.statusText);
       await invalidateTransactionMeta();
     } catch (error: unknown) {
       setError(getErrorMessage(error));
@@ -146,12 +144,11 @@ export default function TransferGroupTool({ transactions, token, invalidateTrans
     setRemovingId(groupId);
     setError(null);
     try {
-      const res = await fetch("/api/transaction_meta/transfer_group", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json", ...buildAuthHeaders(token) },
-        body: JSON.stringify({ transaction_ids: transactionIds })
+      await dataProvider.custom?.({
+        url: "/api/transaction_meta/transfer_group",
+        method: "delete",
+        payload: { transaction_ids: transactionIds }
       });
-      if (!res.ok) throw new Error((await res.json()).error ?? res.statusText);
       await invalidateTransactionMeta();
     } catch (error: unknown) {
       setError(getErrorMessage(error));

@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { TransactionBaseRow, TransactionMerged, TransactionMetaRow } from "../components/types";
-import { buildAuthHeaders } from "../lib/auth";
+import { dataProvider } from "../providers/dataProvider";
 
 type UseTransactionsDataReturn = {
   transactions: TransactionMerged[];
@@ -16,29 +16,25 @@ type UseTransactionsDataReturn = {
 export const TRANSACTIONS_QUERY_KEY = ["transactions", { includeRemoved: false }] as const;
 const TRANSACTION_META_QUERY_KEY = ["transaction_meta"] as const;
 
-const fetchTransactions = async (token: string | null, includeRemoved = false): Promise<TransactionBaseRow[]> => {
-  const query = includeRemoved ? "?includeRemoved=true" : "";
-  const res = await fetch(`/api/transactions${query}`, { headers: buildAuthHeaders(token) });
-  if (!res.ok) throw new Error(`Failed to load transactions (${res.status})`);
-  const data = await res.json();
-  return Array.isArray(data) ? data : [];
-};
-
-const fetchTransactionMeta = async (token: string | null): Promise<TransactionMetaRow[]> => {
-  const res = await fetch("/api/transaction_meta", { headers: buildAuthHeaders(token) });
-  if (!res.ok) throw new Error(`Failed to load transaction meta (${res.status})`);
-  const data = await res.json();
-  return Array.isArray(data) ? data : [];
-};
-
-const syncTransactionsRequest = async (token: string | null): Promise<{ added?: number; modified?: number; removed?: number; error?: string }> => {
-  const res = await fetch("/api/transactions/sync", {
-    method: "POST",
-    headers: buildAuthHeaders(token)
+const fetchTransactions = async (includeRemoved = false): Promise<TransactionBaseRow[]> => {
+  const result = await dataProvider.getList<TransactionBaseRow>({
+    resource: "transactions",
+    meta: { query: includeRemoved ? { includeRemoved: true } : undefined }
   });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data?.error || `Sync failed (${res.status})`);
-  return data;
+  return Array.isArray(result.data) ? result.data : [];
+};
+
+const fetchTransactionMeta = async (): Promise<TransactionMetaRow[]> => {
+  const result = await dataProvider.getList<TransactionMetaRow>({ resource: "transaction_meta" });
+  return Array.isArray(result.data) ? result.data : [];
+};
+
+const syncTransactionsRequest = async (): Promise<{ added?: number; modified?: number; removed?: number; error?: string }> => {
+  const result = await dataProvider.custom?.({
+    url: "/api/transactions/sync",
+    method: "post"
+  });
+  return (result?.data ?? {}) as { added?: number; modified?: number; removed?: number; error?: string };
 };
 
 export function useTransactionsData(token: string | null): UseTransactionsDataReturn {
@@ -47,18 +43,18 @@ export function useTransactionsData(token: string | null): UseTransactionsDataRe
 
   const txQuery = useQuery({
     queryKey: TRANSACTIONS_QUERY_KEY,
-    queryFn: () => fetchTransactions(token, false),
+    queryFn: () => fetchTransactions(false),
     enabled: !!token
   });
 
   const metaQuery = useQuery({
     queryKey: TRANSACTION_META_QUERY_KEY,
-    queryFn: () => fetchTransactionMeta(token),
+    queryFn: () => fetchTransactionMeta(),
     enabled: !!token
   });
 
   const syncMutation = useMutation({
-    mutationFn: () => syncTransactionsRequest(token),
+    mutationFn: () => syncTransactionsRequest(),
     onSuccess: async (result) => {
       setSyncStatus(`${result.modified || 0} modified, ${result.added || 0} added, ${result.removed || 0} removed`);
       await queryClient.invalidateQueries({ queryKey: ["transactions"] });

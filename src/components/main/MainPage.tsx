@@ -1,19 +1,11 @@
-import { useEffect, useState } from "react";
-import type { Session } from "@supabase/supabase-js";
+import { useEffect } from "react";
 import { usePlaidData } from "../../hooks/usePlaidData";
-import { supabase } from "../../lib/supabase";
+import { useAuthSession } from "../../providers/AuthSessionProvider";
 import MainTab from "./MainTab";
 
 export default function MainPage() {
-  const [session, setSession] = useState<Session | null>(null);
-  const userId = session?.user?.id ?? null;
-  const token = session?.access_token ?? null;
-  const userEmail = session?.user?.email ?? "";
+  const { userId, token, userEmail, signOut } = useAuthSession();
   const plaidData = usePlaidData(userId, token);
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => setSession(data.session));
-  }, []);
 
   useEffect(() => {
     if (!userId || !token) return;
@@ -24,7 +16,7 @@ export default function MainPage() {
   return (
     <MainTab
       userEmail={userEmail}
-      signOut={() => supabase.auth.signOut()}
+      signOut={signOut}
       linkBank={plaidData.linkBank}
       deleteItem={plaidData.deleteItem}
       refreshItemAccounts={plaidData.refreshItemAccounts}

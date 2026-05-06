@@ -10,6 +10,17 @@
 - For current API-key guidance, check:
   - [https://supabase.com/docs/guides/api/api-keys](https://supabase.com/docs/guides/api/api-keys)
 
+### Frontend refine.dev Structure
+
+The React frontend is organized around a headless refine.dev-style shell:
+
+- `src/main.tsx` mounts `<Refine>` around the application and registers `authProvider`, `dataProvider`, and resource metadata.
+- `src/app/AppRoutes.tsx` contains the React Router route tree so routing is separated from provider bootstrapping.
+- `src/app/resources.ts` declares refine resources (`items`, `accounts`, `transactions`, `transaction_meta`, `tags`, and `budget_rules`).
+- `src/providers/dataProvider.ts` is the only frontend data-provider adapter. It maps refine resource operations to the Express `/api` routes; the browser does not query Supabase tables directly.
+- `src/providers/apiClient.ts` centralizes API calls and attaches the current Supabase access token to requests sent to the Express server.
+- Supabase remains the authentication/session source through `src/providers/authProvider.ts` and `src/providers/AuthSessionProvider.ts`; protected data still flows through the server API.
+
 ### Transactions Sync Architecture
 
 #### Scheduler function

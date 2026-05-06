@@ -1,7 +1,6 @@
 import { useMemo, useState, type ReactNode } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useList } from "@refinedev/core";
 import type { Tag, Txn } from "../types";
-import { buildAuthHeaders } from "../../lib/auth";
 import { DATE_RANGE_PRESETS } from "../shared/dateRangeUtils";
 import TransactionTable from "../shared/TransactionTable";
 import { buildDatePreset } from "../../utils/datePresets";
@@ -111,17 +110,11 @@ export default function VisualizeTrendsTool({ transactions, token }: Props) {
   const [flowGrouping, setFlowGrouping] = useState<FlowGrouping>("detected");
   const [flowNodeId, setFlowNodeId] = useState<string | null>(null);
 
-  const tagsQuery = useQuery({
-    queryKey: ["tags"],
-    enabled: !!token,
-    queryFn: async (): Promise<Tag[]> => {
-      const res = await fetch("/api/tags", { headers: buildAuthHeaders(token) });
-      if (!res.ok) throw new Error(`Failed to load tags (${res.status})`);
-      const data = await res.json();
-      return Array.isArray(data) ? data : [];
-    }
+  const tagsQuery = useList<Tag>({
+    resource: "tags",
+    queryOptions: { enabled: !!token }
   });
-  const tags = tagsQuery.data ?? EMPTY_TAGS;
+  const tags = tagsQuery.data?.data ?? EMPTY_TAGS;
   const tagMap = useMemo(() => new Map(tags.map((t) => [t.id, t])), [tags]);
 
   const baseTxns = useMemo(

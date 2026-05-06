@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { buildAuthHeaders } from "../../lib/auth";
+import { dataProvider } from "../../providers/dataProvider";
 import { TRANSACTIONS_QUERY_KEY } from "../../hooks/useTransactionsData";
 import {
   formatCategoryLabel,
@@ -673,10 +673,8 @@ export default function BudgetRulesTool({ token }: Props) {
     queryKey: ["budget_rules"],
     enabled: !!token,
     queryFn: async (): Promise<BudgetRule[]> => {
-      const res = await fetch("/api/budget_rules", { headers: buildAuthHeaders(token) });
-      if (!res.ok) throw new Error(`Failed to load budget rules (${res.status})`);
-      const data = await res.json();
-      return Array.isArray(data) ? data : [];
+      const result = await dataProvider.getList<BudgetRule>({ resource: "budget_rules" });
+      return Array.isArray(result.data) ? result.data : [];
     }
   });
 
@@ -684,10 +682,8 @@ export default function BudgetRulesTool({ token }: Props) {
     queryKey: ["tags"],
     enabled: !!token,
     queryFn: async (): Promise<Tag[]> => {
-      const res = await fetch("/api/tags", { headers: buildAuthHeaders(token) });
-      if (!res.ok) throw new Error(`Failed to load tags (${res.status})`);
-      const data = await res.json();
-      return Array.isArray(data) ? data : [];
+      const result = await dataProvider.getList<Tag>({ resource: "tags" });
+      return Array.isArray(result.data) ? result.data : [];
     }
   });
 
@@ -772,12 +768,7 @@ export default function BudgetRulesTool({ token }: Props) {
 
   const createMutation = useMutation({
     mutationFn: async (body: object) => {
-      const res = await fetch("/api/budget_rules", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", ...buildAuthHeaders(token) },
-        body: JSON.stringify(body)
-      });
-      if (!res.ok) { const d = await res.json().catch(() => ({})); throw new Error(d?.error || `Failed to create rule (${res.status})`); }
+      await dataProvider.create?.({ resource: "budget_rules", variables: body });
     },
     onSuccess: async () => {
       setMode("default");
@@ -792,12 +783,7 @@ export default function BudgetRulesTool({ token }: Props) {
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, body }: { id: number; body: object }) => {
-      const res = await fetch(`/api/budget_rules/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json", ...buildAuthHeaders(token) },
-        body: JSON.stringify(body)
-      });
-      if (!res.ok) { const d = await res.json().catch(() => ({})); throw new Error(d?.error || `Failed to update rule (${res.status})`); }
+      await dataProvider.update?.({ resource: "budget_rules", id, variables: body });
     },
     onSuccess: async () => {
       setEditingId(null);
@@ -809,20 +795,14 @@ export default function BudgetRulesTool({ token }: Props) {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
-      const res = await fetch(`/api/budget_rules/${id}`, { method: "DELETE", headers: buildAuthHeaders(token) });
-      if (!res.ok) { const d = await res.json().catch(() => ({})); throw new Error(d?.error || `Failed to delete rule (${res.status})`); }
+      await dataProvider.deleteOne?.({ resource: "budget_rules", id });
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["budget_rules"] })
   });
 
   const refreshMutation = useMutation({
     mutationFn: async (id: number) => {
-      const res = await fetch(`/api/budget_rules/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json", ...buildAuthHeaders(token) },
-        body: JSON.stringify({})
-      });
-      if (!res.ok) { const d = await res.json().catch(() => ({})); throw new Error(d?.error || `Failed to refresh (${res.status})`); }
+      await dataProvider.update?.({ resource: "budget_rules", id, variables: {} });
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["budget_rules"] })
   });

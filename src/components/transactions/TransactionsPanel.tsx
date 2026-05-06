@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { UseTransactionFiltersReturn } from "../../hooks/useTransactionFilters";
-import { buildAuthHeaders } from "../../lib/auth";
+import { dataProvider } from "../../providers/dataProvider";
 import { getDefaultTagColor, getDisplayTagColor, getTextColorForBackground, TAG_COLOR_PALETTE } from "../../utils/transactionUtils";
 import type { Tag, TagType, Txn } from "../types";
 import LoadingSpinner from "../shared/LoadingSpinner";
@@ -17,7 +17,6 @@ type TransactionsPanelProps = {
   tags: Tag[];
   tagsLoading: boolean;
   tagsError: Error | null;
-  token: string | null;
   invalidateTransactionMeta: () => Promise<void>;
 };
 
@@ -200,7 +199,6 @@ export default function TransactionsPanel({
   tags,
   tagsLoading,
   tagsError,
-  token,
   invalidateTransactionMeta
 }: TransactionsPanelProps) {
   const queryClient = useQueryClient();
@@ -274,15 +272,10 @@ export default function TransactionsPanel({
 
   const createTagMutation = useMutation({
     mutationFn: async () => {
-      const res = await fetch("/api/tags", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", ...buildAuthHeaders(token) },
-        body: JSON.stringify({ name: createName.trim(), type: TAG_UI_KIND_TO_TYPE[createKind], color: createColor })
+      await dataProvider.create?.({
+        resource: "tags",
+        variables: { name: createName.trim(), type: TAG_UI_KIND_TO_TYPE[createKind], color: createColor }
       });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data?.error || `Failed to create tag (${res.status})`);
-      }
     },
     onSuccess: async () => {
       setCreateName("");
@@ -293,14 +286,7 @@ export default function TransactionsPanel({
 
   const deleteTagMutation = useMutation({
     mutationFn: async (tagId: number) => {
-      const res = await fetch(`/api/tags/${tagId}`, {
-        method: "DELETE",
-        headers: buildAuthHeaders(token)
-      });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data?.error || `Failed to delete tag (${res.status})`);
-      }
+      await dataProvider.deleteOne?.({ resource: "tags", id: tagId });
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["tags"] });
@@ -310,14 +296,10 @@ export default function TransactionsPanel({
 
   const applyTagsMutation = useMutation({
     mutationFn: async (items: TransactionTagChange[]) => {
-      const res = await fetch("/api/transaction_meta/tags", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", ...buildAuthHeaders(token) },
-        body: JSON.stringify(items)
-      });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(friendlyApplyError(data?.error || `Failed to apply tags (${res.status})`));
+      try {
+        await dataProvider.custom?.({ url: "/api/transaction_meta/tags", method: "post", payload: items });
+      } catch (error) {
+        throw new Error(friendlyApplyError(error instanceof Error ? error.message : "Failed to apply tags"));
       }
     },
     onSuccess: async () => {
@@ -361,14 +343,10 @@ export default function TransactionsPanel({
 
     if (!items.length) return;
 
-    const res = await fetch("/api/transaction_meta/tags", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json", ...buildAuthHeaders(token) },
-      body: JSON.stringify(items)
-    });
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      throw new Error(friendlyApplyError(data?.error || `Failed to remove tag (${res.status})`));
+    try {
+      await dataProvider.custom?.({ url: "/api/transaction_meta/tags", method: "delete", payload: items });
+    } catch (error) {
+      throw new Error(friendlyApplyError(error instanceof Error ? error.message : "Failed to remove tag"));
     }
 
     await invalidateTransactionMeta();
@@ -402,14 +380,10 @@ export default function TransactionsPanel({
       return;
     }
 
-    const res = await fetch("/api/transaction_meta/tags", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json", ...buildAuthHeaders(token) },
-      body: JSON.stringify(items)
-    });
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      throw new Error(friendlyApplyError(data?.error || `Failed to clear tags (${res.status})`));
+    try {
+      await dataProvider.custom?.({ url: "/api/transaction_meta/tags", method: "delete", payload: items });
+    } catch (error) {
+      throw new Error(friendlyApplyError(error instanceof Error ? error.message : "Failed to clear tags"));
     }
 
     await invalidateTransactionMeta();

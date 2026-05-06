@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { Item, Account } from "../components/types";
-import { buildAuthHeaders } from "../lib/auth";
+import { dataProvider } from "../providers/dataProvider";
 
 const PLAID_LINK_TOKEN_KEY = "plaid_link_token";
 
@@ -25,26 +25,19 @@ export function usePlaidData(userId: string | null, token: string | null): UsePl
   const [items, setItems] = useState<Item[]>([]);
   const [accountsByItem, setAccountsByItem] = useState<Record<string, Account[]>>({});
   const [loadingItems, setLoadingItems] = useState(false);
-  const fetchWithAuth = async (url: string, options: RequestInit = {}, tokenOverride?: string | null) => {
-    const resolvedToken = tokenOverride || token;
-    return fetch(url, {
-      ...options,
-      headers: { ...(options.headers || {}), ...buildAuthHeaders(resolvedToken) }
-    });
-  };
-
   const loadItems = async (uid?: string | null, tk?: string | null) => {
+    void tk;
     if (!(uid || userId)) return;
     setLoadingItems(true);
     try {
-      const itemsRes = await fetchWithAuth("/api/items", {}, tk);
-      const nextItems = itemsRes.ok ? ((await itemsRes.json()) as Item[]) : [];
+      const itemsResult = await dataProvider.getList<Item>({ resource: "items" });
+      const nextItems = Array.isArray(itemsResult.data) ? itemsResult.data : [];
       setItems(nextItems);
       const byItem: Record<string, Account[]> = {};
       await Promise.all(
         nextItems.map(async (item) => {
-          const r = await fetchWithAuth(`/api/${item.id}/accounts`, {}, tk);
-          byItem[item.id] = r.ok ? ((await r.json()) as Account[]) : [];
+          const result = await dataProvider.getList<Account>({ resource: "accounts", meta: { itemId: item.id } });
+          byItem[item.id] = Array.isArray(result.data) ? result.data : [];
         })
       );
       setAccountsByItem(byItem);
@@ -62,10 +55,10 @@ export function usePlaidData(userId: string | null, token: string | null): UsePl
       token: linkToken,
       receivedRedirectUri: window.location.href,
       onSuccess: async (publicToken: string) => {
-        await fetchWithAuth("/api/link/exchange", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ publicToken })
+        await dataProvider.custom?.({
+          url: "/api/link/exchange",
+          method: "post",
+          payload: { publicToken }
         });
         sessionStorage.removeItem(PLAID_LINK_TOKEN_KEY);
         await loadItems(userId, token);
@@ -78,27 +71,27 @@ export function usePlaidData(userId: string | null, token: string | null): UsePl
     });
     handler.open();
     return () => handler.exit?.();
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- OAuth return after session restore; omit loadItems/fetchWithAuth
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- OAuth return after session restore; omit loadItems/dataProvider
   }, [userId, token]);
 
   const linkBank = async (daysRequested = 730) => {
     if (!userId) return;
     const sanitizedDaysRequested = Math.min(730, Math.max(1, Number.isFinite(daysRequested) ? Math.floor(daysRequested) : 730));
-    const linkTokenRes = await fetchWithAuth("/api/link/token", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ daysRequested: sanitizedDaysRequested })
+    const linkTokenResult = await dataProvider.custom?.({
+      url: "/api/link/token",
+      method: "post",
+      payload: { daysRequested: sanitizedDaysRequested }
     });
-    const data = await linkTokenRes.json();
+    const data = linkTokenResult?.data as { link_token?: string } | undefined;
     if (!data?.link_token || !window.Plaid) return;
     sessionStorage.setItem(PLAID_LINK_TOKEN_KEY, data.link_token);
     window.Plaid.create({
       token: data.link_token,
       onSuccess: async (publicToken: string) => {
-        await fetchWithAuth("/api/link/exchange", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ publicToken })
+        await dataProvider.custom?.({
+          url: "/api/link/exchange",
+          method: "post",
+          payload: { publicToken }
         });
         sessionStorage.removeItem(PLAID_LINK_TOKEN_KEY);
         await loadItems();
@@ -109,23 +102,28 @@ export function usePlaidData(userId: string | null, token: string | null): UsePl
 
   const deleteItem = async (itemId: string): Promise<DeleteItemResult> => {
     if (!token) return { ok: false, error: "Not signed in" };
-    const res = await fetchWithAuth(`/api/items/${encodeURIComponent(itemId)}/delete_all`, { method: "POST" });
-    const data = (await res.json().catch(() => ({}))) as {
-      error?: string;
-      plaid_removed?: boolean;
-      plaid_error?: string;
-    };
-    if (!res.ok) return { ok: false, error: data?.error || `Delete failed (${res.status})` };
-    await loadItems();
-    return { ok: true, plaidRemoved: data.plaid_removed !== false, plaidError: data.plaid_error };
+    try {
+      const result = await dataProvider.deleteOne?.({ resource: "items", id: itemId });
+      const data = (result?.data ?? {}) as { plaid_removed?: boolean; plaid_error?: string };
+      await loadItems();
+      return { ok: true, plaidRemoved: data.plaid_removed !== false, plaidError: data.plaid_error };
+    } catch (error) {
+      return { ok: false, error: error instanceof Error ? error.message : "Delete failed" };
+    }
   };
 
   const refreshItemAccounts = async (itemId: string): Promise<RefreshAccountsResult> => {
-    const res = await fetchWithAuth(`/api/${encodeURIComponent(itemId)}/accounts/refresh`, { method: "POST" });
-    const data = (await res.json().catch(() => ({}))) as { error?: string; updated_accounts?: number };
-    if (!res.ok) return { ok: false, error: data.error || `Refresh failed (${res.status})` };
-    await loadItems();
-    return { ok: true, updatedAccounts: typeof data.updated_accounts === "number" ? data.updated_accounts : 0 };
+    try {
+      const result = await dataProvider.custom?.({
+        url: `/api/${encodeURIComponent(itemId)}/accounts/refresh`,
+        method: "post"
+      });
+      const data = (result?.data ?? {}) as { updated_accounts?: number };
+      await loadItems();
+      return { ok: true, updatedAccounts: typeof data.updated_accounts === "number" ? data.updated_accounts : 0 };
+    } catch (error) {
+      return { ok: false, error: error instanceof Error ? error.message : "Refresh failed" };
+    }
   };
 
   return {
