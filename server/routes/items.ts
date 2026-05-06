@@ -7,8 +7,11 @@ import type { ServerRequest } from "../middleware/auth";
 const router = express.Router();
 
 router.get("/items", async (req, res) => {
-  const items = await (req as unknown as ServerRequest).prisma.items.findMany({
-    select: { id: true, institution_name: true }
+  const { user, prisma } = req as unknown as ServerRequest;
+  const items = await prisma.items.findMany({
+    where: { user_id: user.id },
+    select: { id: true, institution_name: true, created_at: true },
+    orderBy: { institution_name: "asc" }
   });
   res.json(items);
 });
@@ -19,17 +22,17 @@ router.post("/items/:itemId/delete_all", async (req, res) => {
 
   try {
     const item = await prisma.items.findFirst({
-      where: { id: itemId },
+      where: { id: itemId, user_id: user.id },
       select: { id: true, access_token: true }
     });
     if (!item) return res.status(404).json({ error: "Item not found" });
 
-    const accountCount = await prisma.accounts.count({ where: { item_id: itemId } });
+    const accountCount = await prisma.accounts.count({ where: { item_id: itemId, user_id: user.id } });
 
     await prisma.$transaction(async (tx) => {
-      await tx.transactions.deleteMany({ where: { item_id: itemId } });
-      await tx.accounts.deleteMany({ where: { item_id: itemId } });
-      await tx.items.delete({ where: { id: itemId } });
+      await tx.transactions.deleteMany({ where: { item_id: itemId, user_id: user.id } });
+      await tx.accounts.deleteMany({ where: { item_id: itemId, user_id: user.id } });
+      await tx.items.delete({ where: { id: itemId, user_id: user.id } });
     });
 
     clearTransactionsCache(user.id);

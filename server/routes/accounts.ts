@@ -4,19 +4,33 @@ import type { ServerRequest } from "../middleware/auth";
 
 const router = express.Router();
 
+router.get("/accounts", async (req, res) => {
+  const { user, prisma } = req as unknown as ServerRequest;
+  const accounts = await prisma.accounts.findMany({
+    where: { user_id: user.id },
+    orderBy: { name: "asc" },
+    include: { items: { select: { institution_name: true } } }
+  });
+  res.json(accounts.map((account) => ({
+    ...account,
+    institution_name: account.items?.institution_name ?? null
+  })));
+});
+
 router.get("/:itemId/accounts", async (req, res) => {
-  const accounts = await (req as unknown as ServerRequest).prisma.accounts.findMany({ where: { item_id: req.params.itemId } });
+  const { user, prisma } = req as unknown as ServerRequest;
+  const accounts = await prisma.accounts.findMany({ where: { item_id: req.params.itemId, user_id: user.id } });
   res.json(accounts);
 });
 
 router.post("/:itemId/accounts/refresh", async (req, res) => {
-  const { prisma } = req as unknown as ServerRequest;
+  const { user, prisma } = req as unknown as ServerRequest;
   const { itemId } = req.params;
 
   try {
     const [dbAccounts, item] = await Promise.all([
-      prisma.accounts.findMany({ where: { item_id: itemId }, select: { id: true } }),
-      prisma.items.findFirst({ where: { id: itemId }, select: { access_token: true } })
+      prisma.accounts.findMany({ where: { item_id: itemId, user_id: user.id }, select: { id: true } }),
+      prisma.items.findFirst({ where: { id: itemId, user_id: user.id }, select: { access_token: true } })
     ]);
 
     if (!item) return res.status(404).json({ error: "Item not found" });
@@ -45,7 +59,7 @@ router.post("/:itemId/accounts/refresh", async (req, res) => {
       for (const dbAccount of dbAccounts) {
         const plaidAccount = plaidById.get(dbAccount.id)!;
         const result = await tx.accounts.updateMany({
-          where: { id: dbAccount.id, item_id: itemId },
+          where: { id: dbAccount.id, item_id: itemId, user_id: user.id },
           data: {
             name: plaidAccount.name ?? null,
             official_name: plaidAccount.official_name ?? null,
