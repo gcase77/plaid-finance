@@ -1,3 +1,13 @@
+### Frontend refine.dev Structure
+
+The React frontend is now organized around a refine-style application shell:
+
+- `src/app/App.tsx` composes React Query, auth, the refine provider, and React Router.
+- `src/app/AppRoutes.tsx` owns route definitions for public, auth, and authenticated application screens.
+- `src/app/resources.ts` declares the refine resources exposed by the app.
+- `src/providers/serverDataProvider.ts` is the app data provider. It targets the existing Express API under `/api` instead of using a Supabase data provider directly.
+- Feature hooks and pages should use `useRefineDataProvider()` for CRUD/custom server calls where possible, keeping Supabase usage limited to authentication concerns.
+
 ### Supabase Email/Password Auth (POC)
 
 - Auth uses email/password with:

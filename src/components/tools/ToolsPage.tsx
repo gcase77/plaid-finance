@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import type { Session } from "@supabase/supabase-js";
-import { supabase } from "../../lib/supabase";
+import { useAppAuth } from "../../providers/authContext";
 import { useTransactionsData } from "../../hooks/useTransactionsData";
 import TransferGroupTool from "./TransferGroupTool";
 import BudgetRulesTool from "./BudgetRulesTool";
@@ -22,14 +21,10 @@ export default function ToolsPage() {
       : false;
   const [isNarrow, setIsNarrow] = useState<boolean>(narrowInit);
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(() => !narrowInit);
-  const [session, setSession] = useState<Session | null>(null);
   const [active, setActive] = useState<ToolKey>("budget-rules");
-  const token = session?.access_token ?? null;
+  const { token } = useAppAuth();
   const { transactions, invalidateTransactionMeta } = useTransactionsData(token);
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => setSession(data.session));
-  }, []);
 
   useEffect(() => {
     if (typeof window === "undefined" || typeof window.matchMedia !== "function") return;
