@@ -10,6 +10,21 @@
 - For current API-key guidance, check:
   - [https://supabase.com/docs/guides/api/api-keys](https://supabase.com/docs/guides/api/api-keys)
 
+
+### Frontend admin shell
+
+The frontend is now structured around marmelab/react-admin. `src/main.tsx` mounts a single `FinanceAdmin`, which wires React Admin resources, the custom layout/menu, authentication, and public routes. React Admin resources use the Express `/api` routes through `src/admin/dataProvider.ts`; the browser does not read application data directly from Supabase. Supabase remains the authentication broker so the frontend can obtain the JWT that the Express `requireAuth` middleware validates before serving data.
+
+Current React Admin resources:
+
+- `transactions`: list/show transaction data and trigger `/api/transactions/sync` from the list toolbar.
+- `items`: list and unlink Plaid items through `/api/items/:itemId/delete_all`.
+- `accounts`: read-only aggregate of `/api/items` plus each `/api/:itemId/accounts`.
+- `tags`: list/create/delete tags.
+- `budget_rules`: list/create/edit/delete budget rules.
+
+The existing bespoke dashboard, tools, landing, legal, and security pages are preserved as React Admin dashboard/custom routes so the migration stays structural and uses out-of-the-box React Admin resource pages where possible.
+
 ### Transactions Sync Architecture
 
 #### Scheduler function
