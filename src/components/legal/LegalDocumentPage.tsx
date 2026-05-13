@@ -48,7 +48,7 @@ function LegalDocumentPage({ markdown, label }: { markdown: string; label: strin
               if (b.level === 2) return <h2 key={i} style={{ marginTop: 24 }}>{b.text}</h2>;
               return <h3 key={i} style={{ marginTop: 16 }}>{b.text}</h3>;
             }
-            if (b.type === "list") return <ul key={i}>{b.items.map((it) => <li key={it}><MarkdownText text={it} /></li>)}</ul>;
+            if (b.type === "list") return <ul key={i}>{b.items.map((it, itemIdx) => <li key={`${i}-${itemIdx}-${it}`}><MarkdownText text={it} /></li>)}</ul>;
             return <p key={i} className="mb-3 muted" style={{ lineHeight: 1.7 }}><MarkdownText text={b.text} /></p>;
           })}
         </article>
