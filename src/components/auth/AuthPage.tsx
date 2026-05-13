@@ -127,7 +127,7 @@ export default function AuthPage({ mode }: { mode: AuthMode }) {
           {isSignUp && (
             <label className="check small">
               <input type="checkbox" checked={acceptedLegal} onChange={(e) => setAcceptedLegal(e.target.checked)} required />
-              <span>I have read the <Link to="/privacy" target="_blank">Privacy Policy</Link> and <Link to="/terms" target="_blank">Terms of Service</Link>.</span>
+              <span>I have read the <Link to="/privacy" target="_blank" rel="noopener noreferrer">Privacy Policy</Link> and <Link to="/terms" target="_blank" rel="noopener noreferrer">Terms of Service</Link>.</span>
             </label>
           )}
           <button type="submit" className="btn primary btn-block" disabled={submitting || (isReset && !canReset) || (isSignUp && !acceptedLegal)}>

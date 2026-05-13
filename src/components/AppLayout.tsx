@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { Link, NavLink, Outlet } from "react-router-dom";
 import { supabase } from "../lib/supabase";
+import { Alert } from "./shared/ui";
 
 const NAV = [
   { to: "/", label: "Home", icon: "⌂", end: true },
@@ -18,6 +19,7 @@ export default function AppLayout() {
     return window.localStorage.getItem(STORAGE_KEY) === "1";
   });
   const [session, setSession] = useState<Session | null>(null);
+  const [signOutErr, setSignOutErr] = useState<string | null>(null);
   const email = session?.user?.email ?? "";
 
   useEffect(() => {
@@ -63,7 +65,18 @@ export default function AppLayout() {
                 <span className="chip-soft chip" style={{ width: 28, height: 28, justifyContent: "center", fontSize: "0.85rem" }}>{initial}</span>
                 <span className="email" style={{ fontSize: "0.8rem" }}>{email}</span>
               </div>
-              <button className="btn ghost btn-sm btn-block" onClick={() => supabase.auth.signOut()}>Sign out</button>
+              {signOutErr && <div className="mb-2"><Alert tone="danger" onClose={() => setSignOutErr(null)}>{signOutErr}</Alert></div>}
+              <button
+                className="btn ghost btn-sm btn-block"
+                onClick={() => {
+                  setSignOutErr(null);
+                  void supabase.auth.signOut().then(({ error }) => {
+                    if (error) setSignOutErr(error.message || "Sign out failed.");
+                  }).catch(() => setSignOutErr("Sign out failed."));
+                }}
+              >
+                Sign out
+              </button>
             </>
           )}
         </div>
