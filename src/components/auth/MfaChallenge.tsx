@@ -1,132 +1,61 @@
 import { FormEvent, useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
+import { Alert } from "../shared/ui";
 
-type TotpFactor = {
-  id: string;
-  friendly_name?: string | null;
-  status?: string;
-};
+type Factor = { id: string; friendly_name?: string | null; status?: string };
 
-type MfaChallengeProps = {
-  onVerified: () => void;
-  onSignOut?: () => void | Promise<void>;
-};
-
-export default function MfaChallenge({ onVerified, onSignOut }: MfaChallengeProps) {
-  const [factor, setFactor] = useState<TotpFactor | null>(null);
+export default function MfaChallenge({ onVerified, onSignOut }: { onVerified: () => void; onSignOut?: () => void | Promise<void> }) {
+  const [factor, setFactor] = useState<Factor | null>(null);
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
-
-    const loadFactor = async () => {
-      setIsLoading(true);
-      setError(null);
-      const { data, error: factorsError } = await supabase.auth.mfa.listFactors();
+    (async () => {
+      setLoading(true); setError(null);
+      const { data, error: e } = await supabase.auth.mfa.listFactors();
       if (cancelled) return;
-
-      if (factorsError) {
-        setError(factorsError.message || "Unable to load your MFA factors.");
-        setIsLoading(false);
-        return;
-      }
-
-      const verifiedTotpFactor = data.totp.find((totpFactor) => totpFactor.status === "verified") ?? null;
-      setFactor(verifiedTotpFactor);
-      if (!verifiedTotpFactor) {
-        setError("No verified authenticator app was found for this account.");
-      }
-      setIsLoading(false);
-    };
-
-    void loadFactor();
-
-    return () => {
-      cancelled = true;
-    };
+      if (e) { setError(e.message || "Unable to load your MFA factors."); setLoading(false); return; }
+      const f = data.totp.find((t) => t.status === "verified") ?? null;
+      setFactor(f);
+      if (!f) setError("No verified authenticator app was found for this account.");
+      setLoading(false);
+    })();
+    return () => { cancelled = true; };
   }, []);
 
-  const handleSubmit = async (event: FormEvent) => {
-    event.preventDefault();
-    if (!factor || isSubmitting) return;
-
-    setError(null);
-    setIsSubmitting(true);
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!factor || submitting) return;
+    setError(null); setSubmitting(true);
     try {
-      const { data: challenge, error: challengeError } = await supabase.auth.mfa.challenge({ factorId: factor.id });
-      if (challengeError) {
-        setError(challengeError.message || "Unable to start MFA verification.");
-        return;
-      }
-
-      const { error: verifyError } = await supabase.auth.mfa.verify({
-        factorId: factor.id,
-        challengeId: challenge.id,
-        code
-      });
-      if (verifyError) {
-        setError(verifyError.message || "Invalid authenticator code.");
-        return;
-      }
-
-      setCode("");
-      onVerified();
-    } finally {
-      setIsSubmitting(false);
-    }
+      const { data: ch, error: ce } = await supabase.auth.mfa.challenge({ factorId: factor.id });
+      if (ce) { setError(ce.message || "Unable to start MFA verification."); return; }
+      const { error: ve } = await supabase.auth.mfa.verify({ factorId: factor.id, challengeId: ch.id, code });
+      if (ve) { setError(ve.message || "Invalid authenticator code."); return; }
+      setCode(""); onVerified();
+    } finally { setSubmitting(false); }
   };
 
   return (
-    <div className="container py-4">
-      <div className="row justify-content-center">
-        <div className="col-12 col-md-6 col-lg-4">
-          <div className="card">
-            <div className="card-body">
-              <h5 className="card-title mb-3">Two-factor authentication</h5>
-              <p className="text-muted small">
-                Enter the 6-digit code from your authenticator app to continue.
-              </p>
-
-              {error && <div className="alert alert-danger py-2">{error}</div>}
-
-              <form onSubmit={handleSubmit}>
-                <div className="mb-3">
-                  <label className="form-label" htmlFor="mfaCode">
-                    Authenticator code
-                  </label>
-                  <input
-                    id="mfaCode"
-                    type="text"
-                    inputMode="numeric"
-                    autoComplete="one-time-code"
-                    className="form-control"
-                    value={code}
-                    onChange={(event) => setCode(event.target.value.trim())}
-                    required
-                    disabled={isLoading || !factor}
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  className="btn btn-primary w-100"
-                  disabled={isLoading || !factor || isSubmitting}
-                >
-                  {isSubmitting ? "Verifying..." : "Verify"}
-                </button>
-              </form>
-
-              {onSignOut && (
-                <button type="button" className="btn btn-link w-100 mt-2" onClick={onSignOut}>
-                  Sign out
-                </button>
-              )}
-            </div>
+    <div className="centered-pane">
+      <div className="card auth-card">
+        <h1>Two-factor authentication</h1>
+        <p className="small muted mb-3">Enter the 6-digit code from your authenticator app to continue.</p>
+        {error && <div className="mb-3"><Alert tone="danger">{error}</Alert></div>}
+        <form onSubmit={handleSubmit} className="col-flex">
+          <div className="field">
+            <label htmlFor="mfaCode">Authenticator code</label>
+            <input id="mfaCode" type="text" inputMode="numeric" autoComplete="one-time-code" className="input"
+              value={code} onChange={(e) => setCode(e.target.value.trim())} required disabled={loading || !factor} />
           </div>
-        </div>
+          <button type="submit" className="btn primary btn-block" disabled={loading || !factor || submitting}>
+            {submitting ? "Verifying…" : "Verify"}
+          </button>
+        </form>
+        {onSignOut && <button type="button" className="btn link mt-3" onClick={onSignOut} style={{ width: "100%", justifyContent: "center" }}>Sign out</button>}
       </div>
     </div>
   );
