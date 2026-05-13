@@ -2,13 +2,7 @@ import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { buildAuthHeaders } from "../../lib/auth";
 import { TRANSACTIONS_QUERY_KEY } from "../../hooks/useTransactionsData";
-import {
-  formatCategoryLabel,
-  formatTxnDetectedCategory,
-  getDisplayTagColor,
-  getTextColorForBackground,
-  normalizeDetectedCategoryValue
-} from "../../utils/transactionUtils";
+import { formatCategoryLabel, formatTxnDetectedCategory, normalizeDetectedCategoryValue } from "../../utils/transactionUtils";
 import type {
   BudgetRule,
   BudgetRuleCacheEntry,
@@ -21,6 +15,7 @@ import type {
   TransactionMetaRow
 } from "../types";
 import LoadingSpinner from "../shared/LoadingSpinner";
+import { TagBadge } from "../shared/TagBadge";
 import { Alert, InfoTip, Segmented } from "../shared/ui";
 
 type Props = { token: string | null };
@@ -96,11 +91,6 @@ function budgetDiff(e: BudgetRuleCacheEntry) { return (e.effective_budget ?? 0) 
 function statusKey(e: BudgetRuleCacheEntry): "success" | "danger" | "warning" {
   const d = budgetDiff(e);
   return Math.abs(d) < ON_BUDGET_EPS ? "warning" : d >= 0 ? "success" : "danger";
-}
-
-function TagBadge({ tag }: { tag: Tag }) {
-  const color = getDisplayTagColor(tag.type, tag.color);
-  return <span className="tag-badge" style={{ background: color, color: getTextColorForBackground(color) }}>{tag.name}</span>;
 }
 
 function RuleForm({

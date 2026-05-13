@@ -1,8 +1,8 @@
 import type { UseTransactionFiltersReturn } from "../../hooks/useTransactionFilters";
 import type { Tag } from "../types";
 import { DATE_RANGE_PRESETS, formatDateRangeLabel } from "./dateRangeUtils";
-import { getDisplayTagColor, getTextColorForBackground } from "../../utils/transactionUtils";
 import { Segmented } from "./ui";
+import { TagBadge } from "./TagBadge";
 
 type Props = { filters: UseTransactionFiltersReturn; tags: Tag[] };
 
@@ -135,12 +135,7 @@ export default function TransactionsFilterSection({ filters, tags }: Props) {
         <div className="col-flex" style={{ gap: 12 }}>
           <CheckList
             label="Tags"
-            options={sortedTags.map((tag) => {
-              const color = getDisplayTagColor(tag.type, tag.color);
-              return [tag.id, (
-                <span key={tag.id} className="tag-badge" style={{ backgroundColor: color, color: getTextColorForBackground(color) }}>{tag.name}</span>
-              )] as [number, React.ReactNode];
-            })}
+            options={sortedTags.map((tag) => [tag.id, <TagBadge key={tag.id} tag={tag} />] as [number, React.ReactNode])}
             selected={state.selectedTagIds}
             onChange={(ids) => { actions.setTagStateFilter("all"); actions.setSelectedTagIds(ids); }}
             tertiary={{ label: "Untagged", active: state.tagStateFilter === "untagged", onClick: () => { actions.setTagStateFilter("untagged"); actions.setSelectedTagIds([]); } }}

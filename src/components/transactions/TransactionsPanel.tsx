@@ -2,9 +2,10 @@ import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { UseTransactionFiltersReturn } from "../../hooks/useTransactionFilters";
 import { buildAuthHeaders } from "../../lib/auth";
-import { getDefaultTagColor, getDisplayTagColor, getTextColorForBackground, TAG_COLOR_PALETTE } from "../../utils/transactionUtils";
+import { getDefaultTagColor, getDisplayTagColor, TAG_COLOR_PALETTE } from "../../utils/transactionUtils";
 import type { Tag, TagType, Txn } from "../types";
 import LoadingSpinner from "../shared/LoadingSpinner";
+import { TagBadge } from "../shared/TagBadge";
 import AppliedFiltersBar from "../shared/AppliedFiltersBar";
 import TransactionsFilterSection from "../shared/FilterSection";
 import TransactionTable from "../shared/TransactionTable";
@@ -45,11 +46,6 @@ function friendlyError(raw: string): string {
   if (/income tag/i.test(raw) && /debit/i.test(raw)) return "You cannot apply income tags to outflow transactions.";
   if (/spending tag/i.test(raw) && /credit/i.test(raw)) return "You cannot apply spending tags to inflow transactions.";
   return raw;
-}
-
-function TagBadge({ tag }: { tag: Tag }) {
-  const color = getDisplayTagColor(tag.type, tag.color);
-  return <span className="tag-badge" style={{ background: color, color: getTextColorForBackground(color) }}>{tag.name}</span>;
 }
 
 function TagRow({ tag }: { tag: Tag }) {
