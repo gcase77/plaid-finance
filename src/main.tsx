@@ -13,6 +13,7 @@ import NotFoundPage from "./components/NotFoundPage";
 import ToolsPage from "./components/tools/ToolsPage";
 import TransactionsPage from "./components/transactions/TransactionsPage";
 import { queryClient } from "./lib/queryClient";
+import "./styles.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

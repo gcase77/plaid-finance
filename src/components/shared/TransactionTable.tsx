@@ -90,7 +90,7 @@ export default function TransactionTable({
   onSelectionChange,
   tags = []
 }: TransactionTableProps) {
-  if (!transactions.length) return <div className="text-muted">{emptyMessage}</div>;
+  if (!transactions.length) return <div className="metric-card text-muted">{emptyMessage}</div>;
 
   const tagMap = new Map(tags.map((t) => [t.id, t]));
 
@@ -115,13 +115,13 @@ export default function TransactionTable({
 
   return (
     <>
-      <div className="d-flex flex-wrap gap-4 mb-3 small">
-        <span>Income: <strong>{formatCurrency(income)}</strong></span>
-        <span>Spending: <strong>{formatCurrency(spending)}</strong></span>
-        <span><strong>{count.toLocaleString()}</strong> transactions</span>
+      <div className="cluster mb-3 small">
+        <span className="chip">Income <strong>{formatCurrency(income)}</strong></span>
+        <span className="chip">Spending <strong>{formatCurrency(spending)}</strong></span>
+        <span className="chip"><strong>{count.toLocaleString()}</strong> transactions</span>
       </div>
       <div className="table-responsive">
-      <table className="table table-sm table-striped align-middle mb-0">
+      <table className="data-table align-middle mb-0">
         <thead>
           <tr>
             {taggingMode && <th style={{ width: 32 }}><input type="checkbox" className="form-check-input" checked={allSelected} onChange={(e) => toggleAll(e.target.checked)} /></th>}

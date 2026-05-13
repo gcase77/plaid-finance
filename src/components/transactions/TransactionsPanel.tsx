@@ -1,15 +1,15 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { UseTransactionFiltersReturn } from "../../hooks/useTransactionFilters";
 import { buildAuthHeaders } from "../../lib/auth";
 import { getDefaultTagColor, getDisplayTagColor, getTextColorForBackground, TAG_COLOR_PALETTE } from "../../utils/transactionUtils";
-import type { Tag, TagType, Txn } from "../types";
-import LoadingSpinner from "../shared/LoadingSpinner";
 import AppliedFiltersBar from "../shared/AppliedFiltersBar";
 import TransactionsFilterSection from "../shared/FilterSection";
+import LoadingSpinner from "../shared/LoadingSpinner";
 import TransactionTable from "../shared/TransactionTable";
+import type { Tag, TagType, Txn } from "../types";
 
-type TransactionsPanelProps = {
+type Props = {
   syncTransactions: () => Promise<void>;
   syncStatus: string;
   loadingTxns: boolean;
@@ -27,134 +27,19 @@ type TransactionTagChange = {
   bucket_2_tag_id?: number | null;
   meta_tag_ids?: number[] | null;
 };
-
 type TagUiKind = "income" | "spending" | "meta";
-const TAG_UI_KIND_LABEL: Record<TagUiKind, string> = {
-  income: "Income",
-  spending: "Spending",
-  meta: "Meta"
-};
+type TagsMode = "view" | "edit" | "delete";
+
 const TAG_UI_KIND_TO_TYPE: Record<TagUiKind, TagType> = {
   income: "income_bucket_1",
   spending: "spending_bucket_1",
   meta: "meta"
 };
-const KIND_INFO: Record<TagUiKind, string> = {
-  income: "Can only be applied to inflow transactions",
-  spending: "Can only be applied to outflow transactions",
-  meta: "Can be applied to any transaction"
-};
 
-type MyTagsMode = "default" | "creating" | "editing" | "deleting";
-
-const SYNC_TXNS_HELP =
-  "Money moving in to your accounts is negative and out is positive.\nAfter linking a bank, it may take a few minutes before full history is ready. Recent transactions may also take a few days to appear.";
-
-/** Meta → spending → income, then name (for apply/remove pickers). */
-function sortTagsMetaSpendingIncomeName(tags: readonly Tag[]) {
-  const rank = (t: Tag) =>
-    t.type === "meta" ? 0 : t.type.startsWith("spending") ? 1 : t.type.startsWith("income") ? 2 : 3;
-  return [...tags].sort((a, b) => rank(a) - rank(b) || a.name.localeCompare(b.name));
-}
-
-function byName(a: Tag, b: Tag) {
-  return a.name.localeCompare(b.name);
-}
-
-function SyncTransactionsInfo() {
-  const [on, setOn] = useState(false);
-  return (
-    <span className="position-relative d-inline-block" onMouseEnter={() => setOn(true)} onMouseLeave={() => setOn(false)}>
-      <span className="text-secondary" style={{ cursor: "help" }} aria-label="About syncing">ⓘ</span>
-      {on && (
-        <span
-          className="position-absolute top-100 start-0 mt-1 p-2 rounded shadow-sm small text-white"
-          style={{ zIndex: 300, width: 280, whiteSpace: "pre-line", background: "#212529", pointerEvents: "none" }}
-        >
-          {SYNC_TXNS_HELP}
-        </span>
-      )}
-    </span>
-  );
-}
-
-function KindSelect({ value, onChange }: { value: TagUiKind; onChange: (k: TagUiKind) => void }) {
-  const [open, setOpen] = useState(false);
-  const [hovered, setHovered] = useState<TagUiKind | null>(null);
-  const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
-  return (
-    <div ref={ref} style={{ position: "relative" }}>
-      <button
-        type="button"
-        className="form-select form-select-sm text-start"
-        style={{ cursor: "pointer" }}
-        onClick={() => setOpen((o) => !o)}
-      >
-        {TAG_UI_KIND_LABEL[value]}
-      </button>
-      {open && (
-        <div
-          className="border rounded shadow-sm bg-white"
-          style={{ position: "absolute", zIndex: 200, top: "calc(100% + 2px)", left: 0, right: 0 }}
-        >
-          {(Object.keys(TAG_UI_KIND_LABEL) as TagUiKind[]).map((kind) => (
-            <div
-              key={kind}
-              className="d-flex justify-content-between align-items-center px-2 py-1"
-              style={{
-                cursor: "pointer",
-                background: kind === value ? "var(--bs-light, #f8f9fa)" : "transparent",
-                userSelect: "none"
-              }}
-              onClick={() => {
-                onChange(kind);
-                setOpen(false);
-              }}
-            >
-              <span className="small">{TAG_UI_KIND_LABEL[kind]}</span>
-              <span
-                className="text-secondary ms-2"
-                style={{ position: "relative", fontSize: "0.8rem", lineHeight: 1 }}
-                onMouseEnter={() => setHovered(kind)}
-                onMouseLeave={() => setHovered(null)}
-                onClick={(e) => e.stopPropagation()}
-              >
-                ⓘ
-                {hovered === kind && (
-                  <span
-                    style={{
-                      position: "absolute",
-                      bottom: "calc(100% + 5px)",
-                      right: 0,
-                      background: "#212529",
-                      color: "#fff",
-                      padding: "5px 9px",
-                      borderRadius: 5,
-                      fontSize: "0.7rem",
-                      whiteSpace: "nowrap",
-                      zIndex: 300,
-                      boxShadow: "0 2px 8px rgba(0,0,0,0.25)",
-                      pointerEvents: "none"
-                    }}
-                  >
-                    {KIND_INFO[kind]}
-                  </span>
-                )}
-              </span>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
+const byName = (a: Tag, b: Tag) => a.name.localeCompare(b.name);
+const scope = (type: TagType) => type === "meta" ? "Meta" : type.startsWith("income") ? "Income" : "Spending";
+const tagRank = (t: Tag) => t.type === "meta" ? 0 : t.type.startsWith("spending") ? 1 : 2;
+const sortTags = (tags: Tag[]) => [...tags].sort((a, b) => tagRank(a) - tagRank(b) || a.name.localeCompare(b.name));
 
 function friendlyApplyError(raw: string): string {
   if (/income tag/i.test(raw) && /debit/i.test(raw)) return "You cannot apply income tags to outflow transactions.";
@@ -162,32 +47,123 @@ function friendlyApplyError(raw: string): string {
   return raw;
 }
 
-function colorBadgeStyle(color: string) {
-  return {
-    backgroundColor: color,
-    color: getTextColorForBackground(color),
-    border: "1px solid rgba(0,0,0,0.12)"
-  } as const;
+function TagBadge({ tag }: { tag: Tag }) {
+  const color = getDisplayTagColor(tag.type, tag.color);
+  return <span className="badge" style={{ backgroundColor: color, color: getTextColorForBackground(color), border: "1px solid rgba(0,0,0,.12)" }}>{tag.name}</span>;
 }
 
-function getTagScopeLabel(type: TagType) {
-  if (type === "meta") return "Meta";
-  return type.startsWith("income") ? "Income" : "Spending";
-}
-
-function TagColorBadge({ tag }: { tag: Tag }) {
-  return <span className="badge" style={colorBadgeStyle(getDisplayTagColor(tag.type, tag.color))}>{tag.name}</span>;
-}
-
-function TagScopeChip({ type }: { type: TagType }) {
-  return <span className="badge bg-light text-muted">{getTagScopeLabel(type)}</span>;
-}
-
-function TagActionRow({ tag }: { tag: Tag }) {
+function ColorPicker({ value, onChange }: { value: string; onChange: (color: string) => void }) {
   return (
-    <div className="d-flex justify-content-between align-items-center">
-      <TagColorBadge tag={tag} />
-      <TagScopeChip type={tag.type} />
+    <div className="cluster">
+      {TAG_COLOR_PALETTE.map((color) => (
+        <button
+          key={color}
+          type="button"
+          className={`btn btn-sm ${value === color ? "btn-dark" : "btn-outline-secondary"}`}
+          style={{ width: 26, height: 26, padding: 0, backgroundColor: color }}
+          onClick={() => onChange(color)}
+          aria-label={`Select ${color}`}
+        />
+      ))}
+    </div>
+  );
+}
+
+function TagsTab({
+  tags,
+  tagsLoading,
+  error,
+  createTag,
+  updateTag,
+  deleteTag
+}: {
+  tags: Tag[];
+  tagsLoading: boolean;
+  error: string | null;
+  createTag: (data: { name: string; kind: TagUiKind; color: string }) => Promise<void>;
+  updateTag: (data: { tagId: number; name: string; color: string }) => Promise<void>;
+  deleteTag: (tagId: number) => void;
+}) {
+  const [mode, setMode] = useState<TagsMode>("view");
+  const [name, setName] = useState("");
+  const [kind, setKind] = useState<TagUiKind>("spending");
+  const [color, setColor] = useState(getDefaultTagColor(TAG_UI_KIND_TO_TYPE.spending));
+  const [editing, setEditing] = useState<Tag | null>(null);
+  const groups = [
+    { title: "Meta", tags: tags.filter((t) => t.type === "meta").sort(byName) },
+    { title: "Spending", tags: tags.filter((t) => t.type.startsWith("spending")).sort(byName) },
+    { title: "Income", tags: tags.filter((t) => t.type.startsWith("income")).sort(byName) }
+  ];
+
+  const resetCreate = () => {
+    setName("");
+    setKind("spending");
+    setColor(getDefaultTagColor(TAG_UI_KIND_TO_TYPE.spending));
+  };
+
+  return (
+    <div className="stack">
+      <div className="surface-card p-3">
+        <div className="split">
+          <div>
+            <h2 className="h5 mb-1">Tags</h2>
+            <p className="text-muted small mb-0">Create buckets for income and spending, plus meta labels for details.</p>
+          </div>
+          <div className="cluster">
+            <button className="btn btn-outline-primary" onClick={() => setMode(mode === "view" ? "edit" : "view")}>{mode === "edit" ? "Done editing" : "Edit"}</button>
+            <button className="btn btn-outline-danger" onClick={() => setMode(mode === "delete" ? "view" : "delete")}>{mode === "delete" ? "Done deleting" : "Delete"}</button>
+          </div>
+        </div>
+        {error && <div className="alert alert-danger py-2 small mt-3">{error}</div>}
+        <div className="filter-grid mt-3">
+          <input className="form-control" value={name} onChange={(e) => setName(e.target.value)} placeholder="New tag name" />
+          <select className="form-select" value={kind} onChange={(e) => { const k = e.target.value as TagUiKind; setKind(k); setColor(getDefaultTagColor(TAG_UI_KIND_TO_TYPE[k])); }}>
+            <option value="spending">Spending</option>
+            <option value="income">Income</option>
+            <option value="meta">Meta</option>
+          </select>
+        </div>
+        <div className="cluster mt-2">
+          <ColorPicker value={color} onChange={setColor} />
+          <button className="btn btn-primary ms-auto" disabled={!name.trim()} onClick={() => createTag({ name, kind, color }).then(resetCreate)}>Create tag</button>
+        </div>
+      </div>
+
+      {tagsLoading ? <LoadingSpinner message="Loading tags..." /> : (
+        <div className="grid-cards">
+          {groups.map((group) => (
+            <section key={group.title} className="surface-card p-3">
+              <div className="split mb-2">
+                <h3 className="h6 mb-0">{group.title}</h3>
+                <span className="chip">{group.tags.length}</span>
+              </div>
+              <div className="stack">
+                {group.tags.length === 0 && <span className="small text-muted">No tags yet.</span>}
+                {group.tags.map((tag) => (
+                  <div key={tag.id} className="metric-card">
+                    {editing?.id === tag.id ? (
+                      <div className="stack">
+                        <input className="form-control form-control-sm" value={editing.name} onChange={(e) => setEditing({ ...editing, name: e.target.value })} />
+                        <ColorPicker value={getDisplayTagColor(editing.type, editing.color)} onChange={(next) => setEditing({ ...editing, color: next })} />
+                        <div className="cluster justify-content-end">
+                          <button className="btn btn-sm btn-outline-secondary" onClick={() => setEditing(null)}>Cancel</button>
+                          <button className="btn btn-sm btn-primary" onClick={() => updateTag({ tagId: editing.id, name: editing.name, color: getDisplayTagColor(editing.type, editing.color) }).then(() => setEditing(null))}>Save</button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="split">
+                        <div className="cluster"><TagBadge tag={tag} /><span className="chip">{scope(tag.type)}</span></div>
+                        {mode === "edit" && <button className="btn btn-sm btn-outline-secondary" onClick={() => setEditing(tag)}>Edit</button>}
+                        {mode === "delete" && <button className="btn btn-sm btn-outline-danger" onClick={() => deleteTag(tag.id)}>Delete</button>}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </section>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -202,113 +178,38 @@ export default function TransactionsPanel({
   tagsError,
   token,
   invalidateTransactionMeta
-}: TransactionsPanelProps) {
+}: Props) {
   const queryClient = useQueryClient();
-
-  const [tab, setTab] = useState<"my-tags" | "tag-transactions">("tag-transactions");
-  const [taggingModeEnabled, setTaggingModeEnabled] = useState(false);
-
-  const [myTagsMode, setMyTagsMode] = useState<MyTagsMode>("default");
-  const [createName, setCreateName] = useState("");
-  const [createKind, setCreateKind] = useState<TagUiKind>("spending");
-  const [createColor, setCreateColor] = useState(getDefaultTagColor(TAG_UI_KIND_TO_TYPE.spending));
-  const [editTagId, setEditTagId] = useState<number | null>(null);
-  const [editName, setEditName] = useState("");
-  const [editColor, setEditColor] = useState(TAG_COLOR_PALETTE[0]);
+  const [tab, setTab] = useState<"transactions" | "tags">("transactions");
+  const [taggingMode, setTaggingMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-
-  const [applyOpen, setApplyOpen] = useState(false);
-  const applyRef = useRef<HTMLDivElement>(null);
-  const [removeOpen, setRemoveOpen] = useState(false);
-  const removeRef = useRef<HTMLDivElement>(null);
-
-  const tagsForUi = tags;
-  const metaTags = useMemo(
-    () => tagsForUi.filter((t) => t.type === "meta").sort(byName),
-    [tagsForUi]
-  );
-  const incomeTags = useMemo(
-    () => tagsForUi.filter((t) => t.type === "income_bucket_1" || t.type === "income_bucket_2").sort(byName),
-    [tagsForUi]
-  );
-  const spendingTags = useMemo(
-    () => tagsForUi.filter((t) => t.type === "spending_bucket_1" || t.type === "spending_bucket_2").sort(byName),
-    [tagsForUi]
-  );
-  const metaOnlyTags = metaTags;
+  const [applyTagId, setApplyTagId] = useState("");
+  const [removeTagId, setRemoveTagId] = useState("");
 
   const selectableTransactions = useMemo(
     () => filters.derived.filteredTransactions.filter((t): t is Txn & { transaction_id: string } => !!t.transaction_id),
     [filters.derived.filteredTransactions]
   );
-
   const tagsOnSelected = useMemo(() => {
     const ids = new Set<number>();
-    selectableTransactions
-      .filter((t) => selectedIds.has(t.transaction_id))
-      .forEach((t) => {
-        if (t.bucket_1_tag_id != null) ids.add(t.bucket_1_tag_id);
-        if (t.bucket_2_tag_id != null) ids.add(t.bucket_2_tag_id);
-        (t.meta_tag_ids ?? []).forEach((metaId) => ids.add(metaId));
-      });
-    return sortTagsMetaSpendingIncomeName(tagsForUi.filter((tag) => ids.has(tag.id)));
-  }, [selectableTransactions, selectedIds, tagsForUi]);
-
-  useEffect(() => {
-    setCreateColor(getDefaultTagColor(TAG_UI_KIND_TO_TYPE[createKind]));
-  }, [createKind]);
-
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (applyRef.current && !applyRef.current.contains(e.target as Node)) setApplyOpen(false);
-      if (removeRef.current && !removeRef.current.contains(e.target as Node)) setRemoveOpen(false);
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
-
-  useEffect(() => {
-    if (!taggingModeEnabled) {
-      setSelectedIds(new Set());
-      setApplyOpen(false);
-      setRemoveOpen(false);
-    }
-  }, [taggingModeEnabled]);
+    selectableTransactions.filter((t) => selectedIds.has(t.transaction_id)).forEach((t) => {
+      if (t.bucket_1_tag_id != null) ids.add(t.bucket_1_tag_id);
+      if (t.bucket_2_tag_id != null) ids.add(t.bucket_2_tag_id);
+      (t.meta_tag_ids ?? []).forEach((id) => ids.add(id));
+    });
+    return sortTags(tags.filter((tag) => ids.has(tag.id)));
+  }, [selectableTransactions, selectedIds, tags]);
 
   const createTagMutation = useMutation({
-    mutationFn: async () => {
+    mutationFn: async ({ name, kind, color }: { name: string; kind: TagUiKind; color: string }) => {
       const res = await fetch("/api/tags", {
         method: "POST",
         headers: { "Content-Type": "application/json", ...buildAuthHeaders(token) },
-        body: JSON.stringify({ name: createName.trim(), type: TAG_UI_KIND_TO_TYPE[createKind], color: createColor })
+        body: JSON.stringify({ name: name.trim(), type: TAG_UI_KIND_TO_TYPE[kind], color })
       });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data?.error || `Failed to create tag (${res.status})`);
-      }
+      if (!res.ok) throw new Error((await res.json().catch(() => ({})))?.error || `Failed to create tag (${res.status})`);
     },
-    onSuccess: async () => {
-      setCreateName("");
-      setCreateColor(getDefaultTagColor(TAG_UI_KIND_TO_TYPE[createKind]));
-      await queryClient.invalidateQueries({ queryKey: ["tags"] });
-    }
-  });
-
-  const deleteTagMutation = useMutation({
-    mutationFn: async (tagId: number) => {
-      const res = await fetch(`/api/tags/${tagId}`, {
-        method: "DELETE",
-        headers: buildAuthHeaders(token)
-      });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data?.error || `Failed to delete tag (${res.status})`);
-      }
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["tags"] });
-      await invalidateTransactionMeta();
-    }
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["tags"] })
   });
 
   const updateTagMutation = useMutation({
@@ -318,15 +219,19 @@ export default function TransactionsPanel({
         headers: { "Content-Type": "application/json", ...buildAuthHeaders(token) },
         body: JSON.stringify({ name: name.trim(), color })
       });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data?.error || `Failed to update tag (${res.status})`);
-      }
+      if (!res.ok) throw new Error((await res.json().catch(() => ({})))?.error || `Failed to update tag (${res.status})`);
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["tags"] })
+  });
+
+  const deleteTagMutation = useMutation({
+    mutationFn: async (tagId: number) => {
+      const res = await fetch(`/api/tags/${tagId}`, { method: "DELETE", headers: buildAuthHeaders(token) });
+      if (!res.ok) throw new Error((await res.json().catch(() => ({})))?.error || `Failed to delete tag (${res.status})`);
     },
     onSuccess: async () => {
-      setEditTagId(null);
-      setEditName("");
       await queryClient.invalidateQueries({ queryKey: ["tags"] });
+      await invalidateTransactionMeta();
     }
   });
 
@@ -337,10 +242,7 @@ export default function TransactionsPanel({
         headers: { "Content-Type": "application/json", ...buildAuthHeaders(token) },
         body: JSON.stringify(items)
       });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(friendlyApplyError(data?.error || `Failed to apply tags (${res.status})`));
-      }
+      if (!res.ok) throw new Error(friendlyApplyError((await res.json().catch(() => ({})))?.error || `Failed to apply tags (${res.status})`));
     },
     onSuccess: async () => {
       setSelectedIds(new Set());
@@ -348,473 +250,147 @@ export default function TransactionsPanel({
     }
   });
 
-  const applySingleTag = async (tagId: number) => {
-    const tag = tagsForUi.find((t) => t.id === tagId);
-    if (!tag) return;
-    const ids = [...selectedIds];
-    if (!ids.length) return;
-
-    const items: TransactionTagChange[] = ids.map((transaction_id) => {
+  const applySelectedTag = async () => {
+    const tag = tags.find((t) => t.id === Number(applyTagId));
+    if (!tag || selectedIds.size === 0) return;
+    const items: TransactionTagChange[] = [...selectedIds].map((transaction_id) => {
       const item: TransactionTagChange = { transaction_id };
       if (tag.type === "meta") {
         const txn = selectableTransactions.find((t) => t.transaction_id === transaction_id);
         item.meta_tag_ids = [...new Set([...(txn?.meta_tag_ids ?? []), tag.id])];
-      } else if (tag.type === "income_bucket_2" || tag.type === "spending_bucket_2") item.bucket_2_tag_id = tag.id;
+      } else if (tag.type.endsWith("_bucket_2")) item.bucket_2_tag_id = tag.id;
       else item.bucket_1_tag_id = tag.id;
       return item;
     });
-
     await applyTagsMutation.mutateAsync(items);
-    setApplyOpen(false);
+    setApplyTagId("");
   };
 
-  const removeTag = async (tagId: number) => {
-    const items: TransactionTagChange[] = [...selectedIds].flatMap((transaction_id) => {
+  const deleteTags = async (items: TransactionTagChange[]) => {
+    if (!items.length) return;
+    const res = await fetch("/api/transaction_meta/tags", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json", ...buildAuthHeaders(token) },
+      body: JSON.stringify(items)
+    });
+    if (!res.ok) throw new Error(friendlyApplyError((await res.json().catch(() => ({})))?.error || `Failed to remove tags (${res.status})`));
+    setSelectedIds(new Set());
+    await invalidateTransactionMeta();
+  };
+
+  const removeSelectedTag = async () => {
+    const tagId = Number(removeTagId);
+    if (!tagId) return;
+    await deleteTags([...selectedIds].flatMap((transaction_id) => {
       const txn = selectableTransactions.find((t) => t.transaction_id === transaction_id);
       if (!txn) return [];
       const item: TransactionTagChange = { transaction_id };
       if (txn.bucket_1_tag_id === tagId) item.bucket_1_tag_id = tagId;
       if (txn.bucket_2_tag_id === tagId) item.bucket_2_tag_id = tagId;
       if ((txn.meta_tag_ids ?? []).includes(tagId)) item.meta_tag_ids = [tagId];
-      return item.bucket_1_tag_id !== undefined || item.bucket_2_tag_id !== undefined || item.meta_tag_ids !== undefined
-        ? [item]
-        : [];
-    });
-
-    if (!items.length) return;
-
-    const res = await fetch("/api/transaction_meta/tags", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json", ...buildAuthHeaders(token) },
-      body: JSON.stringify(items)
-    });
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      throw new Error(friendlyApplyError(data?.error || `Failed to remove tag (${res.status})`));
-    }
-
-    await invalidateTransactionMeta();
-    setSelectedIds(new Set());
-    setRemoveOpen(false);
+      return item.bucket_1_tag_id || item.bucket_2_tag_id || item.meta_tag_ids ? [item] : [];
+    }));
+    setRemoveTagId("");
   };
 
-  const clearAllTags = async () => {
-    const items: TransactionTagChange[] = [...selectedIds].flatMap((transaction_id) => {
+  const clearSelectedTags = async () => {
+    await deleteTags([...selectedIds].flatMap((transaction_id) => {
       const txn = selectableTransactions.find((t) => t.transaction_id === transaction_id);
       if (!txn) return [];
-      const bucketIds: number[] = [];
-      if (txn.bucket_1_tag_id != null) bucketIds.push(txn.bucket_1_tag_id);
-      if (txn.bucket_2_tag_id != null) bucketIds.push(txn.bucket_2_tag_id);
-      const metaIds = txn.meta_tag_ids ?? [];
-      if (bucketIds.length === 0 && metaIds.length === 0) return [];
-      const uniqueMetaIds = [...new Set(metaIds)];
-      const uniqueBucketIds = [...new Set(bucketIds)];
-      return [
-        {
-          transaction_id,
-          bucket_1_tag_id: uniqueBucketIds[0],
-          bucket_2_tag_id: uniqueBucketIds[1],
-          meta_tag_ids: uniqueMetaIds
-        }
-      ];
-    });
-
-    if (items.length === 0) {
-      setRemoveOpen(false);
-      return;
-    }
-
-    const res = await fetch("/api/transaction_meta/tags", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json", ...buildAuthHeaders(token) },
-      body: JSON.stringify(items)
-    });
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      throw new Error(friendlyApplyError(data?.error || `Failed to clear tags (${res.status})`));
-    }
-
-    await invalidateTransactionMeta();
-    setSelectedIds(new Set());
-    setRemoveOpen(false);
+      const item: TransactionTagChange = {
+        transaction_id,
+        bucket_1_tag_id: txn.bucket_1_tag_id ?? undefined,
+        bucket_2_tag_id: txn.bucket_2_tag_id ?? undefined,
+        meta_tag_ids: txn.meta_tag_ids?.length ? [...new Set(txn.meta_tag_ids)] : undefined
+      };
+      return item.bucket_1_tag_id || item.bucket_2_tag_id || item.meta_tag_ids ? [item] : [];
+    }));
   };
 
-  const myTagsErrorMessage =
-    tagsError?.message
+  const error = tagsError?.message
     || (createTagMutation.error as Error | null)?.message
     || (updateTagMutation.error as Error | null)?.message
-    || (deleteTagMutation.error as Error | null)?.message;
-
-  const applyTagsErrorMessage = (applyTagsMutation.error as Error | null)?.message;
-  const startEditingTag = (tag: Tag) => {
-    setEditTagId(tag.id);
-    setEditName(tag.name);
-    setEditColor(getDisplayTagColor(tag.type, tag.color));
-    setMyTagsMode("editing");
-  };
+    || (deleteTagMutation.error as Error | null)?.message
+    || (applyTagsMutation.error as Error | null)?.message;
 
   return (
-    <div>
-      <ul className="nav nav-tabs mb-3">
-        <li className="nav-item">
-          <button
-            className={`nav-link ${tab === "tag-transactions" ? "active" : ""}`}
-            onClick={() => setTab("tag-transactions")}
-          >
-            Tag Transactions
-          </button>
-        </li>
-        <li className="nav-item">
-          <button className={`nav-link ${tab === "my-tags" ? "active" : ""}`} onClick={() => setTab("my-tags")}>
-            My Tags
-          </button>
-        </li>
-      </ul>
+    <div className="stack">
+      <div className="page-head">
+        <div>
+          <span className="page-kicker">Activity and labels</span>
+          <h1>Transactions</h1>
+        </div>
+        <div className="pill-tabs">
+          <button className={`btn btn-sm ${tab === "transactions" ? "active" : ""}`} onClick={() => setTab("transactions")}>Tag transactions</button>
+          <button className={`btn btn-sm ${tab === "tags" ? "active" : ""}`} onClick={() => setTab("tags")}>My tags</button>
+        </div>
+      </div>
 
-      {tab === "my-tags" && (
-          <>
-            {myTagsMode === "creating" ? (
-              <div className="d-flex gap-2 align-items-end mb-3 flex-wrap">
-                <div style={{ flex: "1 1 160px", minWidth: 0 }}>
-                  <label className="form-label small mb-1">Name</label>
-                  <input
-                    className="form-control form-control-sm"
-                    value={createName}
-                    onChange={(e) => setCreateName(e.target.value)}
-                    placeholder="Tag name"
-                    autoFocus
-                  />
+      {tab === "tags" ? (
+        <TagsTab
+          tags={tags}
+          tagsLoading={tagsLoading}
+          error={error ?? null}
+          createTag={(data) => createTagMutation.mutateAsync(data)}
+          updateTag={(data) => updateTagMutation.mutateAsync(data)}
+          deleteTag={(id) => deleteTagMutation.mutate(id)}
+        />
+      ) : (
+        <div className="row g-3">
+          <div className="col-12 col-xl-3">
+            <TransactionsFilterSection filters={filters} tags={tags} />
+          </div>
+          <div className="col-12 col-xl-9">
+            <section className="surface-card p-3 stack">
+              <div className="split">
+                <div className="cluster">
+                  <button className="btn btn-primary" onClick={syncTransactions} disabled={loadingTxns}>Sync transactions</button>
+                  <span className="small text-muted">{syncStatus}</span>
                 </div>
-                <div style={{ flex: "0 0 130px" }}>
-                  <label className="form-label small mb-1">Type</label>
-                  <KindSelect value={createKind} onChange={setCreateKind} />
-                </div>
-                <div style={{ flex: "1 1 220px", minWidth: 220 }}>
-                  <label className="form-label small mb-1">Color</label>
-                  <div className="d-flex flex-wrap gap-1">
-                    {TAG_COLOR_PALETTE.map((color) => (
-                      <button
-                        key={color}
-                        type="button"
-                        className={`btn btn-sm ${createColor === color ? "btn-dark" : "btn-outline-secondary"}`}
-                        style={{ width: 26, height: 26, padding: 0, backgroundColor: color }}
-                        onClick={() => setCreateColor(color)}
-                        aria-label={`Select ${color}`}
-                        title={color}
-                      />
-                    ))}
-                  </div>
-                </div>
-                <button
-                  className="btn btn-sm btn-primary px-3"
-                  style={{ minWidth: 110 }}
-                  disabled={!createName.trim() || createTagMutation.isPending}
-                  onClick={() => createTagMutation.mutateAsync().then(() => setMyTagsMode("default"))}
-                >
-                  {createTagMutation.isPending ? "Creating…" : "Create"}
-                </button>
-                <button
-                  className="btn btn-sm btn-outline-secondary px-3"
-                  style={{ minWidth: 110 }}
-                  onClick={() => {
-                    setCreateName("");
-                    setCreateColor(getDefaultTagColor(TAG_UI_KIND_TO_TYPE[createKind]));
-                    setMyTagsMode("default");
-                  }}
-                >
-                  Cancel
-                </button>
-              </div>
-            ) : (
-              <div className="d-flex gap-2 mb-3">
-                <button className="btn btn-sm btn-outline-primary px-3" style={{ minWidth: 130 }} onClick={() => setMyTagsMode("creating")}>
-                  New tag
-                </button>
-                <button
-                  className={`btn btn-sm px-3 ${myTagsMode === "editing" ? "btn-secondary" : "btn-outline-secondary"}`}
-                  style={{ minWidth: 130 }}
-                  onClick={() => {
-                    setEditTagId(null);
-                    setMyTagsMode((m) => (m === "editing" ? "default" : "editing"));
-                  }}
-                >
-                  Edit tags
-                </button>
-                <button
-                  className={`btn btn-sm px-3 ${myTagsMode === "deleting" ? "btn-danger" : "btn-outline-secondary"}`}
-                  style={{ minWidth: 130 }}
-                  onClick={() => setMyTagsMode((m) => (m === "deleting" ? "default" : "deleting"))}
-                >
-                  Delete tags
-                </button>
-              </div>
-            )}
-
-            {myTagsErrorMessage && (
-              <div className="alert alert-danger py-1 small">{myTagsErrorMessage}</div>
-            )}
-
-            {tagsLoading ? (
-              <LoadingSpinner message="Loading tags..." />
-            ) : (
-              <div className="row g-3">
-                {([
-                  {
-                    label: "Meta tags",
-                    list: metaOnlyTags,
-                    blurb:
-                      "Meta tags apply to either spending or income. You can add multiple per transaction. Use them to mark notable details."
-                  },
-                  {
-                    label: "Spending tags",
-                    list: spendingTags,
-                    blurb:
-                      'Spending tags apply only to money going out. Each transaction can only have one. Use them to put your spending into "buckets"'
-                  },
-                  {
-                    label: "Income tags",
-                    list: incomeTags,
-                    blurb:
-                      "Income tags apply only to money coming in. Each transaction can only have one. Use them to categorize income."
-                  }
-                ] as const).map(({ label, list, blurb }) => (
-                  <div key={label} className="col-12 col-md-4">
-                    <div className="border rounded p-2 h-100">
-                      <div className="d-flex justify-content-between align-items-center mb-1">
-                        <span className="small fw-semibold">{label}</span>
-                        <span className="badge bg-light text-muted">{list.length}</span>
-                      </div>
-                      <p className="text-muted small mb-2 pb-2 lh-sm border-bottom">{blurb}</p>
-                      {list.length === 0 ? (
-                        <div className="text-muted small">No {label.toLowerCase()} yet.</div>
-                      ) : (
-                        <ul className="list-unstyled mb-0 small">
-                          {list.map((tag) => (
-                            <li key={tag.id} className="d-flex justify-content-between align-items-center py-1 border-bottom">
-                              {editTagId === tag.id ? (
-                                <div className="w-100">
-                                  <input
-                                    className="form-control form-control-sm mb-2"
-                                    value={editName}
-                                    onChange={(e) => setEditName(e.target.value)}
-                                    autoFocus
-                                  />
-                                  <div className="d-flex justify-content-between align-items-center gap-2">
-                                    <div className="d-flex flex-wrap gap-1">
-                                      {TAG_COLOR_PALETTE.map((color) => (
-                                        <button
-                                          key={color}
-                                          type="button"
-                                          className={`btn btn-sm ${editColor === color ? "btn-dark" : "btn-outline-secondary"}`}
-                                          style={{ width: 24, height: 24, padding: 0, backgroundColor: color }}
-                                          onClick={() => setEditColor(color)}
-                                          aria-label={`Select ${color}`}
-                                          title={color}
-                                        />
-                                      ))}
-                                    </div>
-                                    <div className="d-flex gap-1">
-                                      <button
-                                        className="btn btn-sm btn-primary"
-                                        disabled={!editName.trim() || updateTagMutation.isPending}
-                                        onClick={() => updateTagMutation.mutate({ tagId: tag.id, name: editName, color: editColor })}
-                                      >
-                                        Save
-                                      </button>
-                                      <button className="btn btn-sm btn-outline-secondary" onClick={() => setEditTagId(null)}>
-                                        Cancel
-                                      </button>
-                                    </div>
-                                  </div>
-                                </div>
-                              ) : (
-                                <>
-                                  <div className="d-flex align-items-center gap-2">
-                                    <TagColorBadge tag={tag} />
-                                  </div>
-                                  {myTagsMode === "editing" && (
-                                    <button className="btn btn-sm btn-outline-secondary" onClick={() => startEditingTag(tag)}>
-                                      Edit
-                                    </button>
-                                  )}
-                                  {myTagsMode === "deleting" && (
-                                    <button
-                                      className="btn btn-sm btn-outline-danger"
-                                      disabled={deleteTagMutation.isPending}
-                                      onClick={() => deleteTagMutation.mutate(tag.id)}
-                                    >
-                                      Delete
-                                    </button>
-                                  )}
-                                </>
-                              )}
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </>
-      )}
-
-      {tab === "tag-transactions" && (
-          <>
-            <div className="d-flex align-items-center justify-content-between mb-3">
-              <div className="d-flex align-items-center gap-2">
-                <button className="btn btn-success" onClick={syncTransactions} disabled={loadingTxns}>
-                  Sync Transactions
-                </button>
-                <SyncTransactionsInfo />
-                <span className="small text-muted">{syncStatus}</span>
-              </div>
-
-              <div className="form-check form-switch m-0">
-                <input
-                  className="form-check-input"
-                  type="checkbox"
-                  role="switch"
-                  id="taggingModeSwitch"
-                  checked={taggingModeEnabled}
-                  onChange={(e) => setTaggingModeEnabled(e.target.checked)}
-                />
-                <label className="form-check-label small" htmlFor="taggingModeSwitch">
-                  Tagging mode
+                <label className="form-check form-switch m-0">
+                  <input className="form-check-input" type="checkbox" checked={taggingMode} onChange={(e) => { setTaggingMode(e.target.checked); setSelectedIds(new Set()); }} />
+                  <span className="form-check-label small">Tagging mode</span>
                 </label>
               </div>
-            </div>
-
-            <div className="row">
-              <div className="col-12 col-lg-3 mb-3 mb-lg-0">
-                <TransactionsFilterSection filters={filters} tags={tagsForUi} />
-              </div>
-              <div className="col-12 col-lg-9">
-                <AppliedFiltersBar filters={filters} />
-
-                <div className="d-flex justify-content-end gap-2 mb-2">
-                  {/* Apply tag */}
-                  <div ref={applyRef} style={{ position: "relative" }}>
-                    <button
-                      type="button"
-                      className="btn btn-sm btn-success px-3"
-                      style={{ minWidth: 120 }}
-                      disabled={!taggingModeEnabled || selectedIds.size === 0 || applyTagsMutation.isPending}
-                      onClick={() => {
-                        setApplyOpen((o) => !o);
-                        setRemoveOpen(false);
-                      }}
-                    >
-                      Apply tag
-                    </button>
-                    {applyOpen && (
-                      <div
-                        className="border rounded shadow-sm bg-white"
-                        style={{ position: "absolute", right: 0, top: "calc(100% + 6px)", zIndex: 200, width: 300 }}
-                      >
-                        <div className="px-3 py-2 border-bottom small text-muted">
-                          Apply tag to{" "}
-                          <strong className="text-body">{selectedIds.size}</strong> transaction
-                          {selectedIds.size !== 1 ? "s" : ""}
-                        </div>
-                        <div style={{ maxHeight: 280, overflowY: "auto" }}>
-                          {tagsForUi.length === 0 ? (
-                            <div className="px-3 py-2 small text-muted">No tags yet.</div>
-                          ) : (
-                            sortTagsMetaSpendingIncomeName(tagsForUi).map((t) => (
-                                <button
-                                  key={t.id}
-                                  type="button"
-                                  className="w-100 btn btn-link text-start text-decoration-none px-3 py-2 border-0"
-                                  style={{ color: "inherit" }}
-                                  onClick={() => applySingleTag(t.id)}
-                                >
-                                  <TagActionRow tag={t} />
-                                </button>
-                              ))
-                          )}
-                        </div>
-                      </div>
-                    )}
+              <AppliedFiltersBar filters={filters} />
+              {taggingMode && (
+                <div className="metric-card">
+                  <div className="split">
+                    <span className="small text-muted"><strong>{selectedIds.size}</strong> selected</span>
+                    <button className="btn btn-sm btn-outline-secondary" disabled={selectedIds.size === 0} onClick={() => setSelectedIds(new Set())}>Clear selection</button>
                   </div>
-
-                  {/* Remove tag */}
-                  <div ref={removeRef} style={{ position: "relative" }}>
-                    <button
-                      type="button"
-                      className="btn btn-sm btn-outline-secondary px-3"
-                      style={{ minWidth: 120 }}
-                      disabled={!taggingModeEnabled || selectedIds.size === 0 || applyTagsMutation.isPending}
-                      onClick={() => {
-                        setRemoveOpen((o) => !o);
-                        setApplyOpen(false);
-                      }}
-                    >
-                      Remove tag
-                    </button>
-                    {removeOpen && (
-                      <div
-                        className="border rounded shadow-sm bg-white"
-                        style={{ position: "absolute", right: 0, top: "calc(100% + 6px)", zIndex: 200, width: 300 }}
-                      >
-                        <div className="px-3 py-2 border-bottom small text-muted">
-                          Remove tag from <strong className="text-body">{selectedIds.size}</strong> transaction
-                          {selectedIds.size !== 1 ? "s" : ""}
-                        </div>
-                        <button
-                          type="button"
-                          className="w-100 btn btn-link text-start text-decoration-none px-3 py-2 border-0 text-danger"
-                          onClick={clearAllTags}
-                          disabled={!taggingModeEnabled || selectedIds.size === 0}
-                        >
-                          <span className="small">Clear all tags</span>
-                        </button>
-
-                        {tagsOnSelected.length > 0 && <div className="border-top" />}
-
-                        <div style={{ maxHeight: 240, overflowY: "auto" }}>
-                          {tagsOnSelected.length === 0 ? (
-                            <div className="px-3 py-2 small text-muted">No tags on selected transactions.</div>
-                          ) : (
-                            tagsOnSelected.map((t) => (
-                              <button
-                                key={t.id}
-                                type="button"
-                                className="w-100 btn btn-link text-start text-decoration-none px-3 py-2 border-0"
-                                style={{ color: "inherit" }}
-                                onClick={() => removeTag(t.id)}
-                              >
-                                <TagActionRow tag={t} />
-                              </button>
-                            ))
-                          )}
-                        </div>
-                      </div>
-                    )}
+                  <div className="filter-grid mt-2">
+                    <div className="cluster">
+                      <select className="form-select form-select-sm" value={applyTagId} onChange={(e) => setApplyTagId(e.target.value)}>
+                        <option value="">Apply tag...</option>
+                        {sortTags(tags).map((t) => <option key={t.id} value={t.id}>{scope(t.type)} - {t.name}</option>)}
+                      </select>
+                      <button className="btn btn-sm btn-primary" disabled={!applyTagId || selectedIds.size === 0} onClick={() => void applySelectedTag()}>Apply</button>
+                    </div>
+                    <div className="cluster">
+                      <select className="form-select form-select-sm" value={removeTagId} onChange={(e) => setRemoveTagId(e.target.value)}>
+                        <option value="">Remove tag...</option>
+                        {tagsOnSelected.map((t) => <option key={t.id} value={t.id}>{scope(t.type)} - {t.name}</option>)}
+                      </select>
+                      <button className="btn btn-sm btn-outline-secondary" disabled={!removeTagId || selectedIds.size === 0} onClick={() => void removeSelectedTag()}>Remove</button>
+                      <button className="btn btn-sm btn-outline-danger" disabled={selectedIds.size === 0} onClick={() => void clearSelectedTags()}>Clear all</button>
+                    </div>
                   </div>
                 </div>
-
-                {applyTagsErrorMessage && (
-                  <div className="alert alert-danger py-1 small" role="alert">
-                    {applyTagsErrorMessage}
-                  </div>
-                )}
-
-                {loadingTxns ? (
-                  <LoadingSpinner />
-                ) : (
-                  <TransactionTable
-                    transactions={taggingModeEnabled ? selectableTransactions : filters.derived.filteredTransactions}
-                    taggingMode={taggingModeEnabled}
-                    selectedIds={selectedIds}
-                    onSelectionChange={setSelectedIds}
-                    tags={tagsForUi}
-                  />
-                )}
-              </div>
-            </div>
-          </>
+              )}
+              {error && <div className="alert alert-danger py-2 small">{error}</div>}
+              {loadingTxns ? <LoadingSpinner /> : (
+                <TransactionTable
+                  transactions={taggingMode ? selectableTransactions : filters.derived.filteredTransactions}
+                  taggingMode={taggingMode}
+                  selectedIds={selectedIds}
+                  onSelectionChange={setSelectedIds}
+                  tags={tags}
+                />
+              )}
+            </section>
+          </div>
+        </div>
       )}
     </div>
   );

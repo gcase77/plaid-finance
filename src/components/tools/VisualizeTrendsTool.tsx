@@ -162,10 +162,14 @@ export default function VisualizeTrendsTool({ transactions, token }: Props) {
   };
 
   return (
-    <div className="card">
-      <div className="card-body">
-        <h6 className="card-title mb-1">Visualize Trends</h6>
-        <p className="text-muted small mb-2">Click graphs to view transactions</p>
+    <section className="surface-card p-3">
+        <div className="split mb-3">
+          <div>
+            <h2 className="h5 mb-1">Visualize trends</h2>
+            <p className="text-muted small mb-0">Click graphs to view matching transactions.</p>
+          </div>
+          <span className="chip">{baseTxns.length} transactions</span>
+        </div>
 
         <div className="mb-3 pb-2 border-bottom small">
           <div className="fw-medium text-body-secondary mb-2">Date range</div>
@@ -189,23 +193,17 @@ export default function VisualizeTrendsTool({ transactions, token }: Props) {
           </div>
         </div>
 
-        <ul className="nav nav-tabs mb-3">
-          <li className="nav-item">
-            <button type="button" className={`nav-link ${vizTab === "pie" ? "active" : ""}`} onClick={() => goTab("pie")}>
+        <div className="pill-tabs mb-3">
+            <button type="button" className={`btn btn-sm ${vizTab === "pie" ? "active" : ""}`} onClick={() => goTab("pie")}>
               Pie Chart
             </button>
-          </li>
-          <li className="nav-item">
-            <button type="button" className={`nav-link ${vizTab === "flow" ? "active" : ""}`} onClick={() => goTab("flow")}>
+            <button type="button" className={`btn btn-sm ${vizTab === "flow" ? "active" : ""}`} onClick={() => goTab("flow")}>
               Flow of Funds
             </button>
-          </li>
-          <li className="nav-item">
-            <button type="button" className={`nav-link ${vizTab === "timeline" ? "active" : ""}`} onClick={() => goTab("timeline")}>
+            <button type="button" className={`btn btn-sm ${vizTab === "timeline" ? "active" : ""}`} onClick={() => goTab("timeline")}>
               Timeline
             </button>
-          </li>
-        </ul>
+        </div>
 
         {vizTab === "timeline" && (
           <TimelineTrendChart transactions={baseTxns} tags={tags} />
@@ -307,8 +305,7 @@ export default function VisualizeTrendsTool({ transactions, token }: Props) {
             )}
           </>
         )}
-      </div>
-    </div>
+    </section>
   );
 }
 

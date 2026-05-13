@@ -172,27 +172,27 @@ export default function TransferGroupTool({ transactions, token, invalidateTrans
   );
 
   return (
-    <div className="card">
-      <div className="card-body">
-        <h6 className="card-title mb-1">Account Transfers</h6>
-        <p className="text-muted small mb-3">Add transfer pairs between your accounts. These transactions are excluded from income and spending calculations.</p>
+    <section className="surface-card p-3">
+        <div className="split mb-3">
+          <div>
+            <h2 className="h5 mb-1">Find transfers</h2>
+            <p className="text-muted small mb-0">Add transfer pairs between your accounts. These transactions are excluded from income and spending calculations.</p>
+          </div>
+          <span className="chip">{totalPairs} candidates</span>
+        </div>
 
         {error && <div className="alert alert-danger py-1 small">{error}</div>}
 
-        <ul className="nav nav-tabs mb-3">
-          <li className="nav-item">
-            <button className={`nav-link ${tab === "find" ? "active" : ""}`} onClick={() => setTab("find")}>
+        <div className="pill-tabs mb-3">
+            <button className={`btn btn-sm ${tab === "find" ? "active" : ""}`} onClick={() => setTab("find")}>
               Find {totalPairs > 0 && <span className="badge bg-secondary ms-1">{totalPairs}</span>}
             </button>
-          </li>
-          <li className="nav-item">
-            <button className={`nav-link ${tab === "existing" ? "active" : ""}`} onClick={() => setTab("existing")}>
+            <button className={`btn btn-sm ${tab === "existing" ? "active" : ""}`} onClick={() => setTab("existing")}>
               Existing {(existingGroups.length + brokenGroups.length) > 0 && (
                 <span className="badge bg-secondary ms-1">{existingGroups.length + brokenGroups.length}</span>
               )}
             </button>
-          </li>
-        </ul>
+        </div>
 
         {tab === "find" && (
           <>
@@ -223,7 +223,7 @@ export default function TransferGroupTool({ transactions, token, invalidateTrans
               <p className="text-muted small mb-0">No transfer pairs found with these settings.</p>
             ) : (
               <div className="table-responsive">
-                <table className="table table-sm table-striped align-middle mb-0">
+                <table className="data-table align-middle mb-0">
                   {tableHead}
                   <tbody>
                     {pairsByGap.map(([gap, gPairs]) => (
@@ -270,7 +270,7 @@ export default function TransferGroupTool({ transactions, token, invalidateTrans
             <p className="text-muted small mb-0">No transfer groups yet.</p>
           ) : (
             <div className="table-responsive">
-              <table className="table table-sm table-striped align-middle mb-0">
+              <table className="data-table align-middle mb-0">
                 {tableHead}
                 <tbody>
                   {existingGroups.map(({ id, outflow, inflow }) => (
@@ -324,7 +324,6 @@ export default function TransferGroupTool({ transactions, token, invalidateTrans
             </div>
           )
         )}
-      </div>
-    </div>
+    </section>
   );
 }
