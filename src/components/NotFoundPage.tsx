@@ -1,47 +1,30 @@
 import { Link } from "react-router-dom";
-import "./landing/LandingPage.css";
-import "./NotFoundPage.css";
 
 export default function NotFoundPage() {
   return (
-    <main className="landing-page not-found-page">
+    <div className="landing">
       <nav className="landing-nav">
-        <Link className="landing-logo" to="/l" aria-label="Funds Up landing page">
-          <img src="/funds-up-logo.svg" alt="Funds Up" />
-        </Link>
-        <div className="landing-nav-links">
-          <Link className="btn btn-primary btn-sm" to="/auth">Sign in</Link>
-        </div>
+        <Link to="/l" className="landing-logo" aria-label="Funds Up"><img src="/funds-up-logo.svg" alt="Funds Up" /></Link>
+        <Link className="btn primary btn-sm" to="/auth">Sign in</Link>
       </nav>
-
-      <section className="not-found-panel" aria-labelledby="not-found-title">
-        <div>
-          <span className="eyebrow">404</span>
-          <h1 id="not-found-title">Page doesn't exist</h1>
-          <p>
-            This route is not part of Funds Up. Head back to the dashboard or start from the public landing page.
-          </p>
-          <div className="hero-actions">
-            <Link className="btn btn-primary" to="/">Go to dashboard</Link>
-            <Link className="btn btn-outline-primary" to="/l">View landing page</Link>
+      <main className="landing-main">
+        <section className="landing-hero" style={{ alignItems: "flex-start" }}>
+          <div>
+            <span className="chip chip-soft">404</span>
+            <h1 style={{ marginTop: 16 }}>Page doesn't exist</h1>
+            <p>This route is not part of Funds Up. Head back to the dashboard or visit the landing page.</p>
+            <div className="row-flex gap-3 mt-4">
+              <Link className="btn primary" to="/">Go to dashboard</Link>
+              <Link className="btn ghost" to="/l">View landing page</Link>
+            </div>
           </div>
-        </div>
-
-        <div className="not-found-visual" aria-hidden="true">
-          <div className="not-found-ledger-row">
-            <span>Route lookup</span>
-            <strong>Missing</strong>
+          <div className="card">
+            <div className="between" style={{ padding: "10px 0", borderBottom: "1px solid var(--line)" }}><span className="muted">Route lookup</span><strong className="text-brand">Missing</strong></div>
+            <div className="between" style={{ padding: "10px 0", borderBottom: "1px solid var(--line)" }}><span className="muted">Status</span><strong className="text-brand">404</strong></div>
+            <div className="between" style={{ padding: "10px 0" }}><span className="muted">Next step</span><strong className="text-brand">Return home</strong></div>
           </div>
-          <div className="not-found-ledger-row">
-            <span>Status</span>
-            <strong>404</strong>
-          </div>
-          <div className="not-found-ledger-row">
-            <span>Next step</span>
-            <strong>Return home</strong>
-          </div>
-        </div>
-      </section>
-    </main>
+        </section>
+      </main>
+    </div>
   );
 }

@@ -1,330 +1,256 @@
-import { Fragment, useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import type { Txn } from "../types";
 import { buildAuthHeaders } from "../../lib/auth";
 import { formatTxnDate, getTxnDateOnly } from "../../utils/transactionUtils";
+import { Alert, ClickEditNumber } from "../shared/ui";
 
-type Props = {
-  transactions: Txn[];
-  token: string | null;
-  invalidateTransactionMeta: () => Promise<void>;
-};
+type Props = { transactions: Txn[]; token: string | null; invalidateTransactionMeta: () => Promise<void> };
+type Pair = { pairId: string; outflow: Txn; inflow: Txn; dayGap: number };
 
-type Pair = {
-  pairId: string;
-  outflow: Txn;
-  inflow: Txn;
-  dayGap: number;
-};
+const errMsg = (e: unknown) => e instanceof Error ? e.message : "Unexpected error";
 
-function getErrorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : "Unexpected error";
+function groupPairsByDaysApart(sorted: Pair[]): { gapKey: number; label: string; pairs: Pair[] }[] {
+  const out: { gapKey: number; label: string; pairs: Pair[] }[] = [];
+  for (const p of sorted) {
+    const gapKey = Number.isFinite(p.dayGap) ? Math.round(p.dayGap) : -1;
+    const label = gapKey < 0 ? "Date unknown" : gapKey === 0 ? "Same day" : `${gapKey} day${gapKey === 1 ? "" : "s"} apart`;
+    const last = out[out.length - 1];
+    if (last?.gapKey === gapKey) last.pairs.push(p);
+    else out.push({ gapKey, label, pairs: [p] });
+  }
+  return out;
 }
 
 function daysBetween(a: Txn, b: Txn): number {
-  const d1 = getTxnDateOnly(a);
-  const d2 = getTxnDateOnly(b);
+  const d1 = getTxnDateOnly(a), d2 = getTxnDateOnly(b);
   if (!d1 || !d2) return Infinity;
   return Math.abs((new Date(d1).getTime() - new Date(d2).getTime()) / 86_400_000);
 }
 
-function TxnCols({ t }: { t: Txn }) {
+function TxnCell({ t }: { t: Txn }) {
   return (
-    <td>
-      <div className="small">{t.name || t.merchant_name || "—"}</div>
-      <div className="text-muted fst-italic" style={{ fontSize: "0.75em" }}>{t.account_name || t.account_official_name || ""}</div>
-    </td>
+    <div>
+      <div className="fw-semi small">{t.name || t.merchant_name || "—"}</div>
+      <div className="xs muted">{t.account_name || t.account_official_name || ""}</div>
+    </div>
   );
 }
 
-function SummaryCol({ outflow, inflow }: { outflow: Txn; inflow: Txn }) {
-  const outAmt = Math.abs(outflow.amount ?? 0);
-  const inAmt = Math.abs(inflow.amount ?? 0);
-  const amountsDiffer = Math.abs(outAmt - inAmt) > 0.001;
-
-  const outDate = formatTxnDate(outflow);
-  const inDate = formatTxnDate(inflow);
-  const datesDiffer = outDate !== inDate;
-
+function AccountCheckFilter({ label, options, excluded, setExcluded }: { label: string; options: { id: string; label: string }[]; excluded: Set<string>; setExcluded: (updater: (prev: Set<string>) => Set<string>) => void }) {
   return (
-    <td className="small text-nowrap" style={{ borderRight: "1px solid var(--bs-border-color)" }}>
-      <div className="fw-semibold">
-        {amountsDiffer
-          ? <><span className="text-danger">${outAmt.toFixed(2)}</span><span className="text-muted mx-1">/</span><span className="text-success">${inAmt.toFixed(2)}</span></>
-          : `$${outAmt.toFixed(2)}`}
+    <div className="field">
+      <div className="row-flex between flex-wrap gap-2">
+        <label style={{ margin: 0 }}>{label} ({options.length - excluded.size} of {options.length})</label>
+        <div className="row-flex gap-2">
+          <button type="button" className="btn ghost btn-sm" onClick={() => setExcluded(() => new Set())}>All</button>
+          <button type="button" className="btn ghost btn-sm" onClick={() => setExcluded(() => new Set(options.map((a) => a.id)))}>None</button>
+        </div>
       </div>
-      <div className="text-muted" style={{ fontSize: "0.8em" }}>
-        {datesDiffer ? <>{outDate}<span className="text-muted mx-1">/</span>{inDate}</> : outDate}
+      <div className="scrollbox" style={{ border: "1px solid var(--line)", borderRadius: "var(--r-sm)", padding: 8, marginTop: 6 }}>
+        {options.map((a) => (
+          <label key={a.id} className="check" style={{ display: "flex", padding: "3px 0" }}>
+            <input
+              type="checkbox"
+              checked={!excluded.has(a.id)}
+              onChange={(e) => setExcluded((prev) => {
+                const next = new Set(prev);
+                if (e.target.checked) next.delete(a.id); else next.add(a.id);
+                return next;
+              })}
+            />
+            <span>{a.label}</span>
+          </label>
+        ))}
       </div>
-    </td>
+    </div>
   );
 }
 
-const COL_SPAN = 4; // summary + outflow + inflow + action
+function PairRow({ pair, ambiguous, action }: { pair: Pair; ambiguous?: boolean; action: ReactNode }) {
+  const outAmt = Math.abs(pair.outflow.amount ?? 0);
+  const inAmt = Math.abs(pair.inflow.amount ?? 0);
+  const amtMismatch = Math.abs(outAmt - inAmt) > 0.001;
+  return (
+    <div className="transfer-pair" style={{ opacity: ambiguous ? 0.65 : 1 }}>
+      <div>
+        <div className="fw-bold">
+          {amtMismatch ? <><span className="text-danger">${outAmt.toFixed(2)}</span> <span className="muted xs">/</span> <span className="text-success">${inAmt.toFixed(2)}</span></> : `$${outAmt.toFixed(2)}`}
+        </div>
+        <div className="xs muted">{formatTxnDate(pair.outflow)}{formatTxnDate(pair.outflow) !== formatTxnDate(pair.inflow) ? ` / ${formatTxnDate(pair.inflow)}` : ""}</div>
+        {ambiguous && <span className="chip chip-warning mt-2">Ambiguous</span>}
+      </div>
+      <div><div className="xs muted fw-semi mb-1">OUT</div><TxnCell t={pair.outflow} /></div>
+      <div><div className="xs muted fw-semi mb-1">IN</div><TxnCell t={pair.inflow} /></div>
+      <div>{action}</div>
+    </div>
+  );
+}
 
 export default function TransferGroupTool({ transactions, token, invalidateTransactionMeta }: Props) {
   const [tab, setTab] = useState<"find" | "existing">("find");
   const [maxDays, setMaxDays] = useState(3);
   const [amountTol, setAmountTol] = useState(0);
-  const [savingId, setSavingId] = useState<string | null>(null);
-  const [removingId, setRemovingId] = useState<string | null>(null);
+  const [excludedOutAccounts, setExcludedOutAccounts] = useState<Set<string>>(new Set());
+  const [excludedInAccounts, setExcludedInAccounts] = useState<Set<string>>(new Set());
+  const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const { pairsByGap, ambiguousIds } = useMemo(() => {
-    const candidates = transactions.filter(t => !t.account_transfer_group && t.transaction_id && t.amount != null);
-    const pairs: Pair[] = [];
+  const accountOptions = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const t of transactions) {
+      if (!t.account_id) continue;
+      if (!m.has(t.account_id)) m.set(t.account_id, t.account_name || t.account_official_name || t.account_id);
+    }
+    return [...m.entries()].map(([id, label]) => ({ id, label })).sort((a, b) => a.label.localeCompare(b.label));
+  }, [transactions]);
 
-    for (let i = 0; i < candidates.length; i++) {
-      for (let j = i + 1; j < candidates.length; j++) {
-        const a = candidates[i], b = candidates[j];
+  const { pairs, ambiguousIds, totalPairs } = useMemo(() => {
+    const cand = transactions.filter((t) => !t.account_transfer_group && t.transaction_id && t.amount != null);
+    const out: Pair[] = [];
+    for (let i = 0; i < cand.length; i++) {
+      for (let j = i + 1; j < cand.length; j++) {
+        const a = cand[i], b = cand[j];
         if (a.account_id === b.account_id) continue;
         if (Math.abs((a.amount ?? 0) + (b.amount ?? 0)) > amountTol) continue;
         const gap = daysBetween(a, b);
         if (gap > maxDays) continue;
         const [outflow, inflow] = (a.amount ?? 0) > 0 ? [a, b] : [b, a];
-        pairs.push({ pairId: `${a.transaction_id}-${b.transaction_id}`, outflow, inflow, dayGap: gap });
+        if (outflow.account_id && excludedOutAccounts.has(outflow.account_id)) continue;
+        if (inflow.account_id && excludedInAccounts.has(inflow.account_id)) continue;
+        out.push({ pairId: `${a.transaction_id}-${b.transaction_id}`, outflow, inflow, dayGap: gap });
       }
     }
+    const count = new Map<string, number>();
+    out.forEach((p) => { count.set(p.outflow.transaction_id!, (count.get(p.outflow.transaction_id!) ?? 0) + 1); count.set(p.inflow.transaction_id!, (count.get(p.inflow.transaction_id!) ?? 0) + 1); });
+    const ambiguous = new Set([...count.entries()].filter(([, c]) => c > 1).map(([id]) => id));
+    out.sort((a, b) => {
+      if (a.dayGap !== b.dayGap) return a.dayGap - b.dayGap;
+      const da = getTxnDateOnly(a.outflow) || "";
+      const db = getTxnDateOnly(b.outflow) || "";
+      if (da !== db) return da.localeCompare(db);
+      return a.pairId.localeCompare(b.pairId);
+    });
+    return { pairs: out, ambiguousIds: ambiguous, totalPairs: out.length };
+  }, [transactions, maxDays, amountTol, excludedOutAccounts, excludedInAccounts]);
 
-    const txCount = new Map<string, number>();
-    for (const p of pairs) {
-      txCount.set(p.outflow.transaction_id!, (txCount.get(p.outflow.transaction_id!) ?? 0) + 1);
-      txCount.set(p.inflow.transaction_id!, (txCount.get(p.inflow.transaction_id!) ?? 0) + 1);
+  const { existing, broken } = useMemo(() => {
+    const m = new Map<string, Txn[]>();
+    transactions.forEach((t) => { if (t.account_transfer_group) { const arr = m.get(t.account_transfer_group) ?? []; arr.push(t); m.set(t.account_transfer_group, arr); } });
+    const existing: { id: string; outflow: Txn; inflow: Txn }[] = [];
+    const broken: { id: string; t: Txn }[] = [];
+    for (const [id, txns] of m.entries()) {
+      if (txns.length >= 2) { const [outflow, inflow] = (txns[0]?.amount ?? 0) > 0 ? [txns[0], txns[1]] : [txns[1], txns[0]]; existing.push({ id, outflow, inflow }); }
+      else if (txns.length === 1) broken.push({ id, t: txns[0] });
     }
-    const ambiguousIds = new Set([...txCount.entries()].filter(([, c]) => c > 1).map(([id]) => id));
-
-    const map = new Map<number, Pair[]>();
-    for (const p of pairs) {
-      const arr = map.get(p.dayGap) ?? [];
-      arr.push(p);
-      map.set(p.dayGap, arr);
-    }
-
-    return { pairsByGap: [...map.entries()].sort((a, b) => a[0] - b[0]), ambiguousIds };
-  }, [transactions, maxDays, amountTol]);
-
-  const totalPairs = pairsByGap.reduce((s, [, ps]) => s + ps.length, 0);
-
-  const { existingGroups, brokenGroups } = useMemo(() => {
-    const map = new Map<string, Txn[]>();
-    for (const t of transactions) {
-      if (t.account_transfer_group) {
-        const arr = map.get(t.account_transfer_group) ?? [];
-        arr.push(t);
-        map.set(t.account_transfer_group, arr);
-      }
-    }
-    const existingGroups: { id: string; outflow: Txn; inflow: Txn }[] = [];
-    const brokenGroups: { id: string; t: Txn }[] = [];
-    for (const [id, txns] of map.entries()) {
-      if (txns.length >= 2) {
-        const [outflow, inflow] = (txns[0]?.amount ?? 0) > 0 ? [txns[0], txns[1]] : [txns[1], txns[0]];
-        existingGroups.push({ id, outflow, inflow });
-      } else if (txns.length === 1) brokenGroups.push({ id, t: txns[0] });
-    }
-    return { existingGroups, brokenGroups };
+    return { existing, broken };
   }, [transactions]);
 
   const addGroup = async (pair: Pair) => {
-    setSavingId(pair.pairId);
-    setError(null);
+    setBusyId(pair.pairId); setError(null);
     try {
-      const res = await fetch("/api/transaction_meta/transfer_group", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", ...buildAuthHeaders(token) },
-        body: JSON.stringify({ transaction_ids: [pair.outflow.transaction_id, pair.inflow.transaction_id] })
-      });
+      const res = await fetch("/api/transaction_meta/transfer_group", { method: "POST", headers: { "Content-Type": "application/json", ...buildAuthHeaders(token) }, body: JSON.stringify({ transaction_ids: [pair.outflow.transaction_id, pair.inflow.transaction_id] }) });
       if (!res.ok) throw new Error((await res.json()).error ?? res.statusText);
       await invalidateTransactionMeta();
-    } catch (error: unknown) {
-      setError(getErrorMessage(error));
-    } finally {
-      setSavingId(null);
-    }
+    } catch (e) { setError(errMsg(e)); } finally { setBusyId(null); }
   };
 
-  const removeGroup = async (groupId: string, transactionIds: string[]) => {
-    setRemovingId(groupId);
-    setError(null);
+  const removeGroup = async (id: string, txIds: string[]) => {
+    setBusyId(id); setError(null);
     try {
-      const res = await fetch("/api/transaction_meta/transfer_group", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json", ...buildAuthHeaders(token) },
-        body: JSON.stringify({ transaction_ids: transactionIds })
-      });
+      const res = await fetch("/api/transaction_meta/transfer_group", { method: "DELETE", headers: { "Content-Type": "application/json", ...buildAuthHeaders(token) }, body: JSON.stringify({ transaction_ids: txIds }) });
       if (!res.ok) throw new Error((await res.json()).error ?? res.statusText);
       await invalidateTransactionMeta();
-    } catch (error: unknown) {
-      setError(getErrorMessage(error));
-    } finally {
-      setRemovingId(null);
-    }
+    } catch (e) { setError(errMsg(e)); } finally { setBusyId(null); }
   };
-
-  const tableHead = (
-    <thead>
-      <tr>
-        <th />
-        <th className="small text-muted fw-semibold border-end">Outflow</th>
-        <th className="small text-muted fw-semibold">Inflow</th>
-        <th />
-      </tr>
-    </thead>
-  );
 
   return (
-    <div className="card">
-      <div className="card-body">
-        <h6 className="card-title mb-1">Account Transfers</h6>
-        <p className="text-muted small mb-3">Add transfer pairs between your accounts. These transactions are excluded from income and spending calculations.</p>
+    <>
+      <div className="tabs">
+        <button className={tab === "find" ? "active" : ""} onClick={() => setTab("find")}>Find{totalPairs > 0 && <span className="count">{totalPairs}</span>}</button>
+        <button className={tab === "existing" ? "active" : ""} onClick={() => setTab("existing")}>Existing{existing.length + broken.length > 0 && <span className="count">{existing.length + broken.length}</span>}</button>
+      </div>
 
-        {error && <div className="alert alert-danger py-1 small">{error}</div>}
+      {error && <div className="mb-3"><Alert tone="danger" onClose={() => setError(null)}>{error}</Alert></div>}
 
-        <ul className="nav nav-tabs mb-3">
-          <li className="nav-item">
-            <button className={`nav-link ${tab === "find" ? "active" : ""}`} onClick={() => setTab("find")}>
-              Find {totalPairs > 0 && <span className="badge bg-secondary ms-1">{totalPairs}</span>}
-            </button>
-          </li>
-          <li className="nav-item">
-            <button className={`nav-link ${tab === "existing" ? "active" : ""}`} onClick={() => setTab("existing")}>
-              Existing {(existingGroups.length + brokenGroups.length) > 0 && (
-                <span className="badge bg-secondary ms-1">{existingGroups.length + brokenGroups.length}</span>
-              )}
-            </button>
-          </li>
-        </ul>
-
-        {tab === "find" && (
-          <>
-            <div className="row g-3 mb-4">
-              <div className="col-sm-6">
-                <label className="form-label small mb-1">Max days apart</label>
-                <div className="d-flex align-items-center gap-2">
-                  <input type="range" className="form-range flex-fill" min={0} max={14} step={1} value={maxDays}
-                    onChange={e => setMaxDays(Number(e.target.value))} />
-                  <input type="number" className="form-control form-control-sm" min={0} max={14} step={1} value={maxDays}
-                    style={{ width: 64 }}
-                    onChange={e => setMaxDays(Math.min(14, Math.max(0, Number(e.target.value))))} />
-                </div>
-              </div>
-              <div className="col-sm-6">
-                <label className="form-label small mb-1">Amount tolerance ($)</label>
-                <div className="d-flex align-items-center gap-2">
-                  <input type="range" className="form-range flex-fill" min={0} max={20} step={0.01} value={amountTol}
-                    onChange={e => setAmountTol(Number(e.target.value))} />
-                  <input type="number" className="form-control form-control-sm" min={0} max={20} step={0.01} value={amountTol}
-                    style={{ width: 64 }}
-                    onChange={e => setAmountTol(Math.min(20, Math.max(0, Number(e.target.value))))} />
-                </div>
-              </div>
+      {tab === "find" && (
+        <>
+          <div className="card card-tight mb-4 transfer-tool-filters">
+            <div className="field">
+              <label>Max days apart: <ClickEditNumber value={maxDays} onCommit={setMaxDays} min={0} max={14} step={1} decimals={0} format={(n) => String(n)} ariaLabel="max days apart" /></label>
+              <input type="range" min={0} max={14} step={1} value={maxDays} onChange={(e) => setMaxDays(Number(e.target.value))} />
             </div>
-
-            {totalPairs === 0 ? (
-              <p className="text-muted small mb-0">No transfer pairs found with these settings.</p>
-            ) : (
-              <div className="table-responsive">
-                <table className="table table-sm table-striped align-middle mb-0">
-                  {tableHead}
-                  <tbody>
-                    {pairsByGap.map(([gap, gPairs]) => (
-                      <Fragment key={`gap-${gap}`}>
-                        <tr className="table-light">
-                          <td colSpan={COL_SPAN} className="py-1">
-                            <h6 className="fw-bold mb-0 small">
-                              {gap === 0 ? "Same day" : `${gap} day${gap > 1 ? "s" : ""} apart`}
-                              <span className="fw-normal text-muted ms-2">({gPairs.length})</span>
-                            </h6>
-                          </td>
-                        </tr>
-                        {gPairs.map(pair => {
-                          const isAmbiguous = ambiguousIds.has(pair.outflow.transaction_id!) || ambiguousIds.has(pair.inflow.transaction_id!);
-                          return (
-                            <tr key={pair.pairId} className={isAmbiguous ? "opacity-50" : ""}>
-                              <SummaryCol outflow={pair.outflow} inflow={pair.inflow} />
-                              <TxnCols t={pair.outflow} />
-                              <TxnCols t={pair.inflow} />
-                              <td className="text-end">
-                                <div className="d-flex justify-content-end align-items-center gap-2">
-                                  <button className="btn btn-sm btn-outline-primary"
-                                    disabled={savingId === pair.pairId}
-                                    onClick={() => addGroup(pair)}>
-                                    {savingId === pair.pairId ? "..." : "Add"}
-                                  </button>
-                                  {isAmbiguous && <span className="badge bg-warning text-dark">Ambiguous</span>}
-                                </div>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </Fragment>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+            <div className="field">
+              <label>Amount tolerance: <ClickEditNumber value={amountTol} onCommit={setAmountTol} min={0} max={20} step={0.5} decimals={2} format={(n) => `$${n.toFixed(2)}`} ariaLabel="amount tolerance in dollars" /></label>
+              <input type="range" min={0} max={20} step={0.5} value={amountTol} onChange={(e) => setAmountTol(Number(e.target.value))} />
+            </div>
+            {accountOptions.length > 0 && (
+              <>
+                <AccountCheckFilter label="OUT accounts" options={accountOptions} excluded={excludedOutAccounts} setExcluded={setExcludedOutAccounts} />
+                <AccountCheckFilter label="IN accounts" options={accountOptions} excluded={excludedInAccounts} setExcluded={setExcludedInAccounts} />
+              </>
             )}
-          </>
-        )}
+          </div>
 
-        {tab === "existing" && (
-          existingGroups.length === 0 && brokenGroups.length === 0 ? (
-            <p className="text-muted small mb-0">No transfer groups yet.</p>
+          {totalPairs === 0 ? (
+            <div className="card"><p className="muted">No transfer pairs found with these settings. Try increasing the day range or amount tolerance.</p></div>
           ) : (
-            <div className="table-responsive">
-              <table className="table table-sm table-striped align-middle mb-0">
-                {tableHead}
-                <tbody>
-                  {existingGroups.map(({ id, outflow, inflow }) => (
-                    <tr key={id}>
-                      <SummaryCol outflow={outflow} inflow={inflow} />
-                      <TxnCols t={outflow} />
-                      <TxnCols t={inflow} />
-                      <td className="text-end">
-                        <button className="btn btn-sm btn-outline-danger"
-                          disabled={removingId === id}
-                          onClick={() => removeGroup(id, [outflow.transaction_id!, inflow.transaction_id!])}>
-                          {removingId === id ? "..." : "Remove"}
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                  {brokenGroups.map(({ id, t }) => {
-                    const tid = t.transaction_id!;
-                    const isOut = (t.amount ?? 0) > 0;
-                    const amt = Math.abs(t.amount ?? 0);
+            <div>
+              {groupPairsByDaysApart(pairs).map((g) => (
+                <section key={g.gapKey} className="transfer-day-block">
+                  <div className="transfer-day-head">{g.label}</div>
+                  {g.pairs.map((p) => {
+                    const ambig = ambiguousIds.has(p.outflow.transaction_id!) || ambiguousIds.has(p.inflow.transaction_id!);
                     return (
-                      <tr key={`broken-${id}`} className="table-light" style={{ opacity: 0.92 }}>
-                        <td className="small text-nowrap" style={{ borderRight: "1px solid var(--bs-border-color)" }}>
-                          <div className="fw-semibold">${amt.toFixed(2)}</div>
-                          <div className="text-muted" style={{ fontSize: "0.65rem", letterSpacing: "0.04em", opacity: 0.75 }}>Incomplete pair</div>
-                          <div className="text-muted" style={{ fontSize: "0.8em" }}>{formatTxnDate(t)}</div>
-                        </td>
-                        {isOut ? (
-                          <>
-                            <TxnCols t={t} />
-                            <td className="small text-muted align-middle">—</td>
-                          </>
-                        ) : (
-                          <>
-                            <td className="small text-muted align-middle">—</td>
-                            <TxnCols t={t} />
-                          </>
-                        )}
-                        <td className="text-end">
-                          <button className="btn btn-sm btn-outline-danger"
-                            disabled={removingId === id}
-                            onClick={() => removeGroup(id, [tid])}>
-                            {removingId === id ? "..." : "Remove"}
+                      <PairRow
+                        key={p.pairId}
+                        pair={p}
+                        ambiguous={ambig}
+                        action={
+                          <button className="btn primary btn-sm" disabled={busyId === p.pairId} onClick={() => addGroup(p)}>
+                            {busyId === p.pairId ? "…" : "+ Pair"}
                           </button>
-                        </td>
-                      </tr>
+                        }
+                      />
                     );
                   })}
-                </tbody>
-              </table>
+                </section>
+              ))}
             </div>
-          )
-        )}
-      </div>
-    </div>
+          )}
+        </>
+      )}
+
+      {tab === "existing" && (
+        existing.length === 0 && broken.length === 0 ? (
+          <div className="card"><p className="muted">No transfer pairs saved yet. Use the <strong>Find</strong> tab to detect them.</p></div>
+        ) : (
+          <div>
+            {existing.map(({ id, outflow, inflow }) => (
+              <PairRow
+                key={id}
+                pair={{ pairId: id, outflow, inflow, dayGap: 0 }}
+                action={<button className="btn danger-ghost btn-sm" disabled={busyId === id} onClick={() => removeGroup(id, [outflow.transaction_id!, inflow.transaction_id!])}>{busyId === id ? "…" : "Unpair"}</button>}
+              />
+            ))}
+            {broken.map(({ id, t }) => {
+              const amt = Math.abs(t.amount ?? 0);
+              const isOut = (t.amount ?? 0) > 0;
+              return (
+                <div key={`broken-${id}`} className="transfer-pair" style={{ background: "var(--warning-soft)", borderRadius: "var(--r-sm)", padding: "var(--s2) var(--s3)" }}>
+                  <div>
+                    <div className="fw-bold">${amt.toFixed(2)}</div>
+                    <div className="xs muted">{formatTxnDate(t)}</div>
+                    <span className="chip chip-warning mt-2">Incomplete pair</span>
+                  </div>
+                  <div><div className="xs muted fw-semi mb-1">OUT</div>{isOut ? <TxnCell t={t} /> : <span className="muted">—</span>}</div>
+                  <div><div className="xs muted fw-semi mb-1">IN</div>{!isOut ? <TxnCell t={t} /> : <span className="muted">—</span>}</div>
+                  <button className="btn danger-ghost btn-sm" disabled={busyId === id} onClick={() => removeGroup(id, [t.transaction_id!])}>{busyId === id ? "…" : "Unpair"}</button>
+                </div>
+              );
+            })}
+          </div>
+        )
+      )}
+    </>
   );
 }

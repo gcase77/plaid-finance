@@ -1,77 +1,56 @@
 import type { Tag, Txn } from "../types";
 import { getTxnIconUrl, formatTxnDate, formatTxnAmount, formatTxnDetectedCategory, getDisplayTagColor, getTextColorForBackground } from "../../utils/transactionUtils";
 
-function getTxnSummary(transactions: Txn[]) {
-  const nonTransfer = transactions.filter((t) => !t.account_transfer_group);
-  const income = nonTransfer.filter((t) => (t.amount ?? 0) < 0).reduce((s, t) => s + Math.abs(t.amount ?? 0), 0);
-  const spending = nonTransfer.filter((t) => (t.amount ?? 0) > 0).reduce((s, t) => s + (t.amount ?? 0), 0);
-  return { income, spending, count: transactions.length };
+function getSummary(txns: Txn[]) {
+  const nt = txns.filter((t) => !t.account_transfer_group);
+  const income = nt.filter((t) => (t.amount ?? 0) < 0).reduce((s, t) => s + Math.abs(t.amount ?? 0), 0);
+  const spending = nt.filter((t) => (t.amount ?? 0) > 0).reduce((s, t) => s + (t.amount ?? 0), 0);
+  return { income, spending, count: txns.length };
+}
+const fmt = (n: number) => `$${n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+function accountDisplay(inst: string, acct: string) {
+  if (!acct) return inst;
+  if (!inst) return acct;
+  return acct.trim().toLowerCase().includes(inst.trim().toLowerCase()) ? acct : `${inst} · ${acct}`;
 }
 
-function formatCurrency(amount: number) {
-  return `$ ${amount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-}
-
-function formatAccountDisplay(institution: string, account: string): string {
-  if (!account) return institution || "";
-  if (!institution) return account;
-  const inst = institution.trim().toLowerCase();
-  const acct = account.trim();
-  return acct.toLowerCase().includes(inst) ? acct : `${institution} | ${acct}`;
-}
-
-type TagBadge = { key: string; label: string; color?: string; accountTransfer?: boolean };
-
-function getTxnTagBadges(t: Txn, tagMap: Map<number, Tag>): TagBadge[] {
-  const badges: TagBadge[] = [];
+type Badge = { key: string; label: string; color?: string; transfer?: boolean };
+function tagBadges(t: Txn, tagMap: Map<number, Tag>): Badge[] {
+  const out: Badge[] = [];
   const seen = new Set<string>();
-  if (t.account_transfer_group) {
-    badges.push({ key: "account_transfer", label: "account_transfer", accountTransfer: true });
-    seen.add("account_transfer");
-  }
-  const addById = (tagId: number) => {
-    const tag = tagMap.get(tagId);
-    if (!tag) {
-      const fallback = String(tagId);
-      if (seen.has(fallback)) return;
-      seen.add(fallback);
-      badges.push({ key: fallback, label: fallback });
-      return;
-    }
-    if (seen.has(tag.name)) return;
-    seen.add(tag.name);
-    badges.push({
-      key: String(tag.id),
-      label: tag.name,
-      color: getDisplayTagColor(tag.type, tag.color)
-    });
+  if (t.account_transfer_group) { out.push({ key: "tx", label: "account_transfer", transfer: true }); seen.add("tx"); }
+  const add = (id: number) => {
+    const tag = tagMap.get(id);
+    const key = tag ? String(tag.id) : String(id);
+    if (seen.has(key)) return;
+    seen.add(key);
+    out.push({ key, label: tag?.name ?? String(id), color: tag ? getDisplayTagColor(tag.type, tag.color) : undefined });
   };
-  if (t.bucket_1_tag_id != null) addById(t.bucket_1_tag_id);
-  if (t.bucket_2_tag_id != null) addById(t.bucket_2_tag_id);
-  (t.meta_tag_ids ?? []).forEach(addById);
-  return badges;
+  if (t.bucket_1_tag_id != null) add(t.bucket_1_tag_id);
+  if (t.bucket_2_tag_id != null) add(t.bucket_2_tag_id);
+  (t.meta_tag_ids ?? []).forEach(add);
+  return out;
 }
 
-function TagBadges({ badges }: { badges: TagBadge[] }) {
-  if (!badges.length) return <span className="text-muted small">—</span>;
+function Badges({ badges }: { badges: Badge[] }) {
+  if (!badges.length) return <span className="muted xs">—</span>;
   return (
-    <div className="d-flex flex-wrap gap-1">
-      {badges.map((badge) => (
+    <div className="row-flex flex-wrap gap-1">
+      {badges.map((b) => (
         <span
-          key={badge.key}
-          className={`badge ${badge.accountTransfer ? "bg-dark" : ""}`}
-          style={badge.accountTransfer || !badge.color
-            ? undefined
-            : { backgroundColor: badge.color, color: getTextColorForBackground(badge.color), border: "1px solid rgba(0,0,0,0.12)" }}
+          key={b.key}
+          className="tag-badge"
+          style={b.transfer ? { background: "var(--ink)", color: "#fff", borderColor: "transparent" } : b.color ? { background: b.color, color: getTextColorForBackground(b.color) } : undefined}
         >
-          {badge.label}
+          {b.label}
         </span>
       ))}
     </div>
   );
 }
 
-type TransactionTableProps = {
+type Props = {
   transactions: Txn[];
   emptyMessage?: string;
   keyPrefix?: string;
@@ -81,92 +60,69 @@ type TransactionTableProps = {
   tags?: Tag[];
 };
 
-export default function TransactionTable({
-  transactions,
-  emptyMessage = "No transactions",
-  keyPrefix = "txn",
-  taggingMode = false,
-  selectedIds,
-  onSelectionChange,
-  tags = []
-}: TransactionTableProps) {
-  if (!transactions.length) return <div className="text-muted">{emptyMessage}</div>;
-
+export default function TransactionTable({ transactions, emptyMessage = "No transactions", keyPrefix = "txn", taggingMode = false, selectedIds, onSelectionChange, tags = [] }: Props) {
+  if (!transactions.length) return <div className="muted">{emptyMessage}</div>;
   const tagMap = new Map(tags.map((t) => [t.id, t]));
-
   const txnId = (t: Txn, idx: number) => t.transaction_id || `${keyPrefix}-${idx}`;
-
-  const toggle = (id: string, checked: boolean) => {
+  const toggle = (id: string, c: boolean) => {
     if (!onSelectionChange || !selectedIds) return;
     const next = new Set(selectedIds);
-    if (checked) next.add(id);
-    else next.delete(id);
+    if (c) next.add(id); else next.delete(id);
     onSelectionChange(next);
   };
-
-  const toggleAll = (checked: boolean) => {
-    if (!onSelectionChange) return;
-    onSelectionChange(checked ? new Set(transactions.map(txnId)) : new Set());
-  };
-
+  const toggleAll = (c: boolean) => { if (onSelectionChange) onSelectionChange(c ? new Set(transactions.map(txnId)) : new Set()); };
   const allSelected = !!selectedIds && transactions.length > 0 && transactions.every((t, i) => selectedIds.has(txnId(t, i)));
-
-  const { income, spending, count } = getTxnSummary(transactions);
+  const { income, spending, count } = getSummary(transactions);
 
   return (
     <>
-      <div className="d-flex flex-wrap gap-4 mb-3 small">
-        <span>Income: <strong>{formatCurrency(income)}</strong></span>
-        <span>Spending: <strong>{formatCurrency(spending)}</strong></span>
+      <div className="row-flex flex-wrap gap-4 mb-3 small">
+        <span>Income: <strong>{fmt(income)}</strong></span>
+        <span>Spending: <strong>{fmt(spending)}</strong></span>
         <span><strong>{count.toLocaleString()}</strong> transactions</span>
       </div>
-      <div className="table-responsive">
-      <table className="table table-sm table-striped align-middle mb-0">
-        <thead>
-          <tr>
-            {taggingMode && <th style={{ width: 32 }}><input type="checkbox" className="form-check-input" checked={allSelected} onChange={(e) => toggleAll(e.target.checked)} /></th>}
-            <th style={{ width: 40 }}></th>
-            <th>Date</th>
-            {taggingMode && <th>Tags</th>}
-            <th>Name</th>
-            <th>Merchant</th>
-            <th className="text-end">Amount</th>
-            {!taggingMode && <th>Tags</th>}
-            <th>Account</th>
-            <th>Detected</th>
-          </tr>
-        </thead>
-        <tbody>
-          {transactions.map((t, idx) => {
-            const id = txnId(t, idx);
-            const isSelected = !!selectedIds?.has(id);
-            return (
-              <tr
-                key={id}
-                className={isSelected ? "table-active" : ""}
-                style={taggingMode ? { cursor: "pointer" } : undefined}
-                onClick={taggingMode ? () => toggle(id, !isSelected) : undefined}
-              >
-                {taggingMode && (
-                  <td onClick={(e) => e.stopPropagation()}>
-                    <input type="checkbox" className="form-check-input" checked={isSelected} onChange={(e) => toggle(id, e.target.checked)} />
-                  </td>
-                )}
-                <td>{getTxnIconUrl(t) ? <img src={getTxnIconUrl(t)} alt="icon" style={{ width: 24, height: 24 }} /> : ""}</td>
-                <td>{formatTxnDate(t)}</td>
-                {taggingMode && <td><TagBadges badges={getTxnTagBadges(t, tagMap)} /></td>}
-                <td>{(t.original_description || "").trim() || t.name || ""}</td>
-                <td>{t.merchant_name || ""}</td>
-                <td className="text-end">{formatTxnAmount(t)}</td>
-                {!taggingMode && <td><TagBadges badges={getTxnTagBadges(t, tagMap)} /></td>}
-                <td>{formatAccountDisplay(t.institution_name || "", t.account_name || t.account_official_name || "")}</td>
-                <td>{formatTxnDetectedCategory(t.personal_finance_category)}</td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
+      <div className="table-wrap">
+        <table className="table">
+          <thead>
+            <tr>
+              {taggingMode && <th style={{ width: 32 }}><input type="checkbox" checked={allSelected} onChange={(e) => toggleAll(e.target.checked)} /></th>}
+              <th style={{ width: 30 }}></th>
+              <th>Date</th>
+              {taggingMode && <th>Tags</th>}
+              <th>Name</th>
+              <th>Merchant</th>
+              <th className="text-end">Amount</th>
+              {!taggingMode && <th>Tags</th>}
+              <th>Account</th>
+              <th>Detected</th>
+            </tr>
+          </thead>
+          <tbody>
+            {transactions.map((t, idx) => {
+              const id = txnId(t, idx);
+              const sel = !!selectedIds?.has(id);
+              return (
+                <tr key={id} className={`${taggingMode ? "selectable" : ""} ${sel ? "selected" : ""}`} onClick={taggingMode ? () => toggle(id, !sel) : undefined}>
+                  {taggingMode && (
+                    <td onClick={(e) => e.stopPropagation()}>
+                      <input type="checkbox" checked={sel} onChange={(e) => toggle(id, e.target.checked)} />
+                    </td>
+                  )}
+                  <td>{getTxnIconUrl(t) && <img src={getTxnIconUrl(t)} alt="" style={{ width: 22, height: 22, borderRadius: 6 }} />}</td>
+                  <td className="text-nowrap">{formatTxnDate(t)}</td>
+                  {taggingMode && <td><Badges badges={tagBadges(t, tagMap)} /></td>}
+                  <td>{(t.original_description || "").trim() || t.name || ""}</td>
+                  <td>{t.merchant_name || ""}</td>
+                  <td className={`text-end ${(t.amount ?? 0) < 0 ? "money-positive" : ""}`}>{formatTxnAmount(t)}</td>
+                  {!taggingMode && <td><Badges badges={tagBadges(t, tagMap)} /></td>}
+                  <td>{accountDisplay(t.institution_name || "", t.account_name || t.account_official_name || "")}</td>
+                  <td>{formatTxnDetectedCategory(t.personal_finance_category)}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
     </>
   );
 }

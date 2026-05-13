@@ -31,11 +31,11 @@ export default function FlowSankeySvg({ model, width, height, selectedId, onSele
     return L.source === selectedId || L.target === selectedId ? 0.5 : 0.1;
   };
   return (
-    <svg viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet" className="w-100" style={{ maxHeight: height }}>
-      <text x={12} y={22} textAnchor="start" fontSize="12" fontWeight="600" fill="var(--bs-body-color)">
+    <svg viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet" style={{ width: "100%", maxHeight: height }}>
+      <text x={12} y={22} textAnchor="start" fontSize="12" fontWeight="600" fill="var(--ink)">
         Income {fmtMoney(model.totalIncome)}
       </text>
-      <text x={width - 12} y={22} textAnchor="end" fontSize="12" fontWeight="600" fill="var(--bs-body-color)">
+      <text x={width - 12} y={22} textAnchor="end" fontSize="12" fontWeight="600" fill="var(--ink)">
         Spending {fmtMoney(model.totalSpending)}
       </text>
       <g transform={`translate(0 ${HEADER_H})`}>
@@ -73,7 +73,7 @@ export default function FlowSankeySvg({ model, width, height, selectedId, onSele
                 height={n.h}
                 rx={2}
                 fill={c}
-                stroke="var(--bs-body-bg)"
+                stroke="var(--surface)"
                 strokeWidth={active ? 2 : 1}
                 opacity={faded}
                 style={{ cursor: "pointer" }}
@@ -84,7 +84,7 @@ export default function FlowSankeySvg({ model, width, height, selectedId, onSele
                   x={Math.min(tx, width - 8)}
                   y={n.y + n.h / 2}
                   className="small"
-                  style={{ fill: "var(--bs-body-color)", fontSize: "9px", opacity: faded }}
+                  style={{ fill: "var(--ink)", fontSize: "9px", opacity: faded }}
                   dominantBaseline="middle"
                 >
                   {n.label.length > 26 ? `${n.label.slice(0, 24)}…` : n.label}

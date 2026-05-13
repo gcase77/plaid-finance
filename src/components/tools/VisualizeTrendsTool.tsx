@@ -8,96 +8,76 @@ import { buildDatePreset } from "../../utils/datePresets";
 import FlowSankeySvg from "./FlowSankeySvg";
 import { buildFlowOfFundsModel, type FlowGrouping } from "./flowOfFundsSankey";
 import TimelineTrendChart from "./TimelineTrendChart";
-import {
-  buildTrendPieSlices,
-  filterTrendsTransactions,
-  sliceColors,
-  type TrendPieGrouping,
-  type TrendPieSlice
-} from "./visualizeTrendsUtils";
+import { buildTrendPieSlices, filterTrendsTransactions, sliceColors, type TrendPieGrouping, type TrendPieSlice } from "./visualizeTrendsUtils";
+import { Segmented } from "../shared/ui";
 
 type Props = { transactions: Txn[]; token: string | null };
-
 type VizTab = "pie" | "flow" | "timeline";
 type Selection = { side: "spending" | "income"; slice: TrendPieSlice };
 
-const CX = 100;
-const CY = 100;
-const R = 90;
-
+const CX = 100, CY = 100, R = 90;
 function pieSlicePath(a0: number, a1: number): string {
-  if (a1 - a0 >= 359.99)
-    return `M ${CX} ${CY} m 0 ${-R} a ${R} ${R} 0 1 1 0 ${2 * R} a ${R} ${R} 0 1 1 0 ${-2 * R}`;
+  if (a1 - a0 >= 359.99) return `M ${CX} ${CY} m 0 ${-R} a ${R} ${R} 0 1 1 0 ${2 * R} a ${R} ${R} 0 1 1 0 ${-2 * R}`;
   const rad = (d: number) => ((d - 90) * Math.PI) / 180;
-  const x0 = CX + R * Math.cos(rad(a0));
-  const y0 = CY + R * Math.sin(rad(a0));
-  const x1 = CX + R * Math.cos(rad(a1));
-  const y1 = CY + R * Math.sin(rad(a1));
-  const large = a1 - a0 > 180 ? 1 : 0;
-  return `M ${CX} ${CY} L ${x0} ${y0} A ${R} ${R} 0 ${large} 1 ${x1} ${y1} Z`;
+  const x0 = CX + R * Math.cos(rad(a0)); const y0 = CY + R * Math.sin(rad(a0));
+  const x1 = CX + R * Math.cos(rad(a1)); const y1 = CY + R * Math.sin(rad(a1));
+  return `M ${CX} ${CY} L ${x0} ${y0} A ${R} ${R} 0 ${a1 - a0 > 180 ? 1 : 0} 1 ${x1} ${y1} Z`;
 }
 
-function SvgPie({
-  slices,
-  colors,
-  selectedKey,
-  onSelect
-}: {
-  slices: TrendPieSlice[];
-  colors: Map<string, string>;
-  selectedKey: string | null;
-  onSelect: (s: TrendPieSlice) => void;
-}) {
+function SvgPie({ slices, colors, selectedKey, onSelect }: { slices: TrendPieSlice[]; colors: Map<string, string>; selectedKey: string | null; onSelect: (s: TrendPieSlice) => void }) {
   const total = slices.reduce((s, x) => s + x.amount, 0);
   if (total <= 0) {
     return (
-      <svg viewBox="0 0 200 200" className="w-100" style={{ maxHeight: 220 }}>
-        <circle cx={CX} cy={CY} r={R} fill="var(--bs-secondary-bg)" stroke="var(--bs-border-color)" />
-        <text x={CX} y={CY} textAnchor="middle" className="fill-secondary small">No data</text>
+      <svg viewBox="0 0 200 200" style={{ width: "100%", maxHeight: 220 }}>
+        <circle cx={CX} cy={CY} r={R} fill="var(--surface-alt)" stroke="var(--line)" />
+        <text x={CX} y={CY} textAnchor="middle" className="small" fill="var(--ink-muted)">No data</text>
       </svg>
     );
   }
-  if (slices.length === 1) {
-    const c = colors.get(slices[0].key) ?? "#888";
-    return (
-      <svg viewBox="0 0 200 200" className="w-100" style={{ maxHeight: 220, cursor: "pointer" }}
-        onClick={() => onSelect(slices[0])}>
-        <circle cx={CX} cy={CY} r={R} fill={c} opacity={selectedKey && selectedKey !== slices[0].key ? 0.35 : 1}
-          stroke="var(--bs-body-bg)" strokeWidth={1} />
-      </svg>
-    );
-  }
-  const paths: ReactNode[] = [];
-  let ang = -90;
-  for (const sl of slices) {
-    const sweep = (sl.amount / total) * 360;
-    const a0 = ang;
-    const a1 = ang + sweep;
-    ang = a1;
-    const path = pieSlicePath(a0, a1);
+  const sweeps = slices.map((sl) => (sl.amount / total) * 360);
+  const starts: number[] = sweeps.reduce<number[]>((acc, s, i) => [...acc, (acc[i - 1] ?? -90) + (i === 0 ? 0 : sweeps[i - 1])], []);
+  const paths: ReactNode[] = slices.map((sl, i) => {
+    const a0 = starts[i];
+    const a1 = a0 + sweeps[i];
     const c = colors.get(sl.key) ?? "#888";
     const dim = selectedKey && selectedKey !== sl.key;
-    paths.push(
-      <path key={sl.key} d={path} fill={c} opacity={dim ? 0.35 : 1} stroke="var(--bs-body-bg)" strokeWidth={1}
-        style={{ cursor: "pointer" }} onClick={() => onSelect(sl)}>
+    return (
+      <path key={sl.key} d={pieSlicePath(a0, a1)} fill={c} opacity={dim ? 0.35 : 1} stroke="var(--surface)" strokeWidth={1} style={{ cursor: "pointer" }} onClick={() => onSelect(sl)}>
         <title>{`${sl.label}: $${sl.amount.toFixed(2)}`}</title>
       </path>
     );
-  }
+  });
+  return <svg viewBox="0 0 200 200" style={{ width: "100%", maxHeight: 220 }}>{paths}</svg>;
+}
+
+function Legend({ slices, colors, selectedKey, onSelect }: { slices: TrendPieSlice[]; colors: Map<string, string>; selectedKey: string | null; onSelect: (s: TrendPieSlice) => void }) {
+  const total = slices.reduce((s, x) => s + x.amount, 0);
+  if (!slices.length) return null;
   return (
-    <svg viewBox="0 0 200 200" className="w-100" style={{ maxHeight: 220 }}>{paths}</svg>
+    <ul className="viz-pie-legend" style={{ listStyle: "none", padding: 0, margin: "8px 0 0" }}>
+      {slices.map((sl) => {
+        const pct = total > 0 ? (100 * sl.amount) / total : 0;
+        const c = colors.get(sl.key) ?? "#888";
+        const active = selectedKey === sl.key;
+        return (
+          <li key={sl.key} style={{ breakInside: "avoid", marginBottom: 4 }}>
+            <button className="btn link btn-sm" style={{ textAlign: "left", padding: 0, fontWeight: active ? 700 : 500, color: "inherit", width: "100%" }} onClick={() => onSelect(sl)}>
+              <span style={{ display: "inline-block", width: 10, height: 10, borderRadius: "50%", background: c, marginRight: 6, verticalAlign: "middle" }} />
+              <span style={{ verticalAlign: "middle" }}>{sl.label}</span>
+              <span className="muted" style={{ marginLeft: 6 }}>{pct.toFixed(0)}%</span>
+            </button>
+          </li>
+        );
+      })}
+    </ul>
   );
 }
 
 const GROUPING_OPTIONS: { value: TrendPieGrouping; label: string }[] = [
-  { value: "detected", label: "Detected categories" },
-  { value: "buckets", label: "Income & spending buckets" },
-  { value: "meta", label: "Meta tags" }
+  { value: "detected", label: "Detected" }, { value: "buckets", label: "Buckets" }, { value: "meta", label: "Meta" }
 ];
-
-const FLOW_GROUPING_OPTIONS: { value: FlowGrouping; label: string }[] = [
-  { value: "detected", label: "Detected categories" },
-  { value: "tags", label: "My tags" }
+const FLOW_GROUPING: { value: FlowGrouping; label: string }[] = [
+  { value: "detected", label: "Detected" }, { value: "tags", label: "Tags" }
 ];
 
 const EMPTY_TAGS: Tag[] = [];
@@ -112,236 +92,106 @@ export default function VisualizeTrendsTool({ transactions, token }: Props) {
   const [flowNodeId, setFlowNodeId] = useState<string | null>(null);
 
   const tagsQuery = useQuery({
-    queryKey: ["tags"],
-    enabled: !!token,
+    queryKey: ["tags"], enabled: !!token,
     queryFn: async (): Promise<Tag[]> => {
       const res = await fetch("/api/tags", { headers: buildAuthHeaders(token) });
       if (!res.ok) throw new Error(`Failed to load tags (${res.status})`);
-      const data = await res.json();
-      return Array.isArray(data) ? data : [];
+      return (await res.json()) || [];
     }
   });
   const tags = tagsQuery.data ?? EMPTY_TAGS;
   const tagMap = useMemo(() => new Map(tags.map((t) => [t.id, t])), [tags]);
 
-  const baseTxns = useMemo(
-    () => filterTrendsTransactions(transactions, startDate, endDate),
-    [transactions, startDate, endDate]
-  );
-
-  const spendingSlices = useMemo(
-    () => buildTrendPieSlices(baseTxns, "spending", grouping, tagMap),
-    [baseTxns, grouping, tagMap]
-  );
-  const incomeSlices = useMemo(
-    () => buildTrendPieSlices(baseTxns, "income", grouping, tagMap),
-    [baseTxns, grouping, tagMap]
-  );
-
-  const spendColors = useMemo(() => sliceColors(spendingSlices), [spendingSlices]);
+  const baseTxns = useMemo(() => filterTrendsTransactions(transactions, startDate, endDate), [transactions, startDate, endDate]);
+  const spendSlices = useMemo(() => buildTrendPieSlices(baseTxns, "spending", grouping, tagMap), [baseTxns, grouping, tagMap]);
+  const incomeSlices = useMemo(() => buildTrendPieSlices(baseTxns, "income", grouping, tagMap), [baseTxns, grouping, tagMap]);
+  const spendColors = useMemo(() => sliceColors(spendSlices), [spendSlices]);
   const incomeColors = useMemo(() => sliceColors(incomeSlices), [incomeSlices]);
-
   const flowModel = useMemo(() => buildFlowOfFundsModel(baseTxns, flowGrouping, tagMap), [baseTxns, flowGrouping, tagMap]);
   const flowDetail = useMemo(() => flowModel?.nodes.find((n) => n.id === flowNodeId), [flowModel, flowNodeId]);
 
-  const goTab = (t: VizTab) => {
-    setVizTab(t);
-    setFlowNodeId(null);
-  };
-
-  const onSlice = (side: "spending" | "income", sl: TrendPieSlice) =>
-    setSelection((prev) =>
-      prev?.side === side && prev.slice.key === sl.key ? null : { side, slice: sl }
-    );
-
-  const bumpRange = (start: string, end: string) => {
-    setStartDate(start);
-    setEndDate(end);
-    setSelection(null);
-    setFlowNodeId(null);
-  };
+  const bumpRange = (start: string, end: string) => { setStartDate(start); setEndDate(end); setSelection(null); setFlowNodeId(null); };
+  const goTab = (t: VizTab) => { setVizTab(t); setFlowNodeId(null); };
+  const onSlice = (side: "spending" | "income", sl: TrendPieSlice) => setSelection((p) => p?.side === side && p.slice.key === sl.key ? null : { side, slice: sl });
 
   return (
-    <div className="card">
-      <div className="card-body">
-        <h6 className="card-title mb-1">Visualize Trends</h6>
-        <p className="text-muted small mb-2">Click graphs to view transactions</p>
-
-        <div className="mb-3 pb-2 border-bottom small">
-          <div className="fw-medium text-body-secondary mb-2">Date range</div>
-          <div className="d-flex flex-wrap gap-1 mb-2" role="group">
-            {DATE_RANGE_PRESETS.map(({ value, label }) => (
-              <button key={value} type="button" className="btn btn-outline-secondary btn-sm"
-                onClick={() => {
-                  const d = buildDatePreset(value);
-                  bumpRange(d.start, d.end);
-                }}>
-                {label}
-              </button>
-            ))}
-          </div>
-          <div className="d-flex flex-wrap align-items-center gap-2">
-            <input type="date" className="form-control form-control-sm" style={{ width: "auto", minWidth: "8rem" }} value={startDate}
-              onChange={(e) => bumpRange(e.target.value, endDate)} />
-            <span className="text-body-secondary user-select-none">–</span>
-            <input type="date" className="form-control form-control-sm" style={{ width: "auto", minWidth: "8rem" }} value={endDate}
-              onChange={(e) => bumpRange(startDate, e.target.value)} />
-          </div>
+    <>
+      <div className="card card-tight mb-4">
+        <div className="xs muted fw-semi mb-2">Date range</div>
+        <div className="row-flex flex-wrap gap-2 mb-3">
+          {DATE_RANGE_PRESETS.map(({ value, label }) => (
+            <button key={value} className="btn ghost btn-sm" onClick={() => { const d = buildDatePreset(value); bumpRange(d.start, d.end); }}>{label}</button>
+          ))}
         </div>
-
-        <ul className="nav nav-tabs mb-3">
-          <li className="nav-item">
-            <button type="button" className={`nav-link ${vizTab === "pie" ? "active" : ""}`} onClick={() => goTab("pie")}>
-              Pie Chart
-            </button>
-          </li>
-          <li className="nav-item">
-            <button type="button" className={`nav-link ${vizTab === "flow" ? "active" : ""}`} onClick={() => goTab("flow")}>
-              Flow of Funds
-            </button>
-          </li>
-          <li className="nav-item">
-            <button type="button" className={`nav-link ${vizTab === "timeline" ? "active" : ""}`} onClick={() => goTab("timeline")}>
-              Timeline
-            </button>
-          </li>
-        </ul>
-
-        {vizTab === "timeline" && (
-          <TimelineTrendChart transactions={baseTxns} tags={tags} />
-        )}
-
-        {vizTab === "pie" && (
-          <div className="mb-3">
-            <span className="small text-muted me-2 d-block d-md-inline mb-1 mb-md-0">Group by</span>
-            <div className="btn-group btn-group-sm flex-wrap" role="group">
-              {GROUPING_OPTIONS.map((opt) => (
-                <button key={opt.value} type="button"
-                  className={`btn btn-outline-primary ${grouping === opt.value ? "active" : ""}`}
-                  onClick={() => { setGrouping(opt.value); setSelection(null); }}>
-                  {opt.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {vizTab === "flow" && (
-          <div className="mb-3">
-            <span className="small text-muted me-2 d-block d-md-inline mb-1 mb-md-0">Group by</span>
-            <div className="btn-group btn-group-sm flex-wrap" role="group">
-              {FLOW_GROUPING_OPTIONS.map((opt) => (
-                <button key={opt.value} type="button"
-                  className={`btn btn-outline-primary ${flowGrouping === opt.value ? "active" : ""}`}
-                  onClick={() => { setFlowGrouping(opt.value); setFlowNodeId(null); }}>
-                  {opt.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {vizTab === "flow" && (
-          <>
-            {flowModel ? (
-              <div className="border rounded p-2 mb-3" style={{ background: "var(--bs-tertiary-bg)" }}>
-                <div className="overflow-x-auto">
-                  <FlowSankeySvg
-                    model={flowModel}
-                    width={1200}
-                    height={Math.max(448, Math.min(232 + flowModel.nodes.length * 18, 820))}
-                    selectedId={flowNodeId}
-                    onSelectNode={setFlowNodeId}
-                  />
-                </div>
-              </div>
-            ) : (
-              <p className="text-muted small mb-0">No income or spending in this range.</p>
-            )}
-            {flowDetail && (
-              <div className="mt-3 border-top pt-3">
-                <div className="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
-                  <h6 className="small mb-0 fw-semibold">{flowDetail.label}</h6>
-                  <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => setFlowNodeId(null)}>Clear</button>
-                </div>
-                <TransactionTable transactions={flowDetail.transactions} tags={tags} keyPrefix="viz-flow" />
-              </div>
-            )}
-          </>
-        )}
-
-        {vizTab === "pie" && (
-          <>
-            <div className="row g-4">
-              <div className="col-lg-6">
-                <h6 className="small fw-semibold mb-2">Spending</h6>
-                <SvgPie slices={spendingSlices} colors={spendColors}
-                  selectedKey={selection?.side === "spending" ? selection.slice.key : null}
-                  onSelect={(sl) => onSlice("spending", sl)} />
-                <Legend slices={spendingSlices} colors={spendColors}
-                  selectedKey={selection?.side === "spending" ? selection.slice.key : null}
-                  onSelect={(sl) => onSlice("spending", sl)} />
-              </div>
-              <div className="col-lg-6">
-                <h6 className="small fw-semibold mb-2">Income</h6>
-                <SvgPie slices={incomeSlices} colors={incomeColors}
-                  selectedKey={selection?.side === "income" ? selection.slice.key : null}
-                  onSelect={(sl) => onSlice("income", sl)} />
-                <Legend slices={incomeSlices} colors={incomeColors}
-                  selectedKey={selection?.side === "income" ? selection.slice.key : null}
-                  onSelect={(sl) => onSlice("income", sl)} />
-              </div>
-            </div>
-
-            {selection && (
-              <div className="mt-4 border-top pt-3">
-                <div className="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
-                  <h6 className="small mb-0 fw-semibold">
-                    {selection.side === "spending" ? "Spending" : "Income"} — {selection.slice.label}
-                    <span className="text-muted fw-normal ms-2">(${selection.slice.amount.toFixed(2)})</span>
-                  </h6>
-                  <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => setSelection(null)}>Clear</button>
-                </div>
-                <TransactionTable transactions={selection.slice.transactions} tags={tags} keyPrefix="viz-trend" />
-              </div>
-            )}
-          </>
-        )}
+        <div className="row-flex flex-wrap gap-2">
+          <input type="date" className="input input-sm" style={{ width: "auto", minWidth: 140 }} value={startDate} onChange={(e) => bumpRange(e.target.value, endDate)} />
+          <span className="muted">–</span>
+          <input type="date" className="input input-sm" style={{ width: "auto", minWidth: 140 }} value={endDate} onChange={(e) => bumpRange(startDate, e.target.value)} />
+        </div>
       </div>
-    </div>
-  );
-}
 
-function Legend({
-  slices,
-  colors,
-  selectedKey,
-  onSelect
-}: {
-  slices: TrendPieSlice[];
-  colors: Map<string, string>;
-  selectedKey: string | null;
-  onSelect: (s: TrendPieSlice) => void;
-}) {
-  const total = slices.reduce((s, x) => s + x.amount, 0);
-  if (!slices.length) return null;
-  return (
-    <ul className="list-unstyled small mb-0 mt-2" style={{ columnCount: 2, columnGap: "1rem" }}>
-      {slices.map((sl) => {
-        const pct = total > 0 ? (100 * sl.amount) / total : 0;
-        const c = colors.get(sl.key) ?? "#888";
-        return (
-          <li key={sl.key} className="mb-1" style={{ breakInside: "avoid" }}>
-            <button type="button"
-              className={`btn btn-link btn-sm text-start text-decoration-none p-0 border-0 w-100 ${selectedKey === sl.key ? "fw-bold" : ""}`}
-              onClick={() => onSelect(sl)}>
-              <span className="d-inline-block rounded-circle me-1 align-middle" style={{ width: 10, height: 10, background: c }} />
-              <span className="align-middle">{sl.label}</span>
-              <span className="text-muted ms-1">{pct.toFixed(0)}%</span>
-            </button>
-          </li>
-        );
-      })}
-    </ul>
+      <div className="tabs">
+        <button className={vizTab === "pie" ? "active" : ""} onClick={() => goTab("pie")}>Pie chart</button>
+        <button className={vizTab === "flow" ? "active" : ""} onClick={() => goTab("flow")}>Flow of funds</button>
+        <button className={vizTab === "timeline" ? "active" : ""} onClick={() => goTab("timeline")}>Timeline</button>
+      </div>
+
+      {vizTab === "timeline" && <TimelineTrendChart transactions={baseTxns} tags={tags} />}
+
+      {vizTab === "pie" && (
+        <>
+          <div className="row-flex gap-3 mb-3">
+            <span className="small muted">Group by</span>
+            <Segmented value={grouping} onChange={(v) => { setGrouping(v); setSelection(null); }} options={GROUPING_OPTIONS} />
+          </div>
+          <div className="viz-pie-grid">
+            <div className="card">
+              <h4 className="mb-2">Spending</h4>
+              <SvgPie slices={spendSlices} colors={spendColors} selectedKey={selection?.side === "spending" ? selection.slice.key : null} onSelect={(sl) => onSlice("spending", sl)} />
+              <Legend slices={spendSlices} colors={spendColors} selectedKey={selection?.side === "spending" ? selection.slice.key : null} onSelect={(sl) => onSlice("spending", sl)} />
+            </div>
+            <div className="card">
+              <h4 className="mb-2">Income</h4>
+              <SvgPie slices={incomeSlices} colors={incomeColors} selectedKey={selection?.side === "income" ? selection.slice.key : null} onSelect={(sl) => onSlice("income", sl)} />
+              <Legend slices={incomeSlices} colors={incomeColors} selectedKey={selection?.side === "income" ? selection.slice.key : null} onSelect={(sl) => onSlice("income", sl)} />
+            </div>
+          </div>
+          {selection && (
+            <div className="card mt-4">
+              <div className="between mb-3 flex-wrap gap-2">
+                <h4>{selection.side === "spending" ? "Spending" : "Income"} — {selection.slice.label} <span className="muted small">(${selection.slice.amount.toFixed(2)})</span></h4>
+                <button className="btn ghost btn-sm" onClick={() => setSelection(null)}>Clear</button>
+              </div>
+              <TransactionTable transactions={selection.slice.transactions} tags={tags} keyPrefix="viz-trend" />
+            </div>
+          )}
+        </>
+      )}
+
+      {vizTab === "flow" && (
+        <>
+          <div className="row-flex gap-3 mb-3">
+            <span className="small muted">Group by</span>
+            <Segmented value={flowGrouping} onChange={(v) => { setFlowGrouping(v); setFlowNodeId(null); }} options={FLOW_GROUPING} />
+          </div>
+          {flowModel ? (
+            <div className="viz-wrap mb-3">
+              <div style={{ overflowX: "auto" }}>
+                <FlowSankeySvg model={flowModel} width={1200} height={Math.max(448, Math.min(232 + flowModel.nodes.length * 18, 820))} selectedId={flowNodeId} onSelectNode={setFlowNodeId} />
+              </div>
+            </div>
+          ) : <p className="muted small">No income or spending in this range.</p>}
+          {flowDetail && (
+            <div className="card mt-3">
+              <div className="between mb-3">
+                <h4>{flowDetail.label}</h4>
+                <button className="btn ghost btn-sm" onClick={() => setFlowNodeId(null)}>Clear</button>
+              </div>
+              <TransactionTable transactions={flowDetail.transactions} tags={tags} keyPrefix="viz-flow" />
+            </div>
+          )}
+        </>
+      )}
+    </>
   );
 }
