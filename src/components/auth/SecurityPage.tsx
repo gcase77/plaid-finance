@@ -16,6 +16,8 @@ export default function SecurityPage() {
   const [success, setSuccess] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<"start" | "verify" | string | null>(null);
+  const [signOutErr, setSignOutErr] = useState<string | null>(null);
+  const [signingOut, setSigningOut] = useState(false);
 
   const load = async () => {
     setLoading(true); setError(null);
@@ -97,8 +99,26 @@ export default function SecurityPage() {
           <h1>Account</h1>
           <p className="desc">Manage multi-factor authentication for your account.</p>
         </div>
+        <div className="page-actions">
+          <button
+            type="button"
+            className="btn ghost"
+            disabled={signingOut}
+            onClick={() => {
+              setSignOutErr(null);
+              setSigningOut(true);
+              void supabase.auth.signOut()
+                .then(({ error: se }) => { if (se) setSignOutErr(se.message || "Sign out failed."); })
+                .catch(() => setSignOutErr("Sign out failed."))
+                .finally(() => setSigningOut(false));
+            }}
+          >
+            {signingOut ? "Signing out…" : "Sign out"}
+          </button>
+        </div>
       </header>
 
+      {signOutErr && <div className="mb-3"><Alert tone="danger" onClose={() => setSignOutErr(null)}>{signOutErr}</Alert></div>}
       {error && <div className="mb-3"><Alert tone="danger" onClose={() => setError(null)}>{error}</Alert></div>}
       {success && <div className="mb-3"><Alert tone="success" onClose={() => setSuccess(null)}>{success}</Alert></div>}
 

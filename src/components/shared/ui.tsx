@@ -1,5 +1,74 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
+function clampRound(n: number, min: number, max: number, step: number, decimals: number) {
+  if (!Number.isFinite(n)) return null;
+  let x = Math.min(max, Math.max(min, n));
+  x = Math.round(x / step) * step;
+  return decimals > 0 ? Math.round(x * 10 ** decimals) / 10 ** decimals : Math.round(x);
+}
+
+/** Click the value to type a number; Enter/blur commits, Escape cancels. */
+export function ClickEditNumber({
+  value, onCommit, min, max, step, decimals, format, ariaLabel
+}: {
+  value: number;
+  onCommit: (n: number) => void;
+  min: number;
+  max: number;
+  step: number;
+  decimals: number;
+  format: (n: number) => string;
+  ariaLabel: string;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState("");
+  const skipBlurCommit = useRef(false);
+  const open = () => {
+    skipBlurCommit.current = false;
+    setDraft(decimals ? Number(value).toFixed(decimals) : String(value));
+    setEditing(true);
+  };
+  const commit = () => {
+    if (skipBlurCommit.current) { skipBlurCommit.current = false; return; }
+    const n = parseFloat(String(draft).replace(/^\$/, "").replace(/,/g, ""));
+    const next = Number.isFinite(n) ? clampRound(n, min, max, step, decimals) : null;
+    if (next != null) onCommit(next);
+    setEditing(false);
+  };
+  if (editing) {
+    return (
+      <input
+        autoFocus
+        type="number"
+        className="input"
+        style={{ width: "4.75rem", padding: "2px 6px", display: "inline-block", verticalAlign: "middle" }}
+        aria-label={ariaLabel}
+        min={min}
+        max={max}
+        step={step}
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") { e.preventDefault(); (e.currentTarget as HTMLInputElement).blur(); }
+          if (e.key === "Escape") {
+            e.preventDefault();
+            skipBlurCommit.current = true;
+            setDraft(decimals ? Number(value).toFixed(decimals) : String(value));
+            setEditing(false);
+          }
+        }}
+      />
+    );
+  }
+  return (
+    <button type="button" className="text-brand" style={{ padding: 0, border: 0, background: "none", cursor: "pointer", font: "inherit", fontWeight: 700, textDecoration: "underline dotted", textUnderlineOffset: 2 }}
+      aria-label={`Edit ${ariaLabel}`} onClick={open}>
+      {format(value)}
+    </button>
+  );
+}
+
 export function Tooltip({ children, content, side = "bottom" }: { children: ReactNode; content: ReactNode; side?: "top" | "bottom" | "left" | "right" }) {
   const [on, setOn] = useState(false);
   const pos =

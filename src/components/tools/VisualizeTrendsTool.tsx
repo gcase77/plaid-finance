@@ -54,7 +54,7 @@ function Legend({ slices, colors, selectedKey, onSelect }: { slices: TrendPieSli
   const total = slices.reduce((s, x) => s + x.amount, 0);
   if (!slices.length) return null;
   return (
-    <ul style={{ listStyle: "none", padding: 0, margin: "8px 0 0", columnCount: 2, columnGap: 12 }}>
+    <ul className="viz-pie-legend" style={{ listStyle: "none", padding: 0, margin: "8px 0 0" }}>
       {slices.map((sl) => {
         const pct = total > 0 ? (100 * sl.amount) / total : 0;
         const c = colors.get(sl.key) ?? "#888";
@@ -144,7 +144,7 @@ export default function VisualizeTrendsTool({ transactions, token }: Props) {
             <span className="small muted">Group by</span>
             <Segmented value={grouping} onChange={(v) => { setGrouping(v); setSelection(null); }} options={GROUPING_OPTIONS} />
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
+          <div className="viz-pie-grid">
             <div className="card">
               <h4 className="mb-2">Spending</h4>
               <SvgPie slices={spendSlices} colors={spendColors} selectedKey={selection?.side === "spending" ? selection.slice.key : null} onSelect={(sl) => onSlice("spending", sl)} />

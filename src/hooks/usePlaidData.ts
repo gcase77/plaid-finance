@@ -123,9 +123,9 @@ export function usePlaidData(userId: string | null, token: string | null): UsePl
   const refreshItemAccounts = async (itemId: string): Promise<RefreshAccountsResult> => {
     const res = await fetchWithAuth(`/api/${encodeURIComponent(itemId)}/accounts/refresh`, { method: "POST" });
     const data = (await res.json().catch(() => ({}))) as { error?: string; updated_accounts?: number };
-    if (!res.ok) return { ok: false, error: data.error || `Refresh failed (${res.status})` };
+    if (!res.ok) return { ok: false as const, error: data.error || `Refresh failed (${res.status})` };
     await loadItems();
-    return { ok: true, updatedAccounts: typeof data.updated_accounts === "number" ? data.updated_accounts : 0 };
+    return { ok: true as const, updatedAccounts: typeof data.updated_accounts === "number" ? data.updated_accounts : 0 };
   };
 
   return {

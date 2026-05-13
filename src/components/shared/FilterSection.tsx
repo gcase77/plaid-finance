@@ -69,7 +69,7 @@ export default function TransactionsFilterSection({ filters, tags }: Props) {
   const catSum = state.selectedCategories.length ? `${state.selectedCategories.length} detected` : "any";
 
   return (
-    <div className="card card-tight col-flex" style={{ gap: 8 }}>
+    <div className="card card-tight col-flex" style={{ gap: 8, minWidth: 0 }}>
       <div className="between">
         <h3>Filters</h3>
         <Segmented value={state.filterOperator} onChange={actions.setFilterOperator} options={[{ value: "and", label: "AND" }, { value: "or", label: "OR" }]} />
@@ -96,9 +96,9 @@ export default function TransactionsFilterSection({ filters, tags }: Props) {
             <button key={value} className="btn ghost btn-sm" onClick={() => actions.applyDatePreset(value)}>{label}</button>
           ))}
         </div>
-        <div className="row-flex gap-2">
-          <input type="date" className="input input-sm" value={state.dateStart} onChange={(e) => actions.setDateStart(e.target.value)} />
-          <input type="date" className="input input-sm" value={state.dateEnd} onChange={(e) => actions.setDateEnd(e.target.value)} />
+        <div className="col-flex gap-2">
+          <input type="date" className="input input-sm" style={{ minWidth: 0 }} value={state.dateStart} onChange={(e) => actions.setDateStart(e.target.value)} />
+          <input type="date" className="input input-sm" style={{ minWidth: 0 }} value={state.dateEnd} onChange={(e) => actions.setDateEnd(e.target.value)} />
         </div>
       </Section>
 

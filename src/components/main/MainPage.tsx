@@ -1,11 +1,20 @@
 import { useEffect, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
-import { Link } from "react-router-dom";
 import { usePlaidData } from "../../hooks/usePlaidData";
 import { supabase } from "../../lib/supabase";
 import type { Account, AccountBalances, Item } from "../types";
 import LoadingSpinner from "../shared/LoadingSpinner";
-import { Alert, Modal } from "../shared/ui";
+import { Alert, ClickEditNumber, Modal, Tooltip } from "../shared/ui";
+
+const BANKS_COLLAPSE_KEY = "funds-up-home-banks-all-collapsed";
+
+function syncBanksCollapseStorage(next: Record<string, boolean>, its: Item[]) {
+  if (!its.length) return;
+  const allCollapsed = its.every((i) => !(next[i.id] ?? true));
+  const allOpen = its.every((i) => (next[i.id] ?? true));
+  if (allCollapsed) localStorage.setItem(BANKS_COLLAPSE_KEY, "1");
+  else if (allOpen) localStorage.setItem(BANKS_COLLAPSE_KEY, "0");
+}
 
 const DELETE_WARNING =
   "Removing a bank permanently deletes its accounts and all transaction history in Funds Up. You can re-link later, but past data will not be restored.";
@@ -97,6 +106,25 @@ export default function MainPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId, token]);
 
+  useEffect(() => {
+    if (!items.length) return;
+    const allCollapsed = localStorage.getItem(BANKS_COLLAPSE_KEY) === "1";
+    setExpanded((prev) => {
+      const next = { ...prev };
+      for (const it of items) {
+        if (next[it.id] === undefined) next[it.id] = !allCollapsed;
+      }
+      for (const k of Object.keys(next)) {
+        if (!items.some((i) => i.id === k)) delete next[k];
+      }
+      syncBanksCollapseStorage(next, items);
+      return next;
+    });
+  }, [items]);
+
+  const allBanksCollapsed = items.length > 0 && items.every((i) => !(expanded[i.id] ?? true));
+  const banksCollapseTip = allBanksCollapsed ? "Expand all banks" : "Collapse all banks";
+
   return (
     <>
       <header className="page-header">
@@ -107,7 +135,7 @@ export default function MainPage() {
         <div className="page-actions">
           {showHistoryPicker ? (
             <div className="card card-tight" style={{ padding: 12, minWidth: 280, boxShadow: "var(--shadow-2)" }}>
-              <div className="small fw-semi mb-2">Pull transactions up to <span className="text-brand">{historyDays}</span> days ago</div>
+              <div className="small fw-semi mb-2">Pull transactions up to <ClickEditNumber value={historyDays} onCommit={setHistoryDays} min={1} max={730} step={1} decimals={0} format={(n) => String(n)} ariaLabel="days of transaction history" /> days ago</div>
               <input className="mb-2" type="range" min={1} max={730} value={historyDays} onChange={(e) => setHistoryDays(Number(e.target.value))} />
               <div className="row-flex gap-2">
                 <button className="btn primary btn-sm" onClick={() => { linkBank(historyDays); setShowHistoryPicker(false); }}>Link via Plaid</button>
@@ -123,7 +151,6 @@ export default function MainPage() {
           >
             {deleteMode ? "Exit removal" : "Remove a bank"}
           </button>
-          <Link className="btn ghost" to="/account">Security</Link>
         </div>
       </header>
 
@@ -132,7 +159,30 @@ export default function MainPage() {
       {loadingItems ? <LoadingSpinner message="Loading banks..." /> : items.length === 0 ? (
         <div className="card"><p className="muted">No banks linked yet. Click <strong>Link bank</strong> to connect your first account.</p></div>
       ) : (
-        <div className="col-flex">
+        <>
+          <div className="row-flex" style={{ justifyContent: "flex-end", marginBottom: "var(--s3)" }}>
+            <Tooltip content={banksCollapseTip}>
+              <button
+                type="button"
+                className="btn ghost btn-sm btn-icon"
+                aria-label={banksCollapseTip}
+                onClick={() => {
+                  if (allBanksCollapsed) {
+                    const next: Record<string, boolean> = {};
+                    syncBanksCollapseStorage(next, items);
+                    setExpanded(next);
+                  } else {
+                    const next = Object.fromEntries(items.map((i) => [i.id, false])) as Record<string, boolean>;
+                    syncBanksCollapseStorage(next, items);
+                    setExpanded(next);
+                  }
+                }}
+              >
+                <span style={{ color: "var(--ink-muted)", fontSize: "1.05rem", lineHeight: 1 }} aria-hidden>{allBanksCollapsed ? "▾" : "▴"}</span>
+              </button>
+            </Tooltip>
+          </div>
+          <div className="col-flex">
           {items.map((item: Item) => {
             const accs = accountsByItem[item.id] ?? [];
             const open = expanded[item.id] ?? true;
@@ -140,7 +190,11 @@ export default function MainPage() {
             return (
               <div key={item.id} className="card" style={{ padding: 0 }}>
                 <div className="between" style={{ padding: "var(--s3) var(--s4)" }}>
-                  <button className="row-flex gap-2" style={{ border: 0, background: "transparent", padding: 0, cursor: "pointer", color: "inherit", flex: 1, justifyContent: "flex-start" }} onClick={() => setExpanded((p) => ({ ...p, [item.id]: !open }))}>
+                  <button className="row-flex gap-2" style={{ border: 0, background: "transparent", padding: 0, cursor: "pointer", color: "inherit", flex: 1, justifyContent: "flex-start" }} onClick={() => setExpanded((p) => {
+                    const next = { ...p, [item.id]: !open };
+                    syncBanksCollapseStorage(next, items);
+                    return next;
+                  })}>
                     <span style={{ display: "inline-block", width: 14, transform: open ? "rotate(0)" : "rotate(-90deg)", transition: "transform 120ms", color: "var(--ink-muted)" }}>▾</span>
                     <span className="fw-semi">{label}</span>
                     <span className="chip">{accs.length} account{accs.length !== 1 ? "s" : ""}</span>
@@ -150,8 +204,8 @@ export default function MainPage() {
                       setBusyId(item.id);
                       const r = await refreshItemAccounts(item.id);
                       setBusyId(null);
-                      if (r.ok) setFlash({ tone: "info", text: `Refreshed ${r.updatedAccounts} account${r.updatedAccounts !== 1 ? "s" : ""} for ${label}.` });
-                      else setFlash({ tone: "warning", text: r.error });
+                      if (r.ok === false) setFlash({ tone: "warning", text: r.error });
+                      else setFlash({ tone: "info", text: `Refreshed ${r.updatedAccounts} account${r.updatedAccounts !== 1 ? "s" : ""} for ${label}.` });
                     }}>
                       {busyId === item.id ? <span className="spinner" /> : "↻"}
                     </button>
@@ -166,7 +220,8 @@ export default function MainPage() {
               </div>
             );
           })}
-        </div>
+          </div>
+        </>
       )}
 
       <Modal

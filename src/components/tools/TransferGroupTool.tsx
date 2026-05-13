@@ -1,13 +1,25 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import type { Txn } from "../types";
 import { buildAuthHeaders } from "../../lib/auth";
 import { formatTxnDate, getTxnDateOnly } from "../../utils/transactionUtils";
-import { Alert } from "../shared/ui";
+import { Alert, ClickEditNumber } from "../shared/ui";
 
 type Props = { transactions: Txn[]; token: string | null; invalidateTransactionMeta: () => Promise<void> };
 type Pair = { pairId: string; outflow: Txn; inflow: Txn; dayGap: number };
 
 const errMsg = (e: unknown) => e instanceof Error ? e.message : "Unexpected error";
+
+function groupPairsByDaysApart(sorted: Pair[]): { gapKey: number; label: string; pairs: Pair[] }[] {
+  const out: { gapKey: number; label: string; pairs: Pair[] }[] = [];
+  for (const p of sorted) {
+    const gapKey = Number.isFinite(p.dayGap) ? Math.round(p.dayGap) : -1;
+    const label = gapKey < 0 ? "Date unknown" : gapKey === 0 ? "Same day" : `${gapKey} day${gapKey === 1 ? "" : "s"} apart`;
+    const last = out[out.length - 1];
+    if (last?.gapKey === gapKey) last.pairs.push(p);
+    else out.push({ gapKey, label, pairs: [p] });
+  }
+  return out;
+}
 
 function daysBetween(a: Txn, b: Txn): number {
   const d1 = getTxnDateOnly(a), d2 = getTxnDateOnly(b);
@@ -24,12 +36,42 @@ function TxnCell({ t }: { t: Txn }) {
   );
 }
 
-function PairCard({ pair, ambiguous, action }: { pair: Pair; ambiguous?: boolean; action: React.ReactNode }) {
+function AccountCheckFilter({ label, options, excluded, setExcluded }: { label: string; options: { id: string; label: string }[]; excluded: Set<string>; setExcluded: (updater: (prev: Set<string>) => Set<string>) => void }) {
+  return (
+    <div className="field">
+      <div className="row-flex between flex-wrap gap-2">
+        <label style={{ margin: 0 }}>{label} ({options.length - excluded.size} of {options.length})</label>
+        <div className="row-flex gap-2">
+          <button type="button" className="btn ghost btn-sm" onClick={() => setExcluded(() => new Set())}>All</button>
+          <button type="button" className="btn ghost btn-sm" onClick={() => setExcluded(() => new Set(options.map((a) => a.id)))}>None</button>
+        </div>
+      </div>
+      <div className="scrollbox" style={{ border: "1px solid var(--line)", borderRadius: "var(--r-sm)", padding: 8, marginTop: 6 }}>
+        {options.map((a) => (
+          <label key={a.id} className="check" style={{ display: "flex", padding: "3px 0" }}>
+            <input
+              type="checkbox"
+              checked={!excluded.has(a.id)}
+              onChange={(e) => setExcluded((prev) => {
+                const next = new Set(prev);
+                if (e.target.checked) next.delete(a.id); else next.add(a.id);
+                return next;
+              })}
+            />
+            <span>{a.label}</span>
+          </label>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function PairRow({ pair, ambiguous, action }: { pair: Pair; ambiguous?: boolean; action: ReactNode }) {
   const outAmt = Math.abs(pair.outflow.amount ?? 0);
   const inAmt = Math.abs(pair.inflow.amount ?? 0);
   const amtMismatch = Math.abs(outAmt - inAmt) > 0.001;
   return (
-    <div className="card card-tight" style={{ display: "grid", gridTemplateColumns: "140px 1fr 1fr auto", gap: 16, alignItems: "center", opacity: ambiguous ? 0.65 : 1 }}>
+    <div className="transfer-pair" style={{ opacity: ambiguous ? 0.65 : 1 }}>
       <div>
         <div className="fw-bold">
           {amtMismatch ? <><span className="text-danger">${outAmt.toFixed(2)}</span> <span className="muted xs">/</span> <span className="text-success">${inAmt.toFixed(2)}</span></> : `$${outAmt.toFixed(2)}`}
@@ -48,8 +90,19 @@ export default function TransferGroupTool({ transactions, token, invalidateTrans
   const [tab, setTab] = useState<"find" | "existing">("find");
   const [maxDays, setMaxDays] = useState(3);
   const [amountTol, setAmountTol] = useState(0);
+  const [excludedOutAccounts, setExcludedOutAccounts] = useState<Set<string>>(new Set());
+  const [excludedInAccounts, setExcludedInAccounts] = useState<Set<string>>(new Set());
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const accountOptions = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const t of transactions) {
+      if (!t.account_id) continue;
+      if (!m.has(t.account_id)) m.set(t.account_id, t.account_name || t.account_official_name || t.account_id);
+    }
+    return [...m.entries()].map(([id, label]) => ({ id, label })).sort((a, b) => a.label.localeCompare(b.label));
+  }, [transactions]);
 
   const { pairs, ambiguousIds, totalPairs } = useMemo(() => {
     const cand = transactions.filter((t) => !t.account_transfer_group && t.transaction_id && t.amount != null);
@@ -62,15 +115,23 @@ export default function TransferGroupTool({ transactions, token, invalidateTrans
         const gap = daysBetween(a, b);
         if (gap > maxDays) continue;
         const [outflow, inflow] = (a.amount ?? 0) > 0 ? [a, b] : [b, a];
+        if (outflow.account_id && excludedOutAccounts.has(outflow.account_id)) continue;
+        if (inflow.account_id && excludedInAccounts.has(inflow.account_id)) continue;
         out.push({ pairId: `${a.transaction_id}-${b.transaction_id}`, outflow, inflow, dayGap: gap });
       }
     }
     const count = new Map<string, number>();
     out.forEach((p) => { count.set(p.outflow.transaction_id!, (count.get(p.outflow.transaction_id!) ?? 0) + 1); count.set(p.inflow.transaction_id!, (count.get(p.inflow.transaction_id!) ?? 0) + 1); });
     const ambiguous = new Set([...count.entries()].filter(([, c]) => c > 1).map(([id]) => id));
-    out.sort((a, b) => a.dayGap - b.dayGap);
+    out.sort((a, b) => {
+      if (a.dayGap !== b.dayGap) return a.dayGap - b.dayGap;
+      const da = getTxnDateOnly(a.outflow) || "";
+      const db = getTxnDateOnly(b.outflow) || "";
+      if (da !== db) return da.localeCompare(db);
+      return a.pairId.localeCompare(b.pairId);
+    });
     return { pairs: out, ambiguousIds: ambiguous, totalPairs: out.length };
-  }, [transactions, maxDays, amountTol]);
+  }, [transactions, maxDays, amountTol, excludedOutAccounts, excludedInAccounts]);
 
   const { existing, broken } = useMemo(() => {
     const m = new Map<string, Txn[]>();
@@ -113,36 +174,47 @@ export default function TransferGroupTool({ transactions, token, invalidateTrans
 
       {tab === "find" && (
         <>
-          <div className="card card-tight mb-4" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
+          <div className="card card-tight mb-4 transfer-tool-filters">
             <div className="field">
-              <label>Max days apart: <span className="text-brand">{maxDays}</span></label>
+              <label>Max days apart: <ClickEditNumber value={maxDays} onCommit={setMaxDays} min={0} max={14} step={1} decimals={0} format={(n) => String(n)} ariaLabel="max days apart" /></label>
               <input type="range" min={0} max={14} step={1} value={maxDays} onChange={(e) => setMaxDays(Number(e.target.value))} />
             </div>
             <div className="field">
-              <label>Amount tolerance: <span className="text-brand">${amountTol.toFixed(2)}</span></label>
+              <label>Amount tolerance: <ClickEditNumber value={amountTol} onCommit={setAmountTol} min={0} max={20} step={0.5} decimals={2} format={(n) => `$${n.toFixed(2)}`} ariaLabel="amount tolerance in dollars" /></label>
               <input type="range" min={0} max={20} step={0.5} value={amountTol} onChange={(e) => setAmountTol(Number(e.target.value))} />
             </div>
+            {accountOptions.length > 0 && (
+              <>
+                <AccountCheckFilter label="OUT accounts" options={accountOptions} excluded={excludedOutAccounts} setExcluded={setExcludedOutAccounts} />
+                <AccountCheckFilter label="IN accounts" options={accountOptions} excluded={excludedInAccounts} setExcluded={setExcludedInAccounts} />
+              </>
+            )}
           </div>
 
           {totalPairs === 0 ? (
             <div className="card"><p className="muted">No transfer pairs found with these settings. Try increasing the day range or amount tolerance.</p></div>
           ) : (
-            <div className="col-flex">
-              {pairs.map((p) => {
-                const ambig = ambiguousIds.has(p.outflow.transaction_id!) || ambiguousIds.has(p.inflow.transaction_id!);
-                return (
-                  <PairCard
-                    key={p.pairId}
-                    pair={p}
-                    ambiguous={ambig}
-                    action={
-                      <button className="btn primary btn-sm" disabled={busyId === p.pairId} onClick={() => addGroup(p)}>
-                        {busyId === p.pairId ? "…" : `+ Pair (${p.dayGap}d)`}
-                      </button>
-                    }
-                  />
-                );
-              })}
+            <div>
+              {groupPairsByDaysApart(pairs).map((g) => (
+                <section key={g.gapKey} className="transfer-day-block">
+                  <div className="transfer-day-head">{g.label}</div>
+                  {g.pairs.map((p) => {
+                    const ambig = ambiguousIds.has(p.outflow.transaction_id!) || ambiguousIds.has(p.inflow.transaction_id!);
+                    return (
+                      <PairRow
+                        key={p.pairId}
+                        pair={p}
+                        ambiguous={ambig}
+                        action={
+                          <button className="btn primary btn-sm" disabled={busyId === p.pairId} onClick={() => addGroup(p)}>
+                            {busyId === p.pairId ? "…" : "+ Pair"}
+                          </button>
+                        }
+                      />
+                    );
+                  })}
+                </section>
+              ))}
             </div>
           )}
         </>
@@ -152,19 +224,19 @@ export default function TransferGroupTool({ transactions, token, invalidateTrans
         existing.length === 0 && broken.length === 0 ? (
           <div className="card"><p className="muted">No transfer pairs saved yet. Use the <strong>Find</strong> tab to detect them.</p></div>
         ) : (
-          <div className="col-flex">
+          <div>
             {existing.map(({ id, outflow, inflow }) => (
-              <PairCard
+              <PairRow
                 key={id}
                 pair={{ pairId: id, outflow, inflow, dayGap: 0 }}
-                action={<button className="btn danger-ghost btn-sm" disabled={busyId === id} onClick={() => removeGroup(id, [outflow.transaction_id!, inflow.transaction_id!])}>{busyId === id ? "…" : "Remove"}</button>}
+                action={<button className="btn danger-ghost btn-sm" disabled={busyId === id} onClick={() => removeGroup(id, [outflow.transaction_id!, inflow.transaction_id!])}>{busyId === id ? "…" : "Unpair"}</button>}
               />
             ))}
             {broken.map(({ id, t }) => {
               const amt = Math.abs(t.amount ?? 0);
               const isOut = (t.amount ?? 0) > 0;
               return (
-                <div key={`broken-${id}`} className="card card-tight" style={{ display: "grid", gridTemplateColumns: "140px 1fr 1fr auto", gap: 16, alignItems: "center", background: "var(--warning-soft)" }}>
+                <div key={`broken-${id}`} className="transfer-pair" style={{ background: "var(--warning-soft)", borderRadius: "var(--r-sm)", padding: "var(--s2) var(--s3)" }}>
                   <div>
                     <div className="fw-bold">${amt.toFixed(2)}</div>
                     <div className="xs muted">{formatTxnDate(t)}</div>
@@ -172,7 +244,7 @@ export default function TransferGroupTool({ transactions, token, invalidateTrans
                   </div>
                   <div><div className="xs muted fw-semi mb-1">OUT</div>{isOut ? <TxnCell t={t} /> : <span className="muted">—</span>}</div>
                   <div><div className="xs muted fw-semi mb-1">IN</div>{!isOut ? <TxnCell t={t} /> : <span className="muted">—</span>}</div>
-                  <button className="btn danger-ghost btn-sm" disabled={busyId === id} onClick={() => removeGroup(id, [t.transaction_id!])}>{busyId === id ? "…" : "Remove"}</button>
+                  <button className="btn danger-ghost btn-sm" disabled={busyId === id} onClick={() => removeGroup(id, [t.transaction_id!])}>{busyId === id ? "…" : "Unpair"}</button>
                 </div>
               );
             })}

@@ -43,7 +43,10 @@ The whole app must follow these:
 
 1. **Navigation** — Universal left sidebar (`AppShell`). The sidebar holds
    global nav (Home, Transactions, Tools, Account) and the signed-in user's
-   account controls. The right column is the active page.
+   account controls. The right column is the active page. Nav glyphs are
+   inline SVGs on a 24×24 viewBox: stroke icons use `stroke-width` 2.85
+   (round caps/joins); the Tools star is filled with a matching hairline stroke
+   so it does not read lighter than the stroke-only icons.
 2. **Page header** — Each page starts with an `<h1>` title and an optional
    one-line description. Page-specific controls live directly under that
    header (a single horizontal action row).

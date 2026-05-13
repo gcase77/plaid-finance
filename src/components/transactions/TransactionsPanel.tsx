@@ -319,8 +319,8 @@ export default function TransactionsPanel({ syncTransactions, syncStatus, loadin
       )}
 
       {tab === "tag-transactions" && (
-        <div style={{ display: "grid", gridTemplateColumns: "minmax(260px, 280px) 1fr", gap: "var(--s5)" }}>
-          <div>
+        <div className="txn-tag-layout">
+          <div style={{ minWidth: 0 }}>
             <TransactionsFilterSection filters={filters} tags={tags} />
           </div>
           <div>
