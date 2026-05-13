@@ -180,8 +180,8 @@ export default function TransferGroupTool({ transactions, token, invalidateTrans
               <input type="range" min={0} max={14} step={1} value={maxDays} onChange={(e) => setMaxDays(Number(e.target.value))} />
             </div>
             <div className="field">
-              <label>Amount tolerance: <ClickEditNumber value={amountTol} onCommit={setAmountTol} min={0} max={20} step={0.5} decimals={2} format={(n) => `$${n.toFixed(2)}`} ariaLabel="amount tolerance in dollars" /></label>
-              <input type="range" min={0} max={20} step={0.5} value={amountTol} onChange={(e) => setAmountTol(Number(e.target.value))} />
+              <label>Amount tolerance: <ClickEditNumber value={amountTol} onCommit={setAmountTol} min={0} max={20} step={0.1} decimals={2} format={(n) => `$${n.toFixed(2)}`} ariaLabel="amount tolerance in dollars" /></label>
+              <input type="range" min={0} max={20} step={0.1} value={amountTol} onChange={(e) => setAmountTol(Number(e.target.value))} />
             </div>
             {accountOptions.length > 0 && (
               <>

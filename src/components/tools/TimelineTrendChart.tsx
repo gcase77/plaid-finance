@@ -4,8 +4,8 @@ import TransactionTable from "../shared/TransactionTable";
 import { getTxnDateOnly } from "../../utils/transactionUtils";
 import { Segmented } from "../shared/ui";
 
-type View = "area" | "net";
-type Granularity = "month" | "week";
+export type TimelineView = "area" | "net";
+export type TimelineGranularity = "month" | "week";
 type Row = { key: string; label: string; income: number; spending: number; net: number; transactions: Txn[] };
 
 const fmt = (n: number) => `$${n.toLocaleString("en-US", { maximumFractionDigits: 2 })}`;
@@ -13,7 +13,7 @@ function toMonthLabel(s: string) { const [y, m] = s.split("-"); return new Date(
 function mondayOf(s: string) { const d = new Date(`${s}T12:00:00`); const day = d.getDay(); d.setDate(d.getDate() + (day === 0 ? -6 : 1 - day)); return d.toISOString().slice(0, 10); }
 function weekLabel(s: string) { return `Week of ${new Date(`${s}T12:00:00`).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "2-digit" })}`; }
 
-function buildRows(txns: Txn[], gran: Granularity): Row[] {
+function buildRows(txns: Txn[], gran: TimelineGranularity): Row[] {
   const map = new Map<string, Row>();
   for (const t of txns) {
     const d = getTxnDateOnly(t);
@@ -37,9 +37,10 @@ function xy(i: number, val: number, len: number, vMax: number, w: number, h: num
   return { x, y };
 }
 
-export default function TimelineTrendChart({ transactions, tags }: { transactions: Txn[]; tags: Tag[] }) {
-  const [view, setView] = useState<View>("area");
-  const [granularity, setGranularity] = useState<Granularity>("month");
+export default function TimelineTrendChart({ transactions, tags, view, granularity, onViewChange, onGranularityChange }: {
+  transactions: Txn[]; tags: Tag[]; view: TimelineView; granularity: TimelineGranularity;
+  onViewChange: (v: TimelineView) => void; onGranularityChange: (g: TimelineGranularity) => void;
+}) {
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const rows = useMemo(() => buildRows(transactions, granularity), [transactions, granularity]);
   const selected = rows.find((r) => r.key === selectedKey) ?? null;
@@ -69,8 +70,8 @@ export default function TimelineTrendChart({ transactions, tags }: { transaction
           <span className="row-flex gap-2"><span style={{ width: 18, height: 3, background: "var(--danger)", borderRadius: 2 }} /><span className="fw-semi">Spending</span></span>
         </div>
         <div className="row-flex gap-2 flex-wrap">
-          <Segmented value={granularity} onChange={(v) => { setGranularity(v); setSelectedKey(null); }} options={[{ value: "week", label: "Week" }, { value: "month", label: "Month" }]} />
-          <Segmented value={view} onChange={setView} options={[{ value: "area", label: "Area" }, { value: "net", label: "Net savings" }]} />
+          <Segmented value={granularity} onChange={(v) => { onGranularityChange(v); setSelectedKey(null); }} options={[{ value: "week", label: "Week" }, { value: "month", label: "Month" }]} />
+          <Segmented value={view} onChange={onViewChange} options={[{ value: "area", label: "Area" }, { value: "net", label: "Net savings" }]} />
         </div>
       </div>
 

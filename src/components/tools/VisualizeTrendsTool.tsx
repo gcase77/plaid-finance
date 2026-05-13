@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import type { Tag, Txn } from "../types";
 import { buildAuthHeaders } from "../../lib/auth";
@@ -7,7 +7,7 @@ import TransactionTable from "../shared/TransactionTable";
 import { buildDatePreset } from "../../utils/datePresets";
 import FlowSankeySvg from "./FlowSankeySvg";
 import { buildFlowOfFundsModel, type FlowGrouping } from "./flowOfFundsSankey";
-import TimelineTrendChart from "./TimelineTrendChart";
+import TimelineTrendChart, { type TimelineGranularity, type TimelineView } from "./TimelineTrendChart";
 import { buildTrendPieSlices, filterTrendsTransactions, sliceColors, type TrendPieGrouping, type TrendPieSlice } from "./visualizeTrendsUtils";
 import { Segmented } from "../shared/ui";
 
@@ -82,14 +82,51 @@ const FLOW_GROUPING: { value: FlowGrouping; label: string }[] = [
 
 const EMPTY_TAGS: Tag[] = [];
 
+const VIZ_TRENDS_KEY = "funds-up-visualize-trends";
+const VIZ_TABS = new Set<VizTab>(["pie", "flow", "timeline"]);
+const PIE_GROUP = new Set<TrendPieGrouping>(["detected", "buckets", "meta"]);
+const FLOW_GROUP = new Set<FlowGrouping>(["detected", "tags"]);
+const TIMELINE_V = new Set<TimelineView>(["area", "net"]);
+const TIMELINE_G = new Set<TimelineGranularity>(["month", "week"]);
+
+function loadVizPrefs() {
+  const d = {
+    vizTab: "pie" as VizTab, grouping: "detected" as TrendPieGrouping, flowGrouping: "detected" as FlowGrouping,
+    timelineView: "area" as TimelineView, timelineGranularity: "month" as TimelineGranularity
+  };
+  if (typeof window === "undefined") return d;
+  try {
+    const raw = localStorage.getItem(VIZ_TRENDS_KEY);
+    if (!raw) return d;
+    const o = JSON.parse(raw) as Record<string, unknown>;
+    if (typeof o.vizTab === "string" && VIZ_TABS.has(o.vizTab as VizTab)) d.vizTab = o.vizTab as VizTab;
+    if (typeof o.grouping === "string" && PIE_GROUP.has(o.grouping as TrendPieGrouping)) d.grouping = o.grouping as TrendPieGrouping;
+    if (typeof o.flowGrouping === "string" && FLOW_GROUP.has(o.flowGrouping as FlowGrouping)) d.flowGrouping = o.flowGrouping as FlowGrouping;
+    if (typeof o.timelineView === "string" && TIMELINE_V.has(o.timelineView as TimelineView)) d.timelineView = o.timelineView as TimelineView;
+    if (typeof o.timelineGranularity === "string" && TIMELINE_G.has(o.timelineGranularity as TimelineGranularity)) d.timelineGranularity = o.timelineGranularity as TimelineGranularity;
+  } catch { /* ignore */ }
+  return d;
+}
+
 export default function VisualizeTrendsTool({ transactions, token }: Props) {
-  const [vizTab, setVizTab] = useState<VizTab>("pie");
-  const [grouping, setGrouping] = useState<TrendPieGrouping>("detected");
+  const initPrefs = useMemo(() => loadVizPrefs(), []);
+  const [vizTab, setVizTab] = useState<VizTab>(initPrefs.vizTab);
+  const [grouping, setGrouping] = useState<TrendPieGrouping>(initPrefs.grouping);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [selection, setSelection] = useState<Selection | null>(null);
-  const [flowGrouping, setFlowGrouping] = useState<FlowGrouping>("detected");
+  const [flowGrouping, setFlowGrouping] = useState<FlowGrouping>(initPrefs.flowGrouping);
   const [flowNodeId, setFlowNodeId] = useState<string | null>(null);
+  const [timelineView, setTimelineView] = useState<TimelineView>(initPrefs.timelineView);
+  const [timelineGranularity, setTimelineGranularity] = useState<TimelineGranularity>(initPrefs.timelineGranularity);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(VIZ_TRENDS_KEY, JSON.stringify({
+        vizTab, grouping, flowGrouping, timelineView, timelineGranularity
+      }));
+    } catch { /* ignore */ }
+  }, [vizTab, grouping, flowGrouping, timelineView, timelineGranularity]);
 
   const tagsQuery = useQuery({
     queryKey: ["tags"], enabled: !!token,
@@ -136,7 +173,7 @@ export default function VisualizeTrendsTool({ transactions, token }: Props) {
         <button className={vizTab === "timeline" ? "active" : ""} onClick={() => goTab("timeline")}>Timeline</button>
       </div>
 
-      {vizTab === "timeline" && <TimelineTrendChart transactions={baseTxns} tags={tags} />}
+      {vizTab === "timeline" && <TimelineTrendChart transactions={baseTxns} tags={tags} view={timelineView} granularity={timelineGranularity} onViewChange={setTimelineView} onGranularityChange={setTimelineGranularity} />}
 
       {vizTab === "pie" && (
         <>

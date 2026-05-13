@@ -150,7 +150,7 @@ export default function TransactionsPanel({ syncTransactions, syncStatus, loadin
       const res = await fetch("/api/transaction_meta/tags", { method: "POST", headers: { "Content-Type": "application/json", ...buildAuthHeaders(token) }, body: JSON.stringify(items) });
       if (!res.ok) { const d = await res.json().catch(() => ({})); throw new Error(friendlyError(d?.error || `Failed to apply tags (${res.status})`)); }
     },
-    onSuccess: async () => { setSelectedIds(new Set()); await invalidateTransactionMeta(); }
+    onSuccess: async () => { await invalidateTransactionMeta(); }
   });
 
   const applySingle = async (tagId: number) => {
@@ -185,7 +185,6 @@ export default function TransactionsPanel({ syncTransactions, syncStatus, loadin
     const res = await fetch("/api/transaction_meta/tags", { method: "DELETE", headers: { "Content-Type": "application/json", ...buildAuthHeaders(token) }, body: JSON.stringify(items) });
     if (!res.ok) { const d = await res.json().catch(() => ({})); throw new Error(friendlyError(d?.error || `Failed to remove tag (${res.status})`)); }
     await invalidateTransactionMeta();
-    setSelectedIds(new Set());
     setRemoveOpen(false);
   };
 
@@ -205,7 +204,6 @@ export default function TransactionsPanel({ syncTransactions, syncStatus, loadin
     const res = await fetch("/api/transaction_meta/tags", { method: "DELETE", headers: { "Content-Type": "application/json", ...buildAuthHeaders(token) }, body: JSON.stringify(items) });
     if (!res.ok) { const d = await res.json().catch(() => ({})); throw new Error(friendlyError(d?.error || `Failed to clear tags (${res.status})`)); }
     await invalidateTransactionMeta();
-    setSelectedIds(new Set());
     setRemoveOpen(false);
   };
 
