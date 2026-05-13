@@ -61,6 +61,37 @@ router.post("/tags", async (req, res) => {
   }
 });
 
+router.patch("/tags/:id", async (req, res) => {
+  try {
+    const { user, prisma } = req as unknown as ServerRequest;
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id)) return res.status(400).json({ error: "Invalid tag id" });
+
+    const body = req.body && typeof req.body === "object" ? req.body : {};
+    const hasName = "name" in body;
+    const hasColor = "color" in body;
+    if (!hasName && !hasColor) return res.status(400).json({ error: "name or color is required" });
+    if (hasName && (body.name == null || !String(body.name).trim())) return res.status(400).json({ error: "name cannot be empty" });
+    if (hasColor && (typeof body.color !== "string" || !isAllowedTagColor(body.color))) return res.status(400).json({ error: "Invalid tag color" });
+
+    const existing = await prisma.tags.findFirst({ where: { id, user_id: user.id }, select: { id: true } });
+    if (!existing) return res.status(404).json({ error: "Tag not found" });
+
+    const tag = await prisma.tags.update({
+      where: { id: existing.id },
+      data: {
+        ...(hasName ? { name: String(body.name).trim() } : {}),
+        ...(hasColor ? { color: body.color } : {})
+      }
+    });
+    res.json(tag);
+  } catch (e: any) {
+    if (e.code === "P2002") return res.status(409).json({ error: "Tag name already exists" });
+    if (e.code === "P2025") return res.status(404).json({ error: "Tag not found" });
+    res.status(500).json({ error: e.message });
+  }
+});
+
 router.delete("/tags/:id", async (req, res) => {
   try {
     const { user, prisma } = req as unknown as ServerRequest;

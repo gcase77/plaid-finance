@@ -45,7 +45,7 @@ const KIND_INFO: Record<TagUiKind, string> = {
   meta: "Can be applied to any transaction"
 };
 
-type MyTagsMode = "default" | "creating" | "deleting";
+type MyTagsMode = "default" | "creating" | "editing" | "deleting";
 
 const SYNC_TXNS_HELP =
   "Money moving in to your accounts is negative and out is positive.\nAfter linking a bank, it may take a few minutes before full history is ready. Recent transactions may also take a few days to appear.";
@@ -212,6 +212,9 @@ export default function TransactionsPanel({
   const [createName, setCreateName] = useState("");
   const [createKind, setCreateKind] = useState<TagUiKind>("spending");
   const [createColor, setCreateColor] = useState(getDefaultTagColor(TAG_UI_KIND_TO_TYPE.spending));
+  const [editTagId, setEditTagId] = useState<number | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editColor, setEditColor] = useState(TAG_COLOR_PALETTE[0]);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   const [applyOpen, setApplyOpen] = useState(false);
@@ -305,6 +308,25 @@ export default function TransactionsPanel({
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["tags"] });
       await invalidateTransactionMeta();
+    }
+  });
+
+  const updateTagMutation = useMutation({
+    mutationFn: async ({ tagId, name, color }: { tagId: number; name: string; color: string }) => {
+      const res = await fetch(`/api/tags/${tagId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", ...buildAuthHeaders(token) },
+        body: JSON.stringify({ name: name.trim(), color })
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data?.error || `Failed to update tag (${res.status})`);
+      }
+    },
+    onSuccess: async () => {
+      setEditTagId(null);
+      setEditName("");
+      await queryClient.invalidateQueries({ queryKey: ["tags"] });
     }
   });
 
@@ -420,9 +442,16 @@ export default function TransactionsPanel({
   const myTagsErrorMessage =
     tagsError?.message
     || (createTagMutation.error as Error | null)?.message
+    || (updateTagMutation.error as Error | null)?.message
     || (deleteTagMutation.error as Error | null)?.message;
 
   const applyTagsErrorMessage = (applyTagsMutation.error as Error | null)?.message;
+  const startEditingTag = (tag: Tag) => {
+    setEditTagId(tag.id);
+    setEditName(tag.name);
+    setEditColor(getDisplayTagColor(tag.type, tag.color));
+    setMyTagsMode("editing");
+  };
 
   return (
     <div>
@@ -502,6 +531,16 @@ export default function TransactionsPanel({
                   New tag
                 </button>
                 <button
+                  className={`btn btn-sm px-3 ${myTagsMode === "editing" ? "btn-secondary" : "btn-outline-secondary"}`}
+                  style={{ minWidth: 130 }}
+                  onClick={() => {
+                    setEditTagId(null);
+                    setMyTagsMode((m) => (m === "editing" ? "default" : "editing"));
+                  }}
+                >
+                  Edit tags
+                </button>
+                <button
                   className={`btn btn-sm px-3 ${myTagsMode === "deleting" ? "btn-danger" : "btn-outline-secondary"}`}
                   style={{ minWidth: 130 }}
                   onClick={() => setMyTagsMode((m) => (m === "deleting" ? "default" : "deleting"))}
@@ -552,17 +591,62 @@ export default function TransactionsPanel({
                         <ul className="list-unstyled mb-0 small">
                           {list.map((tag) => (
                             <li key={tag.id} className="d-flex justify-content-between align-items-center py-1 border-bottom">
-                              <div className="d-flex align-items-center gap-2">
-                                <TagColorBadge tag={tag} />
-                              </div>
-                              {myTagsMode === "deleting" && (
-                                <button
-                                  className="btn btn-sm btn-outline-danger"
-                                  disabled={deleteTagMutation.isPending}
-                                  onClick={() => deleteTagMutation.mutate(tag.id)}
-                                >
-                                  Delete
-                                </button>
+                              {editTagId === tag.id ? (
+                                <div className="w-100">
+                                  <input
+                                    className="form-control form-control-sm mb-2"
+                                    value={editName}
+                                    onChange={(e) => setEditName(e.target.value)}
+                                    autoFocus
+                                  />
+                                  <div className="d-flex justify-content-between align-items-center gap-2">
+                                    <div className="d-flex flex-wrap gap-1">
+                                      {TAG_COLOR_PALETTE.map((color) => (
+                                        <button
+                                          key={color}
+                                          type="button"
+                                          className={`btn btn-sm ${editColor === color ? "btn-dark" : "btn-outline-secondary"}`}
+                                          style={{ width: 24, height: 24, padding: 0, backgroundColor: color }}
+                                          onClick={() => setEditColor(color)}
+                                          aria-label={`Select ${color}`}
+                                          title={color}
+                                        />
+                                      ))}
+                                    </div>
+                                    <div className="d-flex gap-1">
+                                      <button
+                                        className="btn btn-sm btn-primary"
+                                        disabled={!editName.trim() || updateTagMutation.isPending}
+                                        onClick={() => updateTagMutation.mutate({ tagId: tag.id, name: editName, color: editColor })}
+                                      >
+                                        Save
+                                      </button>
+                                      <button className="btn btn-sm btn-outline-secondary" onClick={() => setEditTagId(null)}>
+                                        Cancel
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+                              ) : (
+                                <>
+                                  <div className="d-flex align-items-center gap-2">
+                                    <TagColorBadge tag={tag} />
+                                  </div>
+                                  {myTagsMode === "editing" && (
+                                    <button className="btn btn-sm btn-outline-secondary" onClick={() => startEditingTag(tag)}>
+                                      Edit
+                                    </button>
+                                  )}
+                                  {myTagsMode === "deleting" && (
+                                    <button
+                                      className="btn btn-sm btn-outline-danger"
+                                      disabled={deleteTagMutation.isPending}
+                                      onClick={() => deleteTagMutation.mutate(tag.id)}
+                                    >
+                                      Delete
+                                    </button>
+                                  )}
+                                </>
                               )}
                             </li>
                           ))}
