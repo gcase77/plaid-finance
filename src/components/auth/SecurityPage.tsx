@@ -30,8 +30,10 @@ export default function SecurityPage() {
 
   const removeUnverified = async () => {
     const { data, error: e } = await supabase.auth.mfa.listFactors();
-    if (e) return;
-    await Promise.all(data.totp.filter((f) => f.status !== "verified").map((f) => supabase.auth.mfa.unenroll({ factorId: f.id })));
+    if (e) throw e;
+    const outs = await Promise.all(data.totp.filter((f) => f.status !== "verified").map((f) => supabase.auth.mfa.unenroll({ factorId: f.id })));
+    const ue = outs.find((o) => o.error)?.error;
+    if (ue) throw ue;
   };
 
   const startEnroll = async () => {
@@ -42,6 +44,8 @@ export default function SecurityPage() {
       if (e) { setError(e.message || "Unable to start setup."); return; }
       setEnrollment({ factorId: data.id, qrCode: data.totp.qr_code, secret: data.totp.secret ?? null });
       setCode("");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Unable to prepare MFA setup.");
     } finally { setBusy(null); }
   };
 
