@@ -61,10 +61,10 @@ function Legend({ slices, colors, selectedKey, onSelect }: { slices: TrendPieSli
         const active = selectedKey === sl.key;
         return (
           <li key={sl.key} style={{ breakInside: "avoid", marginBottom: 4 }}>
-            <button className="btn link btn-sm" style={{ textAlign: "left", padding: 0, fontWeight: active ? 700 : 500, color: "inherit", width: "100%" }} onClick={() => onSelect(sl)}>
-              <span style={{ display: "inline-block", width: 10, height: 10, borderRadius: "50%", background: c, marginRight: 6, verticalAlign: "middle" }} />
-              <span style={{ verticalAlign: "middle" }}>{sl.label}</span>
-              <span className="muted" style={{ marginLeft: 6 }}>{pct.toFixed(0)}%</span>
+            <button type="button" className="btn link btn-sm viz-pie-legend-row" style={{ fontWeight: active ? 700 : 500, color: "inherit" }} onClick={() => onSelect(sl)}>
+              <span className="viz-pie-legend-swatch" style={{ background: c }} aria-hidden />
+              <span className="viz-pie-legend-label">{sl.label}</span>
+              <span className="viz-pie-legend-pct muted">{pct.toFixed(0)}%</span>
             </button>
           </li>
         );

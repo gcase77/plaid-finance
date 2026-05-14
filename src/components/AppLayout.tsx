@@ -69,9 +69,16 @@ export default function AppLayout() {
           {layoutCollapsed ? "›" : "‹"}
         </button>
 
-        <Link className="brand" to="/l" aria-label="Funds Up landing page">
-          <img src={layoutCollapsed ? "/funds-up-mark.svg" : "/funds-up-logo.svg"} alt="" />
-        </Link>
+        <div className="sidebar-brand-stack">
+          <Link className="brand" to="/l" aria-label="Funds Up landing page">
+            <img src={layoutCollapsed ? "/funds-up-mark.svg" : "/funds-up-logo.svg"} alt="" />
+          </Link>
+          {narrow && email ? (
+            <Link to="/account" className="sidebar-mobile-profile" title="Account settings" aria-label="Account settings">
+              <span className="chip-soft chip" style={{ width: 28, height: 28, justifyContent: "center", fontSize: "0.85rem" }}>{initial}</span>
+            </Link>
+          ) : null}
+        </div>
 
         <nav aria-label="Primary">
           {NAV.map((n) => (

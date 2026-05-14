@@ -8,6 +8,7 @@ type Props = { transactions: Txn[]; token: string | null; invalidateTransactionM
 type Pair = { pairId: string; outflow: Txn; inflow: Txn; dayGap: number };
 
 const errMsg = (e: unknown) => e instanceof Error ? e.message : "Unexpected error";
+const TAB_KEY = "fundsup:transfer-group-tab";
 
 function groupPairsByDaysApart(sorted: Pair[]): { gapKey: number; label: string; pairs: Pair[] }[] {
   const out: { gapKey: number; label: string; pairs: Pair[] }[] = [];
@@ -87,9 +88,20 @@ function PairRow({ pair, ambiguous, action }: { pair: Pair; ambiguous?: boolean;
 }
 
 export default function TransferGroupTool({ transactions, token, invalidateTransactionMeta }: Props) {
-  const [tab, setTab] = useState<"find" | "existing">("find");
+  const [tab, setTab] = useState<"find" | "existing">(() => {
+    if (typeof window === "undefined") return "find";
+    return window.localStorage.getItem(TAB_KEY) === "existing" ? "existing" : "find";
+  });
+  const setTabPersist = (t: "find" | "existing") => {
+    setTab(t);
+    if (typeof window !== "undefined") window.localStorage.setItem(TAB_KEY, t);
+  };
   const [maxDays, setMaxDays] = useState(3);
   const [amountTol, setAmountTol] = useState(0);
+  const [existingStartDate, setExistingStartDate] = useState("");
+  const [existingEndDate, setExistingEndDate] = useState("");
+  const [existingMinAmount, setExistingMinAmount] = useState(0);
+  const [existingMaxAmountFilter, setExistingMaxAmountFilter] = useState<number | null>(null);
   const [excludedOutAccounts, setExcludedOutAccounts] = useState<Set<string>>(new Set());
   const [excludedInAccounts, setExcludedInAccounts] = useState<Set<string>>(new Set());
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -145,6 +157,30 @@ export default function TransferGroupTool({ transactions, token, invalidateTrans
     return { existing, broken };
   }, [transactions]);
 
+  const existingMaxAmount = useMemo(() => Math.ceil(Math.max(0, ...existing.map(({ outflow }) => Math.abs(outflow.amount ?? 0)), ...broken.map(({ t }) => Math.abs(t.amount ?? 0)))), [existing, broken]);
+  const existingAmountMax = Math.max(1, existingMaxAmount);
+  const existingAmountHi = Math.min(existingMaxAmountFilter ?? existingAmountMax, existingAmountMax);
+  const existingAmountLo = Math.min(existingMinAmount, existingAmountHi);
+  const amountLoPct = (existingAmountLo / existingAmountMax) * 100;
+  const amountHiPct = (existingAmountHi / existingAmountMax) * 100;
+
+  const filteredExisting = useMemo(() => existing.filter(({ outflow }) => {
+    const d = getTxnDateOnly(outflow);
+    if (existingStartDate && (!d || d < existingStartDate)) return false;
+    if (existingEndDate && (!d || d > existingEndDate)) return false;
+    const amt = Math.abs(outflow.amount ?? 0);
+    return amt >= existingAmountLo && amt <= existingAmountHi;
+  }), [existing, existingStartDate, existingEndDate, existingAmountLo, existingAmountHi]);
+
+  const filteredBroken = useMemo(() => broken.filter(({ t }) => {
+    const isOut = (t.amount ?? 0) > 0;
+    const d = getTxnDateOnly(t);
+    if (existingStartDate && (!isOut || !d || d < existingStartDate)) return false;
+    if (existingEndDate && (!isOut || !d || d > existingEndDate)) return false;
+    const amt = Math.abs(t.amount ?? 0);
+    return amt >= existingAmountLo && amt <= existingAmountHi;
+  }), [broken, existingStartDate, existingEndDate, existingAmountLo, existingAmountHi]);
+
   const addGroup = async (pair: Pair) => {
     setBusyId(pair.pairId); setError(null);
     try {
@@ -166,8 +202,8 @@ export default function TransferGroupTool({ transactions, token, invalidateTrans
   return (
     <>
       <div className="tabs">
-        <button className={tab === "find" ? "active" : ""} onClick={() => setTab("find")}>Find{totalPairs > 0 && <span className="count">{totalPairs}</span>}</button>
-        <button className={tab === "existing" ? "active" : ""} onClick={() => setTab("existing")}>Existing{existing.length + broken.length > 0 && <span className="count">{existing.length + broken.length}</span>}</button>
+        <button className={tab === "find" ? "active" : ""} onClick={() => setTabPersist("find")}>Find{totalPairs > 0 && <span className="count">{totalPairs}</span>}</button>
+        <button className={tab === "existing" ? "active" : ""} onClick={() => setTabPersist("existing")}>Existing{filteredExisting.length + filteredBroken.length > 0 && <span className="count">{filteredExisting.length + filteredBroken.length}</span>}</button>
       </div>
 
       {error && <div className="mb-3"><Alert tone="danger" onClose={() => setError(null)}>{error}</Alert></div>}
@@ -225,14 +261,40 @@ export default function TransferGroupTool({ transactions, token, invalidateTrans
           <div className="card"><p className="muted">No transfer pairs saved yet. Use the <strong>Find</strong> tab to detect them.</p></div>
         ) : (
           <div>
-            {existing.map(({ id, outflow, inflow }) => (
+            <div className="card card-tight mb-4 transfer-tool-filters">
+              <div className="field">
+                <label>OUT date from</label>
+                <input className="input" type="date" value={existingStartDate} onChange={(e) => setExistingStartDate(e.target.value)} />
+              </div>
+              <div className="field">
+                <label>OUT date to</label>
+                <input className="input" type="date" value={existingEndDate} onChange={(e) => setExistingEndDate(e.target.value)} />
+              </div>
+              <div className="field" style={{ gridColumn: "1 / -1" }}>
+                <label>Amount</label>
+                <div className="row-flex between gap-3">
+                  <input className="input input-sm" type="number" min={0} max={existingAmountHi} step={1} value={existingAmountLo} onChange={(e) => setExistingMinAmount(Math.min(Number(e.target.value), existingAmountHi))} aria-label="minimum existing transfer amount" style={{ width: "7rem" }} />
+                  <input className="input input-sm" type="number" min={existingAmountLo} max={existingAmountMax} step={1} value={existingAmountHi} onChange={(e) => setExistingMaxAmountFilter(Math.max(Number(e.target.value), existingAmountLo))} aria-label="maximum existing transfer amount" style={{ width: "7rem" }} />
+                </div>
+                <div className="amount-range" style={{ background: `linear-gradient(to right, var(--line) 0%, var(--line) ${amountLoPct}%, var(--brand) ${amountLoPct}%, var(--brand) ${amountHiPct}%, var(--line) ${amountHiPct}%, var(--line) 100%)` }}>
+                  <input type="range" min={0} max={existingAmountMax} step={1} value={existingAmountLo} onChange={(e) => setExistingMinAmount(Math.min(Number(e.target.value), existingAmountHi))} aria-label="minimum existing transfer amount slider" />
+                  <input type="range" min={0} max={existingAmountMax} step={1} value={existingAmountHi} onChange={(e) => setExistingMaxAmountFilter(Math.max(Number(e.target.value), existingAmountLo))} aria-label="maximum existing transfer amount slider" />
+                </div>
+                <div className="row-flex between xs muted">
+                  <span>${existingAmountLo.toFixed(2)}</span>
+                  <span>${existingAmountHi.toFixed(2)}</span>
+                </div>
+              </div>
+            </div>
+            {filteredExisting.length === 0 && filteredBroken.length === 0 && <div className="card"><p className="muted">No saved transfer pairs match these filters.</p></div>}
+            {filteredExisting.map(({ id, outflow, inflow }) => (
               <PairRow
                 key={id}
                 pair={{ pairId: id, outflow, inflow, dayGap: 0 }}
                 action={<button className="btn danger-ghost btn-sm" disabled={busyId === id} onClick={() => removeGroup(id, [outflow.transaction_id!, inflow.transaction_id!])}>{busyId === id ? "…" : "Unpair"}</button>}
               />
             ))}
-            {broken.map(({ id, t }) => {
+            {filteredBroken.map(({ id, t }) => {
               const amt = Math.abs(t.amount ?? 0);
               const isOut = (t.amount ?? 0) > 0;
               return (
