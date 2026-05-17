@@ -139,7 +139,7 @@ export default function SecurityPage() {
               <div className="fw-semi">{f.friendly_name || "Authenticator app"}</div>
               <div className="muted xs">Factor ID: {f.id}</div>
             </div>
-            <button className="btn danger-ghost btn-sm" onClick={() => void removeFactor(f.id)} disabled={busy === f.id}>
+            <button className="btn danger btn-sm" onClick={() => void removeFactor(f.id)} disabled={busy === f.id}>
               {busy === f.id ? "Removing…" : "Remove"}
             </button>
           </div>

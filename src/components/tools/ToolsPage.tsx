@@ -39,7 +39,7 @@ export default function ToolsPage() {
           <h1>{tool.label}</h1>
           <p className="desc">{tool.desc}</p>
         </div>
-        <div className="page-actions tabs" style={{ margin: 0, borderBottom: 0 }}>
+        <div className="page-actions nav nav-tabs" style={{ margin: 0, borderBottom: 0 }}>
           {TOOLS.map((t) => (
             <button key={t.key} className={active === t.key ? "active" : ""} onClick={() => { setActive(t.key); try { localStorage.setItem(TOOLS_ACTIVE_KEY, t.key); } catch { /* ignore */ } }}>{t.label}</button>
           ))}

@@ -61,7 +61,7 @@ function Legend({ slices, colors, selectedKey, onSelect }: { slices: TrendPieSli
         const active = selectedKey === sl.key;
         return (
           <li key={sl.key} style={{ breakInside: "avoid", marginBottom: 4 }}>
-            <button type="button" className="btn link btn-sm viz-pie-legend-row" style={{ fontWeight: active ? 700 : 500, color: "inherit" }} onClick={() => onSelect(sl)}>
+            <button type="button" className="btn ghost btn-sm viz-pie-legend-row" style={{ fontWeight: active ? 700 : 500, color: "inherit", background: "transparent", borderColor: "transparent" }} onClick={() => onSelect(sl)}>
               <span className="viz-pie-legend-swatch" style={{ background: c }} aria-hidden />
               <span className="viz-pie-legend-label">{sl.label}</span>
               <span className="viz-pie-legend-pct muted">{pct.toFixed(0)}%</span>
@@ -167,7 +167,7 @@ export default function VisualizeTrendsTool({ transactions, token }: Props) {
         </div>
       </div>
 
-      <div className="tabs">
+      <div className="nav nav-tabs">
         <button className={vizTab === "pie" ? "active" : ""} onClick={() => goTab("pie")}>Pie chart</button>
         <button className={vizTab === "flow" ? "active" : ""} onClick={() => goTab("flow")}>Flow of funds</button>
         <button className={vizTab === "timeline" ? "active" : ""} onClick={() => goTab("timeline")}>Timeline</button>

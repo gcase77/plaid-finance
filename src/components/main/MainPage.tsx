@@ -210,7 +210,7 @@ export default function MainPage() {
                       {busyId === item.id ? <span className="spinner" /> : "↻"}
                     </button>
                     {deleteMode && (
-                      <button className="btn danger-ghost btn-sm" disabled={busyId === item.id} onClick={() => setConfirmDelete({ itemId: item.id, label, nAcc: accs.length })}>
+                      <button className="btn danger btn-sm" disabled={busyId === item.id} onClick={() => setConfirmDelete({ itemId: item.id, label, nAcc: accs.length })}>
                         Delete
                       </button>
                     )}
