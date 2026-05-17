@@ -9,17 +9,21 @@ type Pair = { pairId: string; outflow: Txn; inflow: Txn; dayGap: number };
 
 const errMsg = (e: unknown) => e instanceof Error ? e.message : "Unexpected error";
 const TAB_KEY = "fundsup:transfer-group-tab";
+const DAY_MS = 86_400_000;
 
-function groupPairsByDaysApart(sorted: Pair[]): { gapKey: number; label: string; pairs: Pair[] }[] {
-  const out: { gapKey: number; label: string; pairs: Pair[] }[] = [];
-  for (const p of sorted) {
-    const gapKey = Number.isFinite(p.dayGap) ? Math.round(p.dayGap) : -1;
-    const label = gapKey < 0 ? "Date unknown" : gapKey === 0 ? "Same day" : `${gapKey} day${gapKey === 1 ? "" : "s"} apart`;
-    const last = out[out.length - 1];
-    if (last?.gapKey === gapKey) last.pairs.push(p);
-    else out.push({ gapKey, label, pairs: [p] });
-  }
-  return out;
+function txnDateEpochMs(t: Txn): number {
+  const d = getTxnDateOnly(t);
+  if (!d) return Number.NEGATIVE_INFINITY;
+  return Date.parse(`${d}T00:00:00Z`);
+}
+
+function pairNewestEpochMs(pair: Pair): number {
+  return Math.max(txnDateEpochMs(pair.outflow), txnDateEpochMs(pair.inflow));
+}
+
+function isEpochOlderThanDays(epochMs: number, days: number, nowMs: number): boolean {
+  if (!Number.isFinite(epochMs)) return false;
+  return nowMs - epochMs > days * DAY_MS;
 }
 
 function daysBetween(a: Txn, b: Txn): number {
@@ -67,12 +71,12 @@ function AccountCheckFilter({ label, options, excluded, setExcluded }: { label: 
   );
 }
 
-function PairRow({ pair, ambiguous, action }: { pair: Pair; ambiguous?: boolean; action: ReactNode }) {
+function PairRow({ pair, ambiguous, old, action }: { pair: Pair; ambiguous?: boolean; old?: boolean; action: ReactNode }) {
   const outAmt = Math.abs(pair.outflow.amount ?? 0);
   const inAmt = Math.abs(pair.inflow.amount ?? 0);
   const amtMismatch = Math.abs(outAmt - inAmt) > 0.001;
   return (
-    <div className="transfer-pair" style={{ opacity: ambiguous ? 0.65 : 1 }}>
+    <div className={`transfer-pair${old ? " transfer-pair-old" : ""}`} style={{ opacity: ambiguous ? 0.65 : undefined }}>
       <div>
         <div className="fw-bold">
           {amtMismatch ? <><span className="text-danger">${outAmt.toFixed(2)}</span> <span className="muted xs">/</span> <span className="text-success">${inAmt.toFixed(2)}</span></> : `$${outAmt.toFixed(2)}`}
@@ -136,10 +140,9 @@ export default function TransferGroupTool({ transactions, token, invalidateTrans
     out.forEach((p) => { count.set(p.outflow.transaction_id!, (count.get(p.outflow.transaction_id!) ?? 0) + 1); count.set(p.inflow.transaction_id!, (count.get(p.inflow.transaction_id!) ?? 0) + 1); });
     const ambiguous = new Set([...count.entries()].filter(([, c]) => c > 1).map(([id]) => id));
     out.sort((a, b) => {
-      if (a.dayGap !== b.dayGap) return a.dayGap - b.dayGap;
-      const da = getTxnDateOnly(a.outflow) || "";
-      const db = getTxnDateOnly(b.outflow) || "";
-      if (da !== db) return da.localeCompare(db);
+      const newestA = pairNewestEpochMs(a);
+      const newestB = pairNewestEpochMs(b);
+      if (newestA !== newestB) return newestB - newestA;
       return a.pairId.localeCompare(b.pairId);
     });
     return { pairs: out, ambiguousIds: ambiguous, totalPairs: out.length };
@@ -198,6 +201,7 @@ export default function TransferGroupTool({ transactions, token, invalidateTrans
       await invalidateTransactionMeta();
     } catch (e) { setError(errMsg(e)); } finally { setBusyId(null); }
   };
+  const nowMs = Date.now();
 
   return (
     <>
@@ -231,26 +235,23 @@ export default function TransferGroupTool({ transactions, token, invalidateTrans
             <div className="card"><p className="muted">No transfer pairs found with these settings. Try increasing the day range or amount tolerance.</p></div>
           ) : (
             <div>
-              {groupPairsByDaysApart(pairs).map((g) => (
-                <section key={g.gapKey} className="transfer-day-block">
-                  <div className="transfer-day-head">{g.label}</div>
-                  {g.pairs.map((p) => {
-                    const ambig = ambiguousIds.has(p.outflow.transaction_id!) || ambiguousIds.has(p.inflow.transaction_id!);
-                    return (
-                      <PairRow
-                        key={p.pairId}
-                        pair={p}
-                        ambiguous={ambig}
-                        action={
-                          <button className="btn primary btn-sm" disabled={busyId === p.pairId} onClick={() => addGroup(p)}>
-                            {busyId === p.pairId ? "…" : "+ Pair"}
-                          </button>
-                        }
-                      />
-                    );
-                  })}
-                </section>
-              ))}
+              {pairs.map((p) => {
+                const ambig = ambiguousIds.has(p.outflow.transaction_id!) || ambiguousIds.has(p.inflow.transaction_id!);
+                const old = isEpochOlderThanDays(pairNewestEpochMs(p), 30, nowMs);
+                return (
+                  <PairRow
+                    key={p.pairId}
+                    pair={p}
+                    ambiguous={ambig}
+                    old={old}
+                    action={
+                      <button className="btn primary btn-sm" disabled={busyId === p.pairId} onClick={() => addGroup(p)}>
+                        {busyId === p.pairId ? "…" : "+ Pair"}
+                      </button>
+                    }
+                  />
+                );
+              })}
             </div>
           )}
         </>
@@ -291,14 +292,16 @@ export default function TransferGroupTool({ transactions, token, invalidateTrans
               <PairRow
                 key={id}
                 pair={{ pairId: id, outflow, inflow, dayGap: 0 }}
+                old={isEpochOlderThanDays(pairNewestEpochMs({ pairId: id, outflow, inflow, dayGap: 0 }), 30, nowMs)}
                 action={<button className="btn danger-ghost btn-sm" disabled={busyId === id} onClick={() => removeGroup(id, [outflow.transaction_id!, inflow.transaction_id!])}>{busyId === id ? "…" : "Unpair"}</button>}
               />
             ))}
             {filteredBroken.map(({ id, t }) => {
               const amt = Math.abs(t.amount ?? 0);
               const isOut = (t.amount ?? 0) > 0;
+              const old = isEpochOlderThanDays(txnDateEpochMs(t), 30, nowMs);
               return (
-                <div key={`broken-${id}`} className="transfer-pair" style={{ background: "var(--warning-soft)", borderRadius: "var(--r-sm)", padding: "var(--s2) var(--s3)" }}>
+                <div key={`broken-${id}`} className={`transfer-pair${old ? " transfer-pair-old" : ""}`} style={{ background: "var(--warning-soft)", borderRadius: "var(--r-sm)", padding: "var(--s2) var(--s3)" }}>
                   <div>
                     <div className="fw-bold">${amt.toFixed(2)}</div>
                     <div className="xs muted">{formatTxnDate(t)}</div>
