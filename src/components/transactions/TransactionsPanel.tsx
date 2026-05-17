@@ -226,7 +226,7 @@ export default function TransactionsPanel({ syncTransactions, syncStatus, loadin
         </div>
       </header>
 
-      <div className="tabs">
+      <div className="nav nav-tabs">
         <button className={tab === "tag-transactions" ? "active" : ""} onClick={() => setTab("tag-transactions")}>Tag transactions</button>
         <button className={tab === "my-tags" ? "active" : ""} onClick={() => setTab("my-tags")}>My tags</button>
       </div>
@@ -300,7 +300,7 @@ export default function TransactionsPanel({ syncTransactions, syncStatus, loadin
                                   <button className="btn ghost btn-sm" onClick={() => { setEditingId(tag.id); setEditName(tag.name); setEditColor(getDisplayTagColor(tag.type, tag.color)); }}>Edit</button>
                                 )}
                                 {deleting && (
-                                  <button className="btn danger-ghost btn-sm" disabled={deleteMut.isPending} onClick={() => deleteMut.mutate(tag.id)}>Delete</button>
+                                  <button className="btn danger btn-sm" disabled={deleteMut.isPending} onClick={() => deleteMut.mutate(tag.id)}>Delete</button>
                                 )}
                               </div>
                             </>

@@ -55,7 +55,7 @@ export default function MfaChallenge({ onVerified, onSignOut }: { onVerified: ()
             {submitting ? "Verifying…" : "Verify"}
           </button>
         </form>
-        {onSignOut && <button type="button" className="btn link mt-3" onClick={onSignOut} style={{ width: "100%", justifyContent: "center" }}>Sign out</button>}
+        {onSignOut && <button type="button" className="btn ghost mt-3" onClick={onSignOut} style={{ width: "100%", justifyContent: "center", background: "transparent", borderColor: "transparent" }}>Sign out</button>}
       </div>
     </div>
   );

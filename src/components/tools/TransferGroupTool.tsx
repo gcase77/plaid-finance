@@ -201,7 +201,7 @@ export default function TransferGroupTool({ transactions, token, invalidateTrans
 
   return (
     <>
-      <div className="tabs">
+      <div className="nav nav-tabs">
         <button className={tab === "find" ? "active" : ""} onClick={() => setTabPersist("find")}>Find{totalPairs > 0 && <span className="count">{totalPairs}</span>}</button>
         <button className={tab === "existing" ? "active" : ""} onClick={() => setTabPersist("existing")}>Existing{filteredExisting.length + filteredBroken.length > 0 && <span className="count">{filteredExisting.length + filteredBroken.length}</span>}</button>
       </div>
@@ -291,7 +291,7 @@ export default function TransferGroupTool({ transactions, token, invalidateTrans
               <PairRow
                 key={id}
                 pair={{ pairId: id, outflow, inflow, dayGap: 0 }}
-                action={<button className="btn danger-ghost btn-sm" disabled={busyId === id} onClick={() => removeGroup(id, [outflow.transaction_id!, inflow.transaction_id!])}>{busyId === id ? "…" : "Unpair"}</button>}
+                action={<button className="btn danger btn-sm" disabled={busyId === id} onClick={() => removeGroup(id, [outflow.transaction_id!, inflow.transaction_id!])}>{busyId === id ? "…" : "Unpair"}</button>}
               />
             ))}
             {filteredBroken.map(({ id, t }) => {
@@ -306,7 +306,7 @@ export default function TransferGroupTool({ transactions, token, invalidateTrans
                   </div>
                   <div><div className="xs muted fw-semi mb-1">OUT</div>{isOut ? <TxnCell t={t} /> : <span className="muted">—</span>}</div>
                   <div><div className="xs muted fw-semi mb-1">IN</div>{!isOut ? <TxnCell t={t} /> : <span className="muted">—</span>}</div>
-                  <button className="btn danger-ghost btn-sm" disabled={busyId === id} onClick={() => removeGroup(id, [t.transaction_id!])}>{busyId === id ? "…" : "Unpair"}</button>
+                  <button className="btn danger btn-sm" disabled={busyId === id} onClick={() => removeGroup(id, [t.transaction_id!])}>{busyId === id ? "…" : "Unpair"}</button>
                 </div>
               );
             })}

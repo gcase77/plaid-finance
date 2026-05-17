@@ -51,10 +51,9 @@ The whole app must follow these:
    one-line description. Page-specific controls live directly under that
    header (a single horizontal action row).
 3. **Cards** — All content blocks use `<div class="card">`. No nested cards.
-4. **Buttons** — Base variants: `btn primary`, `btn ghost`, `btn danger`.
-   Sizes: default and `sm`. Icon-only buttons add `btn-icon`. Utility
-   variants used in app code: `btn danger-ghost`, `btn link`.
-5. **Tabs** — `.tabs` for content switching inside a card.
+4. **Buttons** — Three variants only: `btn primary`, `btn ghost`, `btn danger`.
+   Sizes: default and `sm`. Icon-only buttons add `btn-icon`.
+5. **Tabs** — `nav nav-tabs` for content switching inside a card.
 6. **Tags / Badges** — `chip` (neutral), `chip-soft` (brand-tinted),
    colored `tag-badge` (user tags carry their assigned color).
 7. **Tables** — `table` class only. Sticky header, zebra striping, no borders

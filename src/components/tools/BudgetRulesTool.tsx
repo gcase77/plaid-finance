@@ -482,7 +482,7 @@ export default function BudgetRulesTool({ token }: Props) {
                             </>
                           )}
                           {deleting && (
-                            <button className="btn danger-ghost btn-sm" disabled={deleteMut.isPending} onClick={() => deleteMut.mutate(rule.id)}>Delete</button>
+                            <button className="btn danger btn-sm" disabled={deleteMut.isPending} onClick={() => deleteMut.mutate(rule.id)}>Delete</button>
                           )}
                         </div>
                       </div>

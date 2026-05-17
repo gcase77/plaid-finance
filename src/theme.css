@@ -179,10 +179,6 @@ hr { border: 0; border-top: 1px solid var(--line); margin: var(--s4) 0; }
 .btn.ghost.active { background: var(--brand-soft); color: var(--brand); border-color: var(--brand-soft); }
 .btn.danger { background: var(--danger); color: #fff; border-color: var(--danger); }
 .btn.danger:hover:not(:disabled) { background: #b91c1c; border-color: #b91c1c; }
-.btn.danger-ghost { background: var(--surface); color: var(--danger); border-color: var(--line); }
-.btn.danger-ghost:hover:not(:disabled) { background: var(--danger-soft); border-color: var(--danger); }
-.btn.link { padding: 0; color: var(--brand); background: transparent; border: 0; }
-.btn.link:hover { text-decoration: underline; }
 
 /* Segmented control */
 .segmented { display: flex; flex-wrap: wrap; max-width: 100%; box-sizing: border-box; background: var(--surface-alt); border-radius: var(--r-md); padding: 3px; gap: 2px; border: 1px solid var(--line); }
@@ -283,16 +279,16 @@ hr { border: 0; border-top: 1px solid var(--line); margin: var(--s4) 0; }
 }
 
 /* ───────── Tabs ───────── */
-.tabs { display: flex; gap: var(--s2); border-bottom: 1px solid var(--line); margin-bottom: var(--s4); }
-.tabs button {
+.nav.nav-tabs { display: flex; gap: var(--s2); border-bottom: 1px solid var(--line); margin-bottom: var(--s4); }
+.nav.nav-tabs button {
   background: transparent; border: 0; padding: var(--s2) var(--s3);
   font-family: inherit; font-size: 0.92rem; font-weight: 550;
   color: var(--ink-muted); cursor: pointer; border-bottom: 2px solid transparent;
   margin-bottom: -1px;
 }
-.tabs button:hover { color: var(--ink); }
-.tabs button.active { color: var(--brand); border-bottom-color: var(--brand); }
-.tabs .count { margin-left: 6px; font-size: 0.74rem; padding: 0 6px; border-radius: var(--r-pill); background: var(--surface-alt); color: var(--ink-muted); }
+.nav.nav-tabs button:hover { color: var(--ink); }
+.nav.nav-tabs button.active { color: var(--brand); border-bottom-color: var(--brand); }
+.nav.nav-tabs .count { margin-left: 6px; font-size: 0.74rem; padding: 0 6px; border-radius: var(--r-pill); background: var(--surface-alt); color: var(--ink-muted); }
 
 /* ───────── Tables ───────── */
 .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--r-md); background: var(--surface); }
