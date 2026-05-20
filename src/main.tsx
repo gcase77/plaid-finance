@@ -9,6 +9,7 @@ import RequireAuth from "./components/auth/RequireAuth";
 import SecurityPage from "./components/auth/SecurityPage";
 import { PrivacyPolicyPage, TermsPage } from "./components/legal/LegalDocumentPage";
 import { LandingPage } from "./components/landing/LandingPage";
+import InvestmentsPage from "./components/investments/InvestmentsPage";
 import MainPage from "./components/main/MainPage";
 import NotFoundPage from "./components/NotFoundPage";
 import ToolsPage from "./components/tools/ToolsPage";
@@ -34,6 +35,7 @@ createRoot(document.getElementById("root")!).render(
               <Route path="/plaid-oauth-redirect" element={<MainPage />} />
               <Route path="/main" element={<Navigate to="/" replace />} />
               <Route path="/transactions" element={<TransactionsPage />} />
+              <Route path="/investments" element={<InvestmentsPage />} />
               <Route path="/tools" element={<ToolsPage />} />
               <Route path="/account" element={<SecurityPage />} />
             </Route>

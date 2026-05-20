@@ -14,7 +14,7 @@ router.post("/link/token", async (req, res) => {
       : 730;
     const linkTokenRequest: any = {
       user: { client_user_id: userId },
-      products: ["transactions"],
+      products: ["transactions", "investments"],
       client_name: "Plaid App",
       language: "en",
       country_codes: ["US"],
