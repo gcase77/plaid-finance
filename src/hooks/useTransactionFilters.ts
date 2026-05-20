@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import type { TextMode, TagStateFilter, Txn } from "../components/types";
+import type { MissingTagFilter, TagStateFilter, TextMode, Txn } from "../components/types";
 import { buildDatePreset } from "../utils/datePresets";
 import { formatCategoryLabel, formatCategorySubLabel, getTxnDateOnly } from "../utils/transactionUtils";
 
@@ -22,6 +22,7 @@ export type TransactionFilterState = {
   dateStart: string;
   dateEnd: string;
   tagStateFilter: TagStateFilter;
+  missingTagFilter: MissingTagFilter;
   selectedTagIds: number[];
   filterOperator: "and" | "or";
 };
@@ -39,6 +40,7 @@ export type TransactionFilterActions = {
   setDateStart: (v: string) => void;
   setDateEnd: (v: string) => void;
   setTagStateFilter: (v: TagStateFilter) => void;
+  setMissingTagFilter: (v: MissingTagFilter) => void;
   setSelectedTagIds: (v: number[]) => void;
   setFilterOperator: (v: "and" | "or") => void;
   clearAllFilters: () => void;
@@ -73,6 +75,7 @@ export function useTransactionFilters(transactions: Txn[]): UseTransactionFilter
   const [dateStart, setDateStart] = useState("");
   const [dateEnd, setDateEnd] = useState("");
   const [tagStateFilter, setTagStateFilter] = useState<TagStateFilter>("all");
+  const [missingTagFilter, setMissingTagFilter] = useState<MissingTagFilter>("all");
   const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
   const [filterOperator, setFilterOperator] = useState<"and" | "or">("and");
 
@@ -132,6 +135,15 @@ export function useTransactionFilters(transactions: Txn[]): UseTransactionFilter
         return true;
       });
     }
+    if (missingTagFilter !== "all") {
+      predicates.push((t) => {
+        const hasBucketTag = t.bucket_1_tag_id != null || t.bucket_2_tag_id != null;
+        if (missingTagFilter === "no_meta") return (t.meta_tag_ids?.length ?? 0) === 0;
+        if (missingTagFilter === "no_income") return Number(t.amount || 0) < 0 && !hasBucketTag;
+        if (missingTagFilter === "no_spending") return Number(t.amount || 0) > 0 && !hasBucketTag;
+        return true;
+      });
+    }
     if (selectedTagIds.length) {
       predicates.push((t) =>
         selectedTagIds.includes(t.bucket_1_tag_id ?? -1)
@@ -144,7 +156,7 @@ export function useTransactionFilters(transactions: Txn[]): UseTransactionFilter
     return transactions.filter((t) =>
       filterOperator === "or" ? predicates.some((p) => p(t)) : predicates.every((p) => p(t))
     );
-  }, [transactions, filterOperator, nameFilter, nameMode, merchantFilter, merchantMode, selectedBanks, selectedAccounts, selectedCategories, amountMin, amountMax, dateStart, dateEnd, tagStateFilter, selectedTagIds]);
+  }, [transactions, filterOperator, nameFilter, nameMode, merchantFilter, merchantMode, selectedBanks, selectedAccounts, selectedCategories, amountMin, amountMax, dateStart, dateEnd, tagStateFilter, missingTagFilter, selectedTagIds]);
 
   const bankOptions = useMemo(() => {
     const m = new Map<string, string>();
@@ -199,6 +211,7 @@ export function useTransactionFilters(transactions: Txn[]): UseTransactionFilter
     setDateStart("");
     setDateEnd("");
     setTagStateFilter("all");
+    setMissingTagFilter("all");
     setSelectedTagIds([]);
   };
 
@@ -222,6 +235,7 @@ export function useTransactionFilters(transactions: Txn[]): UseTransactionFilter
       dateStart,
       dateEnd,
       tagStateFilter,
+      missingTagFilter,
       selectedTagIds,
       filterOperator
     },
@@ -238,6 +252,7 @@ export function useTransactionFilters(transactions: Txn[]): UseTransactionFilter
       setDateStart,
       setDateEnd,
       setTagStateFilter,
+      setMissingTagFilter,
       setSelectedTagIds,
       setFilterOperator,
       clearAllFilters,

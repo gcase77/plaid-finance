@@ -65,7 +65,13 @@ export default function TransactionsFilterSection({ filters, tags }: Props) {
   }`;
   const amountSummary = hasMin && hasMax ? `${state.amountMin}–${state.amountMax}` : hasMin ? `≥ ${state.amountMin}` : hasMax ? `≤ ${state.amountMax}` : "any";
   const sourceSummary = `${state.selectedBanks.length || "any"} bank, ${state.selectedAccounts.length || "any"} acct`;
-  const tagSum = state.tagStateFilter === "untagged" ? "untagged" : state.selectedTagIds.length ? `${state.selectedTagIds.length} tag${state.selectedTagIds.length === 1 ? "" : "s"}` : "any";
+  const tagSummaryParts: string[] = [];
+  if (state.tagStateFilter === "untagged") tagSummaryParts.push("untagged");
+  else if (state.selectedTagIds.length) tagSummaryParts.push(`${state.selectedTagIds.length} tag${state.selectedTagIds.length === 1 ? "" : "s"}`);
+  if (state.missingTagFilter === "no_meta") tagSummaryParts.push("no meta");
+  if (state.missingTagFilter === "no_income") tagSummaryParts.push("no income");
+  if (state.missingTagFilter === "no_spending") tagSummaryParts.push("no spending");
+  const tagSum = tagSummaryParts.length ? tagSummaryParts.join(", ") : "any";
   const catSum = state.selectedCategories.length ? `${state.selectedCategories.length} detected` : "any";
 
   return (
@@ -140,6 +146,14 @@ export default function TransactionsFilterSection({ filters, tags }: Props) {
             onChange={(ids) => { actions.setTagStateFilter("all"); actions.setSelectedTagIds(ids); }}
             tertiary={{ label: "Untagged", active: state.tagStateFilter === "untagged", onClick: () => { actions.setTagStateFilter("untagged"); actions.setSelectedTagIds([]); } }}
           />
+          <div className="col-flex" style={{ gap: 6 }}>
+            <div className="xs muted fw-semi">Missing tags</div>
+            <div className="row-flex flex-wrap gap-2">
+              <button className={`btn ${state.missingTagFilter === "no_meta" ? "primary" : "ghost"} btn-sm`} onClick={() => actions.setMissingTagFilter(state.missingTagFilter === "no_meta" ? "all" : "no_meta")}>No meta</button>
+              <button className={`btn ${state.missingTagFilter === "no_income" ? "primary" : "ghost"} btn-sm`} onClick={() => actions.setMissingTagFilter(state.missingTagFilter === "no_income" ? "all" : "no_income")}>No income</button>
+              <button className={`btn ${state.missingTagFilter === "no_spending" ? "primary" : "ghost"} btn-sm`} onClick={() => actions.setMissingTagFilter(state.missingTagFilter === "no_spending" ? "all" : "no_spending")}>No spending</button>
+            </div>
+          </div>
           <div className="col-flex" style={{ gap: 6 }}>
             <div className="xs muted fw-semi">Detected ({state.selectedCategories.length})</div>
             <div className="row-flex gap-2">

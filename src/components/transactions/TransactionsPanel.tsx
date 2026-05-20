@@ -120,6 +120,16 @@ export default function TransactionsPanel({ syncTransactions, syncStatus, loadin
 
   useEffect(() => { setCreateColor(getDefaultTagColor(KIND_TO_TYPE[createKind])); }, [createKind]);
   useEffect(() => { if (!taggingMode) { setSelectedIds(new Set()); setApplyOpen(false); setRemoveOpen(false); } }, [taggingMode]);
+  useEffect(() => {
+    if (!taggingMode) return;
+    const visible = new Set(selectable.map((t) => t.transaction_id));
+    setSelectedIds((prev) => {
+      if (!prev.size) return prev;
+      const next = new Set<string>();
+      prev.forEach((id) => { if (visible.has(id)) next.add(id); });
+      return next.size === prev.size ? prev : next;
+    });
+  }, [taggingMode, selectable]);
 
   const createMut = useMutation({
     mutationFn: async () => {
@@ -168,6 +178,7 @@ export default function TransactionsPanel({ syncTransactions, syncStatus, loadin
       return it;
     });
     await applyMut.mutateAsync(items);
+    setSelectedIds(new Set<string>());
     setApplyOpen(false);
   };
 
@@ -185,6 +196,7 @@ export default function TransactionsPanel({ syncTransactions, syncStatus, loadin
     const res = await fetch("/api/transaction_meta/tags", { method: "DELETE", headers: { "Content-Type": "application/json", ...buildAuthHeaders(token) }, body: JSON.stringify(items) });
     if (!res.ok) { const d = await res.json().catch(() => ({})); throw new Error(friendlyError(d?.error || `Failed to remove tag (${res.status})`)); }
     await invalidateTransactionMeta();
+    setSelectedIds(new Set<string>());
     setRemoveOpen(false);
   };
 
@@ -204,6 +216,7 @@ export default function TransactionsPanel({ syncTransactions, syncStatus, loadin
     const res = await fetch("/api/transaction_meta/tags", { method: "DELETE", headers: { "Content-Type": "application/json", ...buildAuthHeaders(token) }, body: JSON.stringify(items) });
     if (!res.ok) { const d = await res.json().catch(() => ({})); throw new Error(friendlyError(d?.error || `Failed to clear tags (${res.status})`)); }
     await invalidateTransactionMeta();
+    setSelectedIds(new Set<string>());
     setRemoveOpen(false);
   };
 

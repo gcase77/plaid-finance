@@ -15,7 +15,10 @@ export default function AppliedFiltersBar({ filters }: { filters: UseTransaction
     state.selectedAccounts.length > 0 && { id: "accounts", label: `Accounts: ${state.selectedAccounts.length}`, onClear: () => actions.setSelectedAccounts([]) },
     state.selectedTagIds.length > 0 && { id: "tags", label: `Tags: ${state.selectedTagIds.length}`, onClear: () => actions.setSelectedTagIds([]) },
     state.selectedCategories.length > 0 && { id: "categories", label: `Detected: ${state.selectedCategories.length}`, onClear: () => actions.setSelectedCategories([]) },
-    state.tagStateFilter === "untagged" && { id: "untagged", label: "Untagged only", onClear: () => actions.setTagStateFilter("all") }
+    state.tagStateFilter === "untagged" && { id: "untagged", label: "Untagged only", onClear: () => actions.setTagStateFilter("all") },
+    state.missingTagFilter === "no_meta" && { id: "no-meta", label: "No meta tag", onClear: () => actions.setMissingTagFilter("all") },
+    state.missingTagFilter === "no_income" && { id: "no-income", label: "No income tag", onClear: () => actions.setMissingTagFilter("all") },
+    state.missingTagFilter === "no_spending" && { id: "no-spending", label: "No spending tag", onClear: () => actions.setMissingTagFilter("all") }
   ].filter(Boolean) as Chip[];
 
   if (!chips.length) return null;
