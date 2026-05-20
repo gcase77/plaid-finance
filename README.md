@@ -225,9 +225,10 @@ Reference data for holdings and transactions. Returned by both Investments endpo
 | DELETE | [api/transaction_meta/transfer_group](server/routes/transaction_meta.ts#L82) | query: — body: `{ transaction_ids: [id1, id2] }` or `{ transaction_ids: [id] }` (clears whole group for that transfer) | `{ success: true }` |
 | POST   | [api/transaction_meta/tags](server/routes/transaction_meta.ts#L115)    | query: — body: `TransactionTagChange[]` (set bucket tags and add meta tags) | `{ success: true }` |
 | DELETE | [api/transaction_meta/tags](server/routes/transaction_meta.ts#L268)    | query: — body: `TransactionTagChange[]` (remove specified bucket/meta tags only) | `{ success: true }` |
-| GET    | [api/tags](server/routes/tags.ts#L10)                                 | query: — body: —                    | tag array                                                      |
-| POST   | [api/tags](server/routes/tags.ts#L23)                                 | query: — body: `{ name, type, color? }`     | created tag object                                             |
-| DELETE | [api/tags/:id](server/routes/tags.ts#L37)                              | query: — body: —                    | `{ success: true }`                                            |
+| GET    | [api/tags](server/routes/tags.ts#L34)                                 | query: — body: —                    | tag array                                                      |
+| POST   | [api/tags](server/routes/tags.ts#L47)                                 | query: — body: `{ name, type, color? }`     | created tag object                                             |
+| PATCH  | [api/tags/:id](server/routes/tags.ts#L64)                              | query: — body: `{ name?, color? }`  | updated tag object                                             |
+| DELETE | [api/tags/:id](server/routes/tags.ts#L93)                              | query: — body: —                    | `{ success: true }`                                            |
 | GET    | [api/budget_rules](server/routes/budget_rules.ts#L227)                 | query: — body: —                    | budget rule array                                              |
 | POST   | [api/budget_rules](server/routes/budget_rules.ts#L240)                 | query: — body: `{ tag_id, name, start_date, type, flat_amount?, percent?, calendar_window, rollover_options }` | created budget rule object |
 | PATCH  | [api/budget_rules/:id](server/routes/budget_rules.ts#L301)              | query: — body: partial budget rule object | updated budget rule object                    |

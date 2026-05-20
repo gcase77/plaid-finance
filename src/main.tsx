@@ -2,6 +2,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import "./theme.css";
 import AppLayout from "./components/AppLayout";
 import AuthPage from "./components/auth/AuthPage";
 import RequireAuth from "./components/auth/RequireAuth";

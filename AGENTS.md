@@ -19,7 +19,7 @@ This is a personal finance app (React + Express + Prisma + Supabase + Plaid). Se
 | Install deps          | `npm install` (also runs `prisma generate` via postinstall) |
 | Lint                  | `npm run lint` (ESLint on `src/`)                           |
 | Build                 | `npm run build` (Vite production build)                     |
-| Dev (both servers)    | `npm run start` (concurrently runs Vite + Express)          |
+| Dev (both servers)    | `npm run dev` (concurrently runs Vite + Express)            |
 | Dev (frontend only)   | `npm run dev:client`                                        |
 | Dev (backend only)    | `npm run dev:server`                                        |
 | Dev (backend + watch) | `npm run watch` (nodemon auto-reload)                       |
@@ -30,4 +30,5 @@ This is a personal finance app (React + Express + Prisma + Supabase + Plaid). Se
 - The Express server (`server/index.ts`) requires `DATABASE_URL` at module load time — it will crash immediately without it. The Vite frontend can run independently via `npm run dev:client`.
 - Required env vars for full operation: `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `DATABASE_URL`, `DIRECT_URL`, `PLAID_CLIENT_ID`, `PLAID_SECRET`, `PLAID_ENV`. Place them in a root `.env` file.
 - Node.js v22+ and npm are used. There is no `.nvmrc` or version manager config — the system Node works fine.
-
+- A `.env` file is required at the repository root for the servers to start. All secrets are injected as environment variables; generate `.env` from them before running services: `printenv | grep -E '^(SUPABASE_URL|SUPABASE_PUBLISHABLE_KEY|DATABASE_URL|DIRECT_URL|PLAID_CLIENT_ID|PLAID_SECRET|PLAID_ENV)=' > .env`
+- The Vite dev server (port 5173) proxies `/api` requests to the Express backend (port 8000). Use `npm run dev` to start both.
