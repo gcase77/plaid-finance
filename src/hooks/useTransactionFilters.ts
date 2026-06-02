@@ -255,11 +255,17 @@ export function useTransactionFilters(transactions: Txn[]): UseTransactionFilter
       setMissingTagFilter,
       setSelectedTagIds,
       setFilterOperator,
+      setGroupsOperator,
+      addCurrentAsGroup,
+      removeGroup,
+      clearGroups,
       clearAllFilters,
       applyDatePreset
     },
     derived: {
       filteredTransactions,
+      draftGroup,
+      rootNode,
       options: {
         bankOptions,
         accountOptions,

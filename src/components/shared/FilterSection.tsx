@@ -78,8 +78,13 @@ export default function TransactionsFilterSection({ filters, tags }: Props) {
     <div className="card card-tight col-flex" style={{ gap: 8, minWidth: 0 }}>
       <div className="between">
         <h3>Filters</h3>
-        <Segmented value={state.filterOperator} onChange={actions.setFilterOperator} options={[{ value: "and", label: "AND" }, { value: "or", label: "OR" }]} />
+        <div className="row-flex gap-2" style={{ alignItems: "center" }}>
+          <span className="xs muted">Match</span>
+          <Segmented value={state.filterOperator} onChange={actions.setFilterOperator} options={[{ value: "and", label: "AND" }, { value: "or", label: "OR" }]} />
+        </div>
       </div>
+
+      <FilterGroupsBar filters={filters} tags={tags} />
 
       <Section label="Search" summary={searchSummary}>
         <div className="col-flex" style={{ gap: 10 }}>
