@@ -1,41 +1,32 @@
-import { Fragment } from "react";
+import { useMemo } from "react";
 import type { UseTransactionFiltersReturn } from "../../hooks/useTransactionFilters";
+import type { Tag } from "../types";
+import { countActiveConditions, describeNode, type LabelCtx } from "../../utils/filterTree";
 
-type Chip = { id: string; label: string; onClear: () => void };
+export default function AppliedFiltersBar({ filters, tags }: { filters: UseTransactionFiltersReturn; tags: Tag[] }) {
+  const { root, clear, derived } = filters;
 
-export default function AppliedFiltersBar({ filters }: { filters: UseTransactionFiltersReturn }) {
-  const { state, actions } = filters;
-  const chips: Chip[] = [
-    state.nameFilter.trim() && { id: "name", label: `Name ${state.nameMode === "not" ? "≠" : "∋"} "${state.nameFilter}"`, onClear: () => { actions.setNameFilter(""); actions.setNameMode("contains"); } },
-    state.merchantMode === "null" && { id: "merchant-null", label: "Merchant unspecified", onClear: () => actions.setMerchantMode("contains") },
-    state.merchantFilter.trim() && state.merchantMode !== "null" && { id: "merchant", label: `Merchant ${state.merchantMode === "not" ? "≠" : "∋"} "${state.merchantFilter}"`, onClear: () => { actions.setMerchantFilter(""); actions.setMerchantMode("contains"); } },
-    (state.amountMin.trim() || state.amountMax.trim()) && { id: "amount", label: state.amountMin && state.amountMax ? `Amount ${state.amountMin}–${state.amountMax}` : state.amountMin ? `≥ ${state.amountMin}` : `≤ ${state.amountMax}`, onClear: () => { actions.setAmountMin(""); actions.setAmountMax(""); } },
-    (state.dateStart || state.dateEnd) && { id: "date", label: `${state.dateStart || "?"} → ${state.dateEnd || "?"}`, onClear: () => { actions.setDateStart(""); actions.setDateEnd(""); } },
-    state.selectedBanks.length > 0 && { id: "banks", label: `Banks: ${state.selectedBanks.length}`, onClear: () => actions.setSelectedBanks([]) },
-    state.selectedAccounts.length > 0 && { id: "accounts", label: `Accounts: ${state.selectedAccounts.length}`, onClear: () => actions.setSelectedAccounts([]) },
-    state.selectedTagIds.length > 0 && { id: "tags", label: `Tags: ${state.selectedTagIds.length}`, onClear: () => actions.setSelectedTagIds([]) },
-    state.selectedCategories.length > 0 && { id: "categories", label: `Detected: ${state.selectedCategories.length}`, onClear: () => actions.setSelectedCategories([]) },
-    state.tagStateFilter === "untagged" && { id: "untagged", label: "Untagged only", onClear: () => actions.setTagStateFilter("all") },
-    state.missingTagFilter === "no_meta" && { id: "no-meta", label: "No meta tag", onClear: () => actions.setMissingTagFilter("all") },
-    state.missingTagFilter === "no_income" && { id: "no-income", label: "No income tag", onClear: () => actions.setMissingTagFilter("all") },
-    state.missingTagFilter === "no_spending" && { id: "no-spending", label: "No spending tag", onClear: () => actions.setMissingTagFilter("all") }
-  ].filter(Boolean) as Chip[];
+  const ctx = useMemo<LabelCtx>(() => {
+    const tagById = new Map(tags.map((t) => [t.id, t.name]));
+    const bankById = new Map(derived.options.bankOptions);
+    const accountById = new Map(derived.options.accountOptions);
+    const categoryLabelByValue = new Map<string, string>();
+    derived.options.categoryOptionsByPrimary.forEach((g) => g.options.forEach((o) => categoryLabelByValue.set(o.value, o.label)));
+    return {
+      tagName: (id) => tagById.get(id) ?? `#${id}`,
+      bankLabel: (id) => bankById.get(id) ?? id,
+      accountLabel: (id) => accountById.get(id) ?? id,
+      categoryLabel: (value) => categoryLabelByValue.get(value) ?? value
+    };
+  }, [tags, derived.options]);
 
-  if (!chips.length) return null;
-  const sep = state.filterOperator === "or" ? "OR" : "AND";
+  if (countActiveConditions(root) === 0) return null;
+
   return (
-    <div className="row-flex flex-wrap gap-2 mb-3">
-      <span className="xs muted">Filters:</span>
-      {chips.map(({ id, label, onClear }, i) => (
-        <Fragment key={id}>
-          {i > 0 && <span className="xs muted fw-semi">{sep}</span>}
-          <span className="chip chip-soft">
-            {label}
-            <button type="button" aria-label="Remove" onClick={onClear} style={{ background: "transparent", border: 0, color: "inherit", marginLeft: 4, cursor: "pointer", fontSize: "0.9rem" }}>✕</button>
-          </span>
-        </Fragment>
-      ))}
-      <button className="btn ghost btn-sm" onClick={actions.clearAllFilters}>Clear all</button>
+    <div className="row-flex flex-wrap gap-2 mb-3" style={{ alignItems: "center" }}>
+      <span className="xs muted">Showing:</span>
+      <span className="chip chip-soft" style={{ lineHeight: 1.4 }}>{describeNode(root, ctx)}</span>
+      <button className="btn ghost btn-sm" onClick={clear}>Clear</button>
     </div>
   );
 }

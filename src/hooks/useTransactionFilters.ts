@@ -1,7 +1,11 @@
-import { useState, useMemo } from "react";
-import type { MissingTagFilter, TagStateFilter, TextMode, Txn } from "../components/types";
-import { buildDatePreset } from "../utils/datePresets";
-import { formatCategoryLabel, formatCategorySubLabel, getTxnDateOnly } from "../utils/transactionUtils";
+import { useState, useMemo, useEffect, useCallback } from "react";
+import type { Txn } from "../components/types";
+import { formatCategoryLabel, formatCategorySubLabel } from "../utils/transactionUtils";
+import { applyFilterTree, cloneWithNewIds, emptyGroup, type GroupNode } from "../utils/filterTree";
+
+const STORAGE_KEY = "txn_filter_builder_v1";
+
+export type SavedFilter = { name: string; tree: GroupNode };
 
 type CategoryOptionGroup = {
   primary: string;
@@ -9,154 +13,75 @@ type CategoryOptionGroup = {
   options: Array<{ value: string; label: string }>;
 };
 
-export type TransactionFilterState = {
-  nameMode: TextMode;
-  nameFilter: string;
-  merchantMode: TextMode;
-  merchantFilter: string;
-  selectedBanks: string[];
-  selectedAccounts: string[];
-  selectedCategories: string[];
-  amountMin: string;
-  amountMax: string;
-  dateStart: string;
-  dateEnd: string;
-  tagStateFilter: TagStateFilter;
-  missingTagFilter: MissingTagFilter;
-  selectedTagIds: number[];
-  filterOperator: "and" | "or";
-};
-
-export type TransactionFilterActions = {
-  setNameMode: (v: TextMode) => void;
-  setNameFilter: (v: string) => void;
-  setMerchantMode: (v: TextMode) => void;
-  setMerchantFilter: (v: string) => void;
-  setSelectedBanks: (v: string[]) => void;
-  setSelectedAccounts: (v: string[]) => void;
-  setSelectedCategories: (v: string[]) => void;
-  setAmountMin: (v: string) => void;
-  setAmountMax: (v: string) => void;
-  setDateStart: (v: string) => void;
-  setDateEnd: (v: string) => void;
-  setTagStateFilter: (v: TagStateFilter) => void;
-  setMissingTagFilter: (v: MissingTagFilter) => void;
-  setSelectedTagIds: (v: number[]) => void;
-  setFilterOperator: (v: "and" | "or") => void;
-  clearAllFilters: () => void;
-  applyDatePreset: (preset: string) => void;
-};
-
-type TransactionFilterDerived = {
-  filteredTransactions: Txn[];
-  options: {
-    bankOptions: Array<[string, string]>;
-    accountOptions: Array<[string, string]>;
-    categoryOptionsByPrimary: CategoryOptionGroup[];
-  };
+type FilterOptions = {
+  bankOptions: Array<[string, string]>;
+  accountOptions: Array<[string, string]>;
+  categoryOptionsByPrimary: CategoryOptionGroup[];
 };
 
 export type UseTransactionFiltersReturn = {
-  state: TransactionFilterState;
-  actions: TransactionFilterActions;
-  derived: TransactionFilterDerived;
+  /** The root of the editable filter tree. */
+  root: GroupNode;
+  setRoot: (next: GroupNode) => void;
+  clear: () => void;
+  savedFilters: SavedFilter[];
+  saveFilter: (name: string) => void;
+  loadFilter: (name: string) => void;
+  deleteFilter: (name: string) => void;
+  derived: {
+    filteredTransactions: Txn[];
+    options: FilterOptions;
+  };
+};
+
+const loadSaved = (): SavedFilter[] => {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
 };
 
 export function useTransactionFilters(transactions: Txn[]): UseTransactionFiltersReturn {
-  const [nameMode, setNameMode] = useState<TextMode>("contains");
-  const [nameFilter, setNameFilter] = useState("");
-  const [merchantMode, setMerchantMode] = useState<TextMode>("contains");
-  const [merchantFilter, setMerchantFilter] = useState("");
-  const [selectedBanks, setSelectedBanks] = useState<string[]>([]);
-  const [selectedAccounts, setSelectedAccounts] = useState<string[]>([]);
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [amountMin, setAmountMin] = useState<string>("");
-  const [amountMax, setAmountMax] = useState<string>("");
-  const [dateStart, setDateStart] = useState("");
-  const [dateEnd, setDateEnd] = useState("");
-  const [tagStateFilter, setTagStateFilter] = useState<TagStateFilter>("all");
-  const [missingTagFilter, setMissingTagFilter] = useState<MissingTagFilter>("all");
-  const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
-  const [filterOperator, setFilterOperator] = useState<"and" | "or">("and");
+  const [root, setRoot] = useState<GroupNode>(() => emptyGroup("and"));
+  const [savedFilters, setSavedFilters] = useState<SavedFilter[]>(loadSaved);
 
-  const filteredTransactions = useMemo(() => {
-    const minVal = amountMin.trim() ? Number(amountMin) : null;
-    const maxVal = amountMax.trim() ? Number(amountMax) : null;
-    const predicates: Array<(t: Txn) => boolean> = [];
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(savedFilters));
+    } catch {
+      // Ignore storage write failures (e.g. private mode / quota).
+    }
+  }, [savedFilters]);
 
-    if (nameFilter.trim()) {
-      const q = nameFilter.toLowerCase().trim();
-      predicates.push((t) => nameMode === "not" ? !(t.name || "").toLowerCase().includes(q) : (t.name || "").toLowerCase().includes(q));
-    }
-    if (merchantMode === "null") {
-      predicates.push((t) => !t.merchant_name);
-    } else if (merchantFilter.trim()) {
-      const q = merchantFilter.toLowerCase().trim();
-      predicates.push((t) => merchantMode === "not" ? !(t.merchant_name || "").toLowerCase().includes(q) : (t.merchant_name || "").toLowerCase().includes(q));
-    }
-    if (selectedBanks.length) predicates.push((t) => selectedBanks.includes(String(t.item_id || "")));
-    if (selectedAccounts.length) predicates.push((t) => selectedAccounts.includes(String(t.account_id || "")));
-    if (selectedCategories.length) predicates.push((t) => {
-      const cat = t.personal_finance_category?.detailed || t.personal_finance_category?.primary || "";
-      return selectedCategories.includes(cat);
+  const clear = useCallback(() => setRoot(emptyGroup("and")), []);
+
+  const saveFilter = useCallback((name: string) => {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    const tree = cloneWithNewIds(root) as GroupNode;
+    setSavedFilters((prev) => {
+      const without = prev.filter((f) => f.name !== trimmed);
+      return [...without, { name: trimmed, tree }];
     });
-    if (minVal !== null && Number.isFinite(minVal)) {
-      predicates.push((t) => {
-        const amt = Number(t.amount || 0);
-        // Inclusive bounds: UI labels use "≥"/"≤".
-        return amt >= minVal;
-      });
-    }
-    if (maxVal !== null && Number.isFinite(maxVal)) {
-      predicates.push((t) => {
-        const amt = Number(t.amount || 0);
-        return amt <= maxVal;
-      });
-    }
-    if (dateStart || dateEnd) {
-      predicates.push((t) => {
-        const rawDate = getTxnDateOnly(t);
-        if (!rawDate) return false;
-        const d = new Date(`${rawDate}T00:00:00`);
-        if (Number.isNaN(d.valueOf())) return false;
-        if (dateStart && d < new Date(`${dateStart}T00:00:00`)) return false;
-        if (dateEnd && d > new Date(`${dateEnd}T23:59:59`)) return false;
-        return true;
-      });
-    }
-    if (tagStateFilter !== "all") {
-      predicates.push((t) => {
-        const hasAnyTag = t.account_transfer_group != null
-          || t.bucket_1_tag_id != null
-          || t.bucket_2_tag_id != null
-          || (t.meta_tag_ids?.length ?? 0) > 0;
-        if (tagStateFilter === "untagged") return !hasAnyTag;
-        if (tagStateFilter === "tagged") return hasAnyTag;
-        return true;
-      });
-    }
-    if (missingTagFilter !== "all") {
-      predicates.push((t) => {
-        const hasBucketTag = t.bucket_1_tag_id != null || t.bucket_2_tag_id != null;
-        if (missingTagFilter === "no_meta") return (t.meta_tag_ids?.length ?? 0) === 0;
-        if (missingTagFilter === "no_income") return Number(t.amount || 0) < 0 && !hasBucketTag;
-        if (missingTagFilter === "no_spending") return Number(t.amount || 0) > 0 && !hasBucketTag;
-        return true;
-      });
-    }
-    if (selectedTagIds.length) {
-      predicates.push((t) =>
-        selectedTagIds.includes(t.bucket_1_tag_id ?? -1)
-        || selectedTagIds.includes(t.bucket_2_tag_id ?? -1)
-        || (t.meta_tag_ids?.some((id) => selectedTagIds.includes(id)) ?? false)
-      );
-    }
+  }, [root]);
 
-    if (!predicates.length) return transactions;
-    return transactions.filter((t) =>
-      filterOperator === "or" ? predicates.some((p) => p(t)) : predicates.every((p) => p(t))
-    );
-  }, [transactions, filterOperator, nameFilter, nameMode, merchantFilter, merchantMode, selectedBanks, selectedAccounts, selectedCategories, amountMin, amountMax, dateStart, dateEnd, tagStateFilter, missingTagFilter, selectedTagIds]);
+  const loadFilter = useCallback((name: string) => {
+    setSavedFilters((prev) => {
+      const found = prev.find((f) => f.name === name);
+      if (found) setRoot(cloneWithNewIds(found.tree) as GroupNode);
+      return prev;
+    });
+  }, []);
+
+  const deleteFilter = useCallback((name: string) => {
+    setSavedFilters((prev) => prev.filter((f) => f.name !== name));
+  }, []);
+
+  const filteredTransactions = useMemo(() => applyFilterTree(root, transactions), [root, transactions]);
 
   const bankOptions = useMemo(() => {
     const m = new Map<string, string>();
@@ -191,80 +116,22 @@ export function useTransactionFilters(transactions: Txn[]): UseTransactionFilter
       .map(([primary, valueSet]) => ({
         primary,
         primaryLabel: formatCategoryLabel(primary),
-        options: [...valueSet]
-          .sort()
-          .map((value) => ({ value, label: formatCategorySubLabel(primary, value) }))
+        options: [...valueSet].sort().map((value) => ({ value, label: formatCategorySubLabel(primary, value) }))
       }))
       .sort((a, b) => a.primaryLabel.localeCompare(b.primaryLabel));
   }, [transactions]);
 
-  const clearAllFilters = () => {
-    setNameMode("contains");
-    setNameFilter("");
-    setMerchantMode("contains");
-    setMerchantFilter("");
-    setSelectedBanks([]);
-    setSelectedAccounts([]);
-    setSelectedCategories([]);
-    setAmountMin("");
-    setAmountMax("");
-    setDateStart("");
-    setDateEnd("");
-    setTagStateFilter("all");
-    setMissingTagFilter("all");
-    setSelectedTagIds([]);
-  };
-
-  const applyDatePreset = (preset: string) => {
-    const d = buildDatePreset(preset);
-    setDateStart(d.start);
-    setDateEnd(d.end);
-  };
-
   return {
-    state: {
-      nameMode,
-      nameFilter,
-      merchantMode,
-      merchantFilter,
-      selectedBanks,
-      selectedAccounts,
-      selectedCategories,
-      amountMin,
-      amountMax,
-      dateStart,
-      dateEnd,
-      tagStateFilter,
-      missingTagFilter,
-      selectedTagIds,
-      filterOperator
-    },
-    actions: {
-      setNameMode,
-      setNameFilter,
-      setMerchantMode,
-      setMerchantFilter,
-      setSelectedBanks,
-      setSelectedAccounts,
-      setSelectedCategories,
-      setAmountMin,
-      setAmountMax,
-      setDateStart,
-      setDateEnd,
-      setTagStateFilter,
-      setMissingTagFilter,
-      setSelectedTagIds,
-      setFilterOperator,
-      clearAllFilters,
-      applyDatePreset
-    },
+    root,
+    setRoot,
+    clear,
+    savedFilters,
+    saveFilter,
+    loadFilter,
+    deleteFilter,
     derived: {
       filteredTransactions,
-      options: {
-        bankOptions,
-        accountOptions,
-        categoryOptionsByPrimary
-      }
+      options: { bankOptions, accountOptions, categoryOptionsByPrimary }
     }
   };
 }

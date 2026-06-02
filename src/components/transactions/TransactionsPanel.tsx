@@ -7,7 +7,7 @@ import type { Tag, TagType, Txn } from "../types";
 import LoadingSpinner from "../shared/LoadingSpinner";
 import { TagBadge } from "../shared/TagBadge";
 import AppliedFiltersBar from "../shared/AppliedFiltersBar";
-import TransactionsFilterSection from "../shared/FilterSection";
+import QueryBuilder from "../shared/QueryBuilder";
 import TransactionTable from "../shared/TransactionTable";
 import { Alert, InfoTip, Popover, Switch } from "../shared/ui";
 
@@ -332,7 +332,7 @@ export default function TransactionsPanel({ syncTransactions, syncStatus, loadin
       {tab === "tag-transactions" && (
         <div className="txn-tag-layout">
           <div style={{ minWidth: 0 }}>
-            <TransactionsFilterSection filters={filters} tags={tags} />
+            <QueryBuilder filters={filters} tags={tags} />
           </div>
           <div>
             <div className="row-flex between mb-3 flex-wrap gap-2">
@@ -379,7 +379,7 @@ export default function TransactionsPanel({ syncTransactions, syncStatus, loadin
               </div>
             </div>
 
-            <AppliedFiltersBar filters={filters} />
+            <AppliedFiltersBar filters={filters} tags={tags} />
             {applyErr && <div className="mb-3"><Alert tone="danger">{applyErr}</Alert></div>}
 
             {loadingTxns ? <LoadingSpinner /> : (
