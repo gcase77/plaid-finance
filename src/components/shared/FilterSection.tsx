@@ -3,6 +3,7 @@ import type { Tag } from "../types";
 import { DATE_RANGE_PRESETS, formatDateRangeLabel } from "./dateRangeUtils";
 import { Segmented } from "./ui";
 import { TagBadge } from "./TagBadge";
+import FilterGroupsBar from "./FilterGroupsBar";
 
 type Props = { filters: UseTransactionFiltersReturn; tags: Tag[] };
 

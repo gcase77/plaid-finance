@@ -1,7 +1,18 @@
 import { useState, useMemo } from "react";
 import type { MissingTagFilter, TagStateFilter, TextMode, Txn } from "../components/types";
 import { buildDatePreset } from "../utils/datePresets";
-import { formatCategoryLabel, formatCategorySubLabel, getTxnDateOnly } from "../utils/transactionUtils";
+import { formatCategoryLabel, formatCategorySubLabel } from "../utils/transactionUtils";
+import {
+  applyFilterTree,
+  conditionNode,
+  emptyGroup,
+  isConditionActive,
+  newNodeId,
+  type Condition,
+  type FilterNode,
+  type FilterOp,
+  type GroupNode
+} from "../utils/filterTree";
 
 type CategoryOptionGroup = {
   primary: string;
@@ -25,6 +36,8 @@ export type TransactionFilterState = {
   missingTagFilter: MissingTagFilter;
   selectedTagIds: number[];
   filterOperator: "and" | "or";
+  savedGroups: GroupNode[];
+  groupsOperator: FilterOp;
 };
 
 export type TransactionFilterActions = {
@@ -43,12 +56,20 @@ export type TransactionFilterActions = {
   setMissingTagFilter: (v: MissingTagFilter) => void;
   setSelectedTagIds: (v: number[]) => void;
   setFilterOperator: (v: "and" | "or") => void;
+  setGroupsOperator: (v: FilterOp) => void;
+  addCurrentAsGroup: () => void;
+  removeGroup: (id: string) => void;
+  clearGroups: () => void;
   clearAllFilters: () => void;
   applyDatePreset: (preset: string) => void;
 };
 
 type TransactionFilterDerived = {
   filteredTransactions: Txn[];
+  /** Live group built from the current panel selections (the "draft" group). */
+  draftGroup: GroupNode;
+  /** The full tree actually applied: saved groups + the live draft group, combined by `groupsOperator`. */
+  rootNode: GroupNode;
   options: {
     bankOptions: Array<[string, string]>;
     accountOptions: Array<[string, string]>;
@@ -78,85 +99,46 @@ export function useTransactionFilters(transactions: Txn[]): UseTransactionFilter
   const [missingTagFilter, setMissingTagFilter] = useState<MissingTagFilter>("all");
   const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
   const [filterOperator, setFilterOperator] = useState<"and" | "or">("and");
+  const [savedGroups, setSavedGroups] = useState<GroupNode[]>([]);
+  const [groupsOperator, setGroupsOperator] = useState<FilterOp>("or");
 
-  const filteredTransactions = useMemo(() => {
-    const minVal = amountMin.trim() ? Number(amountMin) : null;
-    const maxVal = amountMax.trim() ? Number(amountMax) : null;
-    const predicates: Array<(t: Txn) => boolean> = [];
+  // The active conditions described by the current panel selections.
+  const draftConditions = useMemo<Condition[]>(() => {
+    const all: Condition[] = [
+      { kind: "name", mode: nameMode === "null" ? "contains" : nameMode, value: nameFilter },
+      { kind: "merchant", mode: merchantMode, value: merchantFilter },
+      { kind: "bank", ids: selectedBanks },
+      { kind: "account", ids: selectedAccounts },
+      { kind: "category", values: selectedCategories },
+      { kind: "amount", min: amountMin, max: amountMax },
+      { kind: "date", start: dateStart, end: dateEnd },
+      { kind: "tagState", value: tagStateFilter },
+      { kind: "missingTag", value: missingTagFilter },
+      { kind: "tags", ids: selectedTagIds }
+    ];
+    return all.filter(isConditionActive);
+  }, [nameMode, nameFilter, merchantMode, merchantFilter, selectedBanks, selectedAccounts, selectedCategories, amountMin, amountMax, dateStart, dateEnd, tagStateFilter, missingTagFilter, selectedTagIds]);
 
-    if (nameFilter.trim()) {
-      const q = nameFilter.toLowerCase().trim();
-      predicates.push((t) => nameMode === "not" ? !(t.name || "").toLowerCase().includes(q) : (t.name || "").toLowerCase().includes(q));
-    }
-    if (merchantMode === "null") {
-      predicates.push((t) => !t.merchant_name);
-    } else if (merchantFilter.trim()) {
-      const q = merchantFilter.toLowerCase().trim();
-      predicates.push((t) => merchantMode === "not" ? !(t.merchant_name || "").toLowerCase().includes(q) : (t.merchant_name || "").toLowerCase().includes(q));
-    }
-    if (selectedBanks.length) predicates.push((t) => selectedBanks.includes(String(t.item_id || "")));
-    if (selectedAccounts.length) predicates.push((t) => selectedAccounts.includes(String(t.account_id || "")));
-    if (selectedCategories.length) predicates.push((t) => {
-      const cat = t.personal_finance_category?.detailed || t.personal_finance_category?.primary || "";
-      return selectedCategories.includes(cat);
-    });
-    if (minVal !== null && Number.isFinite(minVal)) {
-      predicates.push((t) => {
-        const amt = Number(t.amount || 0);
-        // Inclusive bounds: UI labels use "≥"/"≤".
-        return amt >= minVal;
-      });
-    }
-    if (maxVal !== null && Number.isFinite(maxVal)) {
-      predicates.push((t) => {
-        const amt = Number(t.amount || 0);
-        return amt <= maxVal;
-      });
-    }
-    if (dateStart || dateEnd) {
-      predicates.push((t) => {
-        const rawDate = getTxnDateOnly(t);
-        if (!rawDate) return false;
-        const d = new Date(`${rawDate}T00:00:00`);
-        if (Number.isNaN(d.valueOf())) return false;
-        if (dateStart && d < new Date(`${dateStart}T00:00:00`)) return false;
-        if (dateEnd && d > new Date(`${dateEnd}T23:59:59`)) return false;
-        return true;
-      });
-    }
-    if (tagStateFilter !== "all") {
-      predicates.push((t) => {
-        const hasAnyTag = t.account_transfer_group != null
-          || t.bucket_1_tag_id != null
-          || t.bucket_2_tag_id != null
-          || (t.meta_tag_ids?.length ?? 0) > 0;
-        if (tagStateFilter === "untagged") return !hasAnyTag;
-        if (tagStateFilter === "tagged") return hasAnyTag;
-        return true;
-      });
-    }
-    if (missingTagFilter !== "all") {
-      predicates.push((t) => {
-        const hasBucketTag = t.bucket_1_tag_id != null || t.bucket_2_tag_id != null;
-        if (missingTagFilter === "no_meta") return (t.meta_tag_ids?.length ?? 0) === 0;
-        if (missingTagFilter === "no_income") return Number(t.amount || 0) < 0 && !hasBucketTag;
-        if (missingTagFilter === "no_spending") return Number(t.amount || 0) > 0 && !hasBucketTag;
-        return true;
-      });
-    }
-    if (selectedTagIds.length) {
-      predicates.push((t) =>
-        selectedTagIds.includes(t.bucket_1_tag_id ?? -1)
-        || selectedTagIds.includes(t.bucket_2_tag_id ?? -1)
-        || (t.meta_tag_ids?.some((id) => selectedTagIds.includes(id)) ?? false)
-      );
-    }
+  // The live "draft" group: the current panel selections joined by `filterOperator`.
+  const draftGroup = useMemo<GroupNode>(() => ({
+    id: "draft",
+    type: "group",
+    op: filterOperator,
+    negate: false,
+    children: draftConditions.map(conditionNode)
+  }), [filterOperator, draftConditions]);
 
-    if (!predicates.length) return transactions;
-    return transactions.filter((t) =>
-      filterOperator === "or" ? predicates.some((p) => p(t)) : predicates.every((p) => p(t))
-    );
-  }, [transactions, filterOperator, nameFilter, nameMode, merchantFilter, merchantMode, selectedBanks, selectedAccounts, selectedCategories, amountMin, amountMax, dateStart, dateEnd, tagStateFilter, missingTagFilter, selectedTagIds]);
+  // The full tree: saved groups plus the live draft, combined by `groupsOperator`.
+  const rootNode = useMemo<GroupNode>(() => {
+    const children: FilterNode[] = [...savedGroups];
+    if (draftGroup.children.length) children.push(draftGroup);
+    return { id: "root", type: "group", op: groupsOperator, negate: false, children };
+  }, [savedGroups, draftGroup, groupsOperator]);
+
+  const filteredTransactions = useMemo(
+    () => (rootNode.children.length ? applyFilterTree(rootNode, transactions) : transactions),
+    [rootNode, transactions]
+  );
 
   const bankOptions = useMemo(() => {
     const m = new Map<string, string>();
@@ -198,7 +180,7 @@ export function useTransactionFilters(transactions: Txn[]): UseTransactionFilter
       .sort((a, b) => a.primaryLabel.localeCompare(b.primaryLabel));
   }, [transactions]);
 
-  const clearAllFilters = () => {
+  const resetDraft = () => {
     setNameMode("contains");
     setNameFilter("");
     setMerchantMode("contains");
@@ -214,6 +196,26 @@ export function useTransactionFilters(transactions: Txn[]): UseTransactionFilter
     setMissingTagFilter("all");
     setSelectedTagIds([]);
   };
+
+  const clearAllFilters = () => {
+    resetDraft();
+    setSavedGroups([]);
+  };
+
+  // Snapshot the current panel selections into a reusable group, then reset the panel.
+  const addCurrentAsGroup = () => {
+    if (!draftConditions.length) return;
+    const group: GroupNode = {
+      ...emptyGroup(filterOperator),
+      id: newNodeId(),
+      children: draftConditions.map(conditionNode)
+    };
+    setSavedGroups((prev) => [...prev, group]);
+    resetDraft();
+  };
+
+  const removeGroup = (id: string) => setSavedGroups((prev) => prev.filter((g) => g.id !== id));
+  const clearGroups = () => setSavedGroups([]);
 
   const applyDatePreset = (preset: string) => {
     const d = buildDatePreset(preset);
@@ -237,7 +239,9 @@ export function useTransactionFilters(transactions: Txn[]): UseTransactionFilter
       tagStateFilter,
       missingTagFilter,
       selectedTagIds,
-      filterOperator
+      filterOperator,
+      savedGroups,
+      groupsOperator
     },
     actions: {
       setNameMode,
