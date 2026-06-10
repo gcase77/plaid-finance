@@ -145,7 +145,8 @@ const getTxnDetectedCategory = (rawCategory: unknown): string | null => {
 
 type RuleSource =
   | { rule_source_type: "tag"; tag_id: number; detected_category: null }
-  | { rule_source_type: "detected_category"; tag_id: null; detected_category: string };
+  | { rule_source_type: "detected_category"; tag_id: null; detected_category: string }
+  | { rule_source_type: "all_spending"; tag_id: null; detected_category: null };
 
 export const buildBudgetRuleCache = async (
   prisma: ServerRequest["prisma"],
@@ -209,11 +210,13 @@ export const buildBudgetRuleCache = async (
       cache[idx].associated_income += Math.abs(amount);
     }
 
-    const matchesRule = source.rule_source_type === "tag"
-      ? row.transaction_meta?.bucket_1_tag_id === source.tag_id
-        || row.transaction_meta?.bucket_2_tag_id === source.tag_id
-        || (row.transaction_meta?.meta_tags?.some((link) => link.tag_id === source.tag_id) ?? false)
-      : getTxnDetectedCategory(row.personal_finance_category) === source.detected_category;
+    const matchesRule = source.rule_source_type === "all_spending"
+      ? true // transfers already excluded above; any positive amount is spend
+      : source.rule_source_type === "tag"
+        ? row.transaction_meta?.bucket_1_tag_id === source.tag_id
+          || row.transaction_meta?.bucket_2_tag_id === source.tag_id
+          || (row.transaction_meta?.meta_tags?.some((link) => link.tag_id === source.tag_id) ?? false)
+        : getTxnDetectedCategory(row.personal_finance_category) === source.detected_category;
     if (matchesRule && amount > 0) {
       cache[idx].associated_spend += amount;
     }
@@ -272,7 +275,7 @@ router.post("/budget_rules", async (req, res) => {
     if (!rule_source_type || !name || !start_date || !type || !calendar_window || !rollover_options) {
       return res.status(400).json({ error: "rule_source_type, name, start_date, type, calendar_window, and rollover_options are required" });
     }
-    if (rule_source_type !== "tag" && rule_source_type !== "detected_category") {
+    if (rule_source_type !== "tag" && rule_source_type !== "detected_category" && rule_source_type !== "all_spending") {
       return res.status(400).json({ error: "Invalid rule_source_type" });
     }
     if (!validTypes.has(type)) return res.status(400).json({ error: "Invalid budget rule type" });
@@ -290,7 +293,7 @@ router.post("/budget_rules", async (req, res) => {
       const tagCheck = await ensureBudgetRuleTag(prisma, user.id, numericTagId);
       if (!tagCheck.ok) return res.status(tagCheck.status).json({ error: tagCheck.error });
       source = { rule_source_type: "tag", tag_id: numericTagId, detected_category: null };
-    } else {
+    } else if (rule_source_type === "detected_category") {
       if (tag_id != null) return res.status(400).json({ error: "tag_id must be null when rule_source_type is detected_category" });
       if (!normalizedDetectedCategory) return res.status(400).json({ error: "detected_category is required when rule_source_type is detected_category" });
       source = {
@@ -298,6 +301,10 @@ router.post("/budget_rules", async (req, res) => {
         tag_id: null,
         detected_category: normalizedDetectedCategory
       };
+    } else {
+      if (tag_id != null) return res.status(400).json({ error: "tag_id must be null when rule_source_type is all_spending" });
+      if (normalizedDetectedCategory) return res.status(400).json({ error: "detected_category must be null when rule_source_type is all_spending" });
+      source = { rule_source_type: "all_spending", tag_id: null, detected_category: null };
     }
 
     const parsedFlat = flat_amount == null ? null : Number(flat_amount);
@@ -371,7 +378,7 @@ router.patch("/budget_rules/:id", async (req, res) => {
     if (existing.rule_source_type === "tag") {
       if (!Number.isInteger(existing.tag_id)) return res.status(500).json({ error: "Invalid existing rule source" });
       existingSource = { rule_source_type: "tag", tag_id: existing.tag_id, detected_category: null };
-    } else {
+    } else if (existing.rule_source_type === "detected_category") {
       const normalizedExistingDetectedCategory = normalizeDetectedCategory(existing.detected_category);
       if (!normalizedExistingDetectedCategory) return res.status(500).json({ error: "Invalid existing rule source" });
       existingSource = {
@@ -379,6 +386,8 @@ router.patch("/budget_rules/:id", async (req, res) => {
         tag_id: null,
         detected_category: normalizedExistingDetectedCategory
       };
+    } else {
+      existingSource = { rule_source_type: "all_spending", tag_id: null, detected_category: null };
     }
 
     const rawFlat = req.body?.flat_amount ?? existing.flat_amount;

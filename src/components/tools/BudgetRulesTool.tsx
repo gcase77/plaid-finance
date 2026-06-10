@@ -71,8 +71,8 @@ const ROLLOVER: { value: RolloverOption; label: string }[] = [
 ];
 
 const EMPTY_TAGS: Tag[] = [];
-const BUDGET_INTRO = "Set spending targets by tag or detected category. Track per week or month, fixed amount or a percent of last period's income. Optionally roll over surplus/deficit.";
-const BASED_ON_TIP = "Track a spending tag (recommended) or a detected category from your transactions.";
+const BUDGET_INTRO = "Set spending targets by tag, detected category, or all spending. Track per week or month, fixed amount or a percent of last period's income. Optionally roll over surplus/deficit.";
+const BASED_ON_TIP = "Track a spending tag (recommended), a detected category, or all spending (everything except transfers).";
 const START_DATE_TIP = "When this budget begins. Rollover starts from this period.";
 
 const MONTH_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -115,11 +115,11 @@ function RuleForm({
   const setEarliest = async (c: boolean) => {
     setUseEarliest(c);
     const v = form.rule_source_type === "tag" ? form.tag_id : form.detected_category;
-    if (!c || !v) return;
+    if (!c || (form.rule_source_type !== "all_spending" && !v)) return;
     const d = await getEarliest(form.rule_source_type, v);
     if (d) setForm((p) => ({ ...p, start_date: d }));
   };
-  const sourceOk = form.rule_source_type === "tag" ? !!form.tag_id : !!form.detected_category;
+  const sourceOk = form.rule_source_type === "all_spending" ? true : form.rule_source_type === "tag" ? !!form.tag_id : !!form.detected_category;
   const saveDisabled = pending || !form.name.trim() || !sourceOk;
 
   return (
@@ -136,22 +136,25 @@ function RuleForm({
           <select className="select input-sm" value={form.rule_source_type} disabled={sourceLocked} onChange={(e) => { setUseEarliest(false); setForm((p) => ({ ...p, rule_source_type: e.target.value as BudgetRuleSourceType, tag_id: "", detected_category: "" })); }}>
             <option value="tag">Tag</option>
             <option value="detected_category">Detected category</option>
+            <option value="all_spending">All spending</option>
           </select>
         </div>
-        <div className="field">
-          <label>{form.rule_source_type === "tag" ? "Tag" : "Detected category"}</label>
-          {form.rule_source_type === "tag" ? (
-            <select className="select input-sm" disabled={sourceLocked} value={form.tag_id} onChange={(e) => void setSourceValue(e.target.value)}>
-              <option value="">Select tag…</option>
-              {selectableTags.map((t) => <option key={t.id} value={t.id}>{t.name} ({t.type === "meta" ? "Meta" : "Spending"})</option>)}
-            </select>
-          ) : (
-            <select className="select input-sm" disabled={sourceLocked} value={form.detected_category} onChange={(e) => void setSourceValue(e.target.value)}>
-              <option value="">Select category…</option>
-              {detectedOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-            </select>
-          )}
-        </div>
+        {form.rule_source_type !== "all_spending" && (
+          <div className="field">
+            <label>{form.rule_source_type === "tag" ? "Tag" : "Detected category"}</label>
+            {form.rule_source_type === "tag" ? (
+              <select className="select input-sm" disabled={sourceLocked} value={form.tag_id} onChange={(e) => void setSourceValue(e.target.value)}>
+                <option value="">Select tag…</option>
+                {selectableTags.map((t) => <option key={t.id} value={t.id}>{t.name} ({t.type === "meta" ? "Meta" : "Spending"})</option>)}
+              </select>
+            ) : (
+              <select className="select input-sm" disabled={sourceLocked} value={form.detected_category} onChange={(e) => void setSourceValue(e.target.value)}>
+                <option value="">Select category…</option>
+                {detectedOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+              </select>
+            )}
+          </div>
+        )}
         <div className="field">
           <label>Start date <InfoTip text={START_DATE_TIP} /></label>
           <input type="date" className="input input-sm" value={form.start_date} onChange={set("start_date")} />
@@ -346,7 +349,7 @@ export default function BudgetRulesTool({ token }: Props) {
   const getEarliest = async (st: BudgetRuleSourceType, val: string): Promise<string | null> => {
     if (st === "tag" && !Number.isInteger(Number(val))) return null;
     const norm = st === "detected_category" ? normalizeDetectedCategoryValue(val) : val;
-    if (!norm) return null;
+    if (st !== "all_spending" && !norm) return null;
     const rows = queryClient.getQueryData<TransactionBaseRow[]>(TRANSACTIONS_QUERY_KEY) ?? [];
     if (!rows.length) return null;
     const meta = queryClient.getQueryData<TransactionMetaRow[]>(["transaction_meta"]) ?? [];
@@ -362,7 +365,7 @@ export default function BudgetRulesTool({ token }: Props) {
         if (!m) continue;
         const tagId = Number(val);
         if (m.bucket_1_tag_id !== tagId && m.bucket_2_tag_id !== tagId && !(m.meta_tag_ids ?? []).includes(tagId)) continue;
-      } else {
+      } else if (st === "detected_category") {
         const cat = normalizeDetectedCategoryValue(t.personal_finance_category?.detailed ?? t.personal_finance_category?.primary);
         if (cat !== norm) continue;
       }
@@ -470,6 +473,7 @@ export default function BudgetRulesTool({ token }: Props) {
                           <span className="fw-semi">{rule.name}</span>
                           {tag && <TagBadge tag={tag} />}
                           {catLabel && <span className="chip chip-soft">{catLabel}</span>}
+                          {rule.rule_source_type === "all_spending" && <span className="chip chip-soft">All spending</span>}
                           <span className="chip">{ruleAmountLabel(rule)}</span>
                           <span className="chip">Rollover: {ROLLOVER.find((r) => r.value === rule.rollover_options)?.label}</span>
                         </div>

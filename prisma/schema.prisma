@@ -125,6 +125,7 @@ enum RolloverOption {
 enum BudgetRuleSourceType {
   tag
   detected_category
+  all_spending
 }
 
 model tags {
