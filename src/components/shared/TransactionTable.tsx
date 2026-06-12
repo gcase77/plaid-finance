@@ -1,3 +1,5 @@
+import { memo, useCallback, useMemo, useRef } from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import type { Tag, Txn } from "../types";
 import { getTxnIconUrl, formatTxnDate, formatTxnAmount, formatTxnDetectedCategory, getDisplayTagColor, getTextColorForBackground } from "../../utils/transactionUtils";
 import { collapseNettingGroups } from "../../utils/nettingUtils";
@@ -63,53 +65,113 @@ type Props = {
   tags?: Tag[];
 };
 
-type DisplayRow = { t: Txn; groupPos?: "start" | "mid" | "end" | "solo" };
+type GroupPos = "start" | "mid" | "end" | "solo";
+type DisplayRow = { t: Txn; id: string; groupPos?: GroupPos };
 const txnEpoch = (t: Txn) => new Date(t.datetime ?? t.authorized_datetime ?? 0).valueOf();
 
 /** In netting mode, groups sit at their anchor (largest leg) date; members sort newest-first within. */
-function buildDisplayRows(transactions: Txn[], nettingMode: boolean): DisplayRow[] {
-  if (!nettingMode) return transactions.map((t) => ({ t }));
-  const groups = new Map<string, Txn[]>();
+function buildDisplayRows(transactions: Txn[], nettingMode: boolean, keyPrefix: string): DisplayRow[] {
+  const withId = transactions.map((t, i) => ({ t, id: t.transaction_id || `${keyPrefix}-${i}` }));
+  if (!nettingMode) return withId;
+  const groups = new Map<string, typeof withId>();
   const units: { sort: number; rows: DisplayRow[] }[] = [];
-  for (const t of transactions) {
-    if (t.netting_group) { const a = groups.get(t.netting_group) ?? []; a.push(t); groups.set(t.netting_group, a); }
-    else units.push({ sort: txnEpoch(t), rows: [{ t }] });
+  for (const r of withId) {
+    if (r.t.netting_group) { const a = groups.get(r.t.netting_group) ?? []; a.push(r); groups.set(r.t.netting_group, a); }
+    else units.push({ sort: txnEpoch(r.t), rows: [r] });
   }
   for (const legs of groups.values()) {
-    legs.sort((a, b) => txnEpoch(b) - txnEpoch(a));
-    const anchor = legs.reduce((m, t) => (Math.abs(t.amount ?? 0) > Math.abs(m.amount ?? 0) ? t : m));
+    legs.sort((a, b) => txnEpoch(b.t) - txnEpoch(a.t));
+    const anchor = legs.reduce((m, r) => (Math.abs(r.t.amount ?? 0) > Math.abs(m.t.amount ?? 0) ? r : m));
     units.push({
-      sort: txnEpoch(anchor),
-      rows: legs.map((t, i) => ({ t, groupPos: legs.length === 1 ? "solo" as const : i === 0 ? "start" as const : i === legs.length - 1 ? "end" as const : "mid" as const }))
+      sort: txnEpoch(anchor.t),
+      rows: legs.map((r, i) => ({ ...r, groupPos: legs.length === 1 ? "solo" as const : i === 0 ? "start" as const : i === legs.length - 1 ? "end" as const : "mid" as const }))
     });
   }
   units.sort((a, b) => b.sort - a.sort);
   return units.flatMap((u) => u.rows);
 }
 
+type RowProps = {
+  t: Txn;
+  id: string;
+  groupPos?: GroupPos;
+  sel: boolean;
+  taggingMode: boolean;
+  tagMap: Map<number, Tag>;
+  onToggle: (id: string, c: boolean) => void;
+  measureRef: (el: HTMLTableRowElement | null) => void;
+  dataIndex: number;
+};
+
+const Row = memo(function Row({ t, id, groupPos, sel, taggingMode, tagMap, onToggle, measureRef, dataIndex }: RowProps) {
+  const groupCls = groupPos
+    ? `net-group ${groupPos === "start" || groupPos === "solo" ? "net-start" : ""} ${groupPos === "end" || groupPos === "solo" ? "net-end" : ""}`
+    : "";
+  return (
+    <tr
+      ref={measureRef}
+      data-index={dataIndex}
+      className={`${taggingMode ? "selectable" : ""} ${sel ? "selected" : ""} ${groupCls}`}
+      onClick={taggingMode ? () => onToggle(id, !sel) : undefined}
+    >
+      {taggingMode && (
+        <td onClick={(e) => e.stopPropagation()}>
+          <input type="checkbox" checked={sel} onChange={(e) => onToggle(id, e.target.checked)} />
+        </td>
+      )}
+      <td>{getTxnIconUrl(t) && <img src={getTxnIconUrl(t)} alt="" style={{ width: 22, height: 22, borderRadius: 6 }} />}</td>
+      <td className="text-nowrap">{formatTxnDate(t)}</td>
+      {taggingMode && <td><Badges badges={tagBadges(t, tagMap)} /></td>}
+      <td>{(t.original_description || "").trim() || t.name || ""}</td>
+      <td>{t.merchant_name || ""}</td>
+      <td className={`text-end ${(t.amount ?? 0) < 0 ? "money-positive" : ""}`}>{formatTxnAmount(t)}</td>
+      {!taggingMode && <td><Badges badges={tagBadges(t, tagMap)} /></td>}
+      <td>{accountDisplay(t.institution_name || "", t.account_name || t.account_official_name || "")}</td>
+      <td>{formatTxnDetectedCategory(t.personal_finance_category)}</td>
+    </tr>
+  );
+});
+
+const ROW_ESTIMATE = 41;
+
 export default function TransactionTable({ transactions, emptyMessage = "No transactions", keyPrefix = "txn", taggingMode = false, nettingMode = false, selectedIds, onSelectionChange, tags = [] }: Props) {
-  if (!transactions.length) return <div className="muted">{emptyMessage}</div>;
-  const tagMap = new Map(tags.map((t) => [t.id, t]));
-  const txnId = (t: Txn, idx: number) => t.transaction_id || `${keyPrefix}-${idx}`;
-  const toggle = (id: string, c: boolean) => {
-    if (!onSelectionChange || !selectedIds) return;
-    const next = new Set(selectedIds);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const tagMap = useMemo(() => new Map(tags.map((t) => [t.id, t])), [tags]);
+  const displayRows = useMemo(() => buildDisplayRows(transactions, nettingMode, keyPrefix), [transactions, nettingMode, keyPrefix]);
+  const summary = useMemo(() => getSummary(transactions), [transactions]);
+
+  const virtualizer = useVirtualizer({
+    count: displayRows.length,
+    getScrollElement: () => scrollRef.current,
+    estimateSize: () => ROW_ESTIMATE,
+    overscan: 12
+  });
+
+  const selectedRef = useRef(selectedIds);
+  selectedRef.current = selectedIds;
+  const toggle = useCallback((id: string, c: boolean) => {
+    if (!onSelectionChange || !selectedRef.current) return;
+    const next = new Set(selectedRef.current);
     if (c) next.add(id); else next.delete(id);
     onSelectionChange(next);
-  };
-  const toggleAll = (c: boolean) => { if (onSelectionChange) onSelectionChange(c ? new Set(transactions.map(txnId)) : new Set()); };
-  const allSelected = !!selectedIds && transactions.length > 0 && transactions.every((t, i) => selectedIds.has(txnId(t, i)));
-  const { income, spending, count } = getSummary(transactions);
-  const displayRows = buildDisplayRows(transactions, nettingMode);
+  }, [onSelectionChange]);
+
+  if (!transactions.length) return <div className="muted">{emptyMessage}</div>;
+  const toggleAll = (c: boolean) => { if (onSelectionChange) onSelectionChange(c ? new Set(displayRows.map((r) => r.id)) : new Set()); };
+  const allSelected = !!selectedIds && displayRows.length > 0 && displayRows.every((r) => selectedIds.has(r.id));
+
+  const items = virtualizer.getVirtualItems();
+  const padTop = items.length ? items[0].start : 0;
+  const padBottom = items.length ? virtualizer.getTotalSize() - items[items.length - 1].end : 0;
 
   return (
     <>
       <div className="row-flex flex-wrap gap-4 mb-3 small">
-        <span>Income: <strong>{fmt(income)}</strong></span>
-        <span>Spending: <strong>{fmt(spending)}</strong></span>
-        <span><strong>{count.toLocaleString()}</strong> transactions</span>
+        <span>Income: <strong>{fmt(summary.income)}</strong></span>
+        <span>Spending: <strong>{fmt(summary.spending)}</strong></span>
+        <span><strong>{summary.count.toLocaleString()}</strong> transactions</span>
       </div>
-      <div className="table-wrap">
+      <div className="table-wrap" ref={scrollRef} style={{ maxHeight: "70vh", overflowY: "auto" }}>
         <table className="table">
           <thead>
             <tr>
@@ -126,31 +188,25 @@ export default function TransactionTable({ transactions, emptyMessage = "No tran
             </tr>
           </thead>
           <tbody>
-            {displayRows.map(({ t, groupPos }, idx) => {
-              const id = txnId(t, idx);
-              const sel = !!selectedIds?.has(id);
-              const groupCls = groupPos
-                ? `net-group ${groupPos === "start" || groupPos === "solo" ? "net-start" : ""} ${groupPos === "end" || groupPos === "solo" ? "net-end" : ""}`
-                : "";
+            {padTop > 0 && <tr aria-hidden style={{ height: padTop }} />}
+            {items.map((vi) => {
+              const { t, id, groupPos } = displayRows[vi.index];
               return (
-                <tr key={id} className={`${taggingMode ? "selectable" : ""} ${sel ? "selected" : ""} ${groupCls}`} onClick={taggingMode ? () => toggle(id, !sel) : undefined}>
-                  {taggingMode && (
-                    <td onClick={(e) => e.stopPropagation()}>
-                      <input type="checkbox" checked={sel} onChange={(e) => toggle(id, e.target.checked)} />
-                    </td>
-                  )}
-                  <td>{getTxnIconUrl(t) && <img src={getTxnIconUrl(t)} alt="" style={{ width: 22, height: 22, borderRadius: 6 }} />}</td>
-                  <td className="text-nowrap">{formatTxnDate(t)}</td>
-                  {taggingMode && <td><Badges badges={tagBadges(t, tagMap)} /></td>}
-                  <td>{(t.original_description || "").trim() || t.name || ""}</td>
-                  <td>{t.merchant_name || ""}</td>
-                  <td className={`text-end ${(t.amount ?? 0) < 0 ? "money-positive" : ""}`}>{formatTxnAmount(t)}</td>
-                  {!taggingMode && <td><Badges badges={tagBadges(t, tagMap)} /></td>}
-                  <td>{accountDisplay(t.institution_name || "", t.account_name || t.account_official_name || "")}</td>
-                  <td>{formatTxnDetectedCategory(t.personal_finance_category)}</td>
-                </tr>
+                <Row
+                  key={id}
+                  t={t}
+                  id={id}
+                  groupPos={groupPos}
+                  sel={!!selectedIds?.has(id)}
+                  taggingMode={taggingMode}
+                  tagMap={tagMap}
+                  onToggle={toggle}
+                  measureRef={virtualizer.measureElement}
+                  dataIndex={vi.index}
+                />
               );
             })}
+            {padBottom > 0 && <tr aria-hidden style={{ height: padBottom }} />}
           </tbody>
         </table>
       </div>
