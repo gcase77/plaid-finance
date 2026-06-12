@@ -190,11 +190,20 @@ router.post("/transaction_meta/netting_group", async (req, res) => {
 router.patch("/transaction_meta/netting_group", async (req, res) => {
   try {
     const { user, prisma } = req as unknown as ServerRequest;
-    const { netting_group, add_ids = [], remove_ids = [] }: { netting_group: string; add_ids?: string[]; remove_ids?: string[] } = req.body;
+    const { netting_group, add_ids = [], remove_ids = [], dissolve = false }: { netting_group: string; add_ids?: string[]; remove_ids?: string[]; dissolve?: boolean } = req.body;
     if (typeof netting_group !== "string" || !netting_group)
       return res.status(400).json({ error: "netting_group is required" });
+    if (dissolve) {
+      const cleared = await prisma.transaction_meta.updateMany({
+        where: { netting_group, transaction: { user_id: user.id, is_removed: false } },
+        data: { netting_group: null }
+      });
+      if (!cleared.count) return res.status(404).json({ error: "Netting group not found" });
+      clearTransactionMetaCache(user.id);
+      return res.json({ success: true, netting_group, member_count: 0 });
+    }
     if (!Array.isArray(add_ids) || !Array.isArray(remove_ids) || (add_ids.length === 0 && remove_ids.length === 0))
-      return res.status(400).json({ error: "Provide add_ids and/or remove_ids arrays" });
+      return res.status(400).json({ error: "Provide add_ids and/or remove_ids arrays, or dissolve: true" });
     if (add_ids.some(id => remove_ids.includes(id)))
       return res.status(400).json({ error: "An id cannot appear in both add_ids and remove_ids" });
 

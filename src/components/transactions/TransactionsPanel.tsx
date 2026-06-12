@@ -103,6 +103,10 @@ export default function TransactionsPanel({ syncTransactions, syncStatus, loadin
   const [removeOpen, setRemoveOpen] = useState(false);
   const [applyBtn, setApplyBtn] = useState<HTMLButtonElement | null>(null);
   const [removeBtn, setRemoveBtn] = useState<HTMLButtonElement | null>(null);
+  const [nettingAddOpen, setNettingAddOpen] = useState(false);
+  const [nettingRemoveOpen, setNettingRemoveOpen] = useState(false);
+  const [nettingAddBtn, setNettingAddBtn] = useState<HTMLButtonElement | null>(null);
+  const [nettingRemoveBtn, setNettingRemoveBtn] = useState<HTMLButtonElement | null>(null);
 
   const metaTags = useMemo(() => tags.filter((t) => t.type === "meta").sort(byName), [tags]);
   const incomeTags = useMemo(() => tags.filter((t) => t.type === "income_bucket_1" || t.type === "income_bucket_2").sort(byName), [tags]);
@@ -124,7 +128,7 @@ export default function TransactionsPanel({ syncTransactions, syncStatus, loadin
   }, [selectable, selectedIds, tags]);
 
   useEffect(() => { setCreateColor(getDefaultTagColor(KIND_TO_TYPE[createKind])); }, [createKind]);
-  useEffect(() => { setSelectedIds(new Set()); setApplyOpen(false); setRemoveOpen(false); }, [mode]);
+  useEffect(() => { setSelectedIds(new Set()); setApplyOpen(false); setRemoveOpen(false); setNettingAddOpen(false); setNettingRemoveOpen(false); }, [mode]);
   useEffect(() => {
     if (!selectionActive) return;
     const visible = new Set(selectable.map((t) => t.transaction_id));
@@ -170,25 +174,52 @@ export default function TransactionsPanel({ syncTransactions, syncStatus, loadin
 
   const selectedTxns = useMemo(() => selectable.filter((t) => selectedIds.has(t.transaction_id)), [selectable, selectedIds]);
   const selectedNettingGroups = useMemo(() => new Set(selectedTxns.map((t) => t.netting_group).filter((g): g is string => !!g)), [selectedTxns]);
+  const ungroupedSelected = useMemo(() => selectedTxns.filter((t) => !t.netting_group && !t.account_transfer_group), [selectedTxns]);
+  const groupedSelected = useMemo(() => selectedTxns.filter((t) => !!t.netting_group), [selectedTxns]);
+  const nettingSidePhrase = (ts: Txn[]) => {
+    const spend = ts.filter((t) => (t.amount ?? 0) > 0).length;
+    const inc = ts.filter((t) => (t.amount ?? 0) < 0).length;
+    const sp = spend ? `${spend} spending` : "";
+    const ip = inc ? `${inc} income` : "";
+    if (sp && ip) return `${sp} and ${ip}`;
+    if (sp) return sp;
+    if (ip) return ip;
+    return String(ts.length);
+  };
+  const canNetAdd = !selectedTxns.some((t) => t.account_transfer_group)
+    && (selectedNettingGroups.size === 0 ? ungroupedSelected.length >= 2 : selectedNettingGroups.size === 1 && ungroupedSelected.length >= 1);
 
-  const nettingCreateMut = useMutation({
+  const nettingFetch = async (method: "POST" | "PATCH", body: object) => {
+    const res = await fetch("/api/transaction_meta/netting_group", { method, headers: { "Content-Type": "application/json", ...buildAuthHeaders(token) }, body: JSON.stringify(body) });
+    if (!res.ok) { const d = await res.json().catch(() => ({})); throw new Error(d?.error || `Netting group request failed (${res.status})`); }
+  };
+  const afterNetting = async () => { await invalidateTransactionMeta(); setSelectedIds(new Set()); setNettingAddOpen(false); setNettingRemoveOpen(false); };
+
+  const nettingAddMut = useMutation({
     mutationFn: async () => {
-      const res = await fetch("/api/transaction_meta/netting_group", { method: "POST", headers: { "Content-Type": "application/json", ...buildAuthHeaders(token) }, body: JSON.stringify({ transaction_ids: [...selectedIds] }) });
-      if (!res.ok) { const d = await res.json().catch(() => ({})); throw new Error(d?.error || `Failed to create netting group (${res.status})`); }
+      const ids = ungroupedSelected.map((t) => t.transaction_id);
+      const existing = [...selectedNettingGroups][0];
+      await (existing
+        ? nettingFetch("PATCH", { netting_group: existing, add_ids: ids })
+        : nettingFetch("POST", { transaction_ids: ids }));
     },
-    onSuccess: async () => { await invalidateTransactionMeta(); setSelectedIds(new Set()); }
+    onSuccess: afterNetting
   });
 
   const nettingRemoveMut = useMutation({
     mutationFn: async () => {
       const byGroup = new Map<string, string[]>();
-      selectedTxns.forEach((t) => { if (t.netting_group) byGroup.set(t.netting_group, [...(byGroup.get(t.netting_group) ?? []), t.transaction_id]); });
-      for (const [netting_group, remove_ids] of byGroup) {
-        const res = await fetch("/api/transaction_meta/netting_group", { method: "PATCH", headers: { "Content-Type": "application/json", ...buildAuthHeaders(token) }, body: JSON.stringify({ netting_group, remove_ids }) });
-        if (!res.ok) { const d = await res.json().catch(() => ({})); throw new Error(d?.error || `Failed to update netting group (${res.status})`); }
-      }
+      groupedSelected.forEach((t) => byGroup.set(t.netting_group!, [...(byGroup.get(t.netting_group!) ?? []), t.transaction_id]));
+      for (const [netting_group, remove_ids] of byGroup) await nettingFetch("PATCH", { netting_group, remove_ids });
     },
-    onSuccess: async () => { await invalidateTransactionMeta(); setSelectedIds(new Set()); }
+    onSuccess: afterNetting
+  });
+
+  const nettingDissolveMut = useMutation({
+    mutationFn: async () => {
+      for (const netting_group of selectedNettingGroups) await nettingFetch("PATCH", { netting_group, dissolve: true });
+    },
+    onSuccess: afterNetting
   });
 
   const applySingle = async (tagId: number) => {
@@ -249,7 +280,7 @@ export default function TransactionsPanel({ syncTransactions, syncStatus, loadin
   };
 
   const errorMsg = tagsError?.message || (createMut.error as Error | null)?.message || (updateMut.error as Error | null)?.message || (deleteMut.error as Error | null)?.message;
-  const applyErr = (applyMut.error as Error | null)?.message || (nettingCreateMut.error as Error | null)?.message || (nettingRemoveMut.error as Error | null)?.message;
+  const applyErr = (applyMut.error as Error | null)?.message || (nettingAddMut.error as Error | null)?.message || (nettingRemoveMut.error as Error | null)?.message || (nettingDissolveMut.error as Error | null)?.message;
 
   return (
     <>
@@ -371,20 +402,35 @@ export default function TransactionsPanel({ syncTransactions, syncStatus, loadin
               </div>
               {mode === "netting" && (
                 <div className="row-flex gap-2">
-                  <button
-                    className="btn primary btn-sm"
-                    disabled={selectedIds.size < 2 || selectedNettingGroups.size > 0 || selectedTxns.some((t) => t.account_transfer_group) || nettingCreateMut.isPending}
-                    onClick={() => nettingCreateMut.mutate()}
-                  >
-                    Create netting group
-                  </button>
-                  <button
-                    className="btn ghost btn-sm"
-                    disabled={selectedNettingGroups.size === 0 || nettingRemoveMut.isPending}
-                    onClick={() => nettingRemoveMut.mutate()}
-                  >
-                    Remove from group
-                  </button>
+                  <div style={{ position: "relative" }}>
+                    <button ref={setNettingAddBtn} className="btn primary btn-sm" disabled={!canNetAdd || nettingAddMut.isPending} onClick={() => { setNettingAddOpen((o) => !o); setNettingRemoveOpen(false); }}>
+                      Add Netting Group
+                    </button>
+                    <Popover anchor={nettingAddBtn} open={nettingAddOpen} onClose={() => setNettingAddOpen(false)} width={320}>
+                      <div className="xs muted" style={{ padding: "10px 12px", borderBottom: "1px solid var(--line)", overflowWrap: "anywhere" }}>
+                        {selectedNettingGroups.size === 1 ? "Add to the selected existing group" : "Create a new netting group"}
+                      </div>
+                      <button className="btn ghost btn-block" style={{ padding: "10px 12px", borderRadius: 0, justifyContent: "flex-start", borderColor: "transparent", overflowWrap: "anywhere" }} disabled={nettingAddMut.isPending} onClick={() => nettingAddMut.mutate()}>
+                        {selectedNettingGroups.size === 1
+                          ? `Add ${nettingSidePhrase(ungroupedSelected)} to existing group`
+                          : `Group ${nettingSidePhrase(ungroupedSelected)}`}
+                      </button>
+                    </Popover>
+                  </div>
+                  <div style={{ position: "relative" }}>
+                    <button ref={setNettingRemoveBtn} className="btn ghost btn-sm" disabled={selectedNettingGroups.size === 0 || nettingRemoveMut.isPending || nettingDissolveMut.isPending} onClick={() => { setNettingRemoveOpen((o) => !o); setNettingAddOpen(false); }}>
+                      Remove from group
+                    </button>
+                    <Popover anchor={nettingRemoveBtn} open={nettingRemoveOpen} onClose={() => setNettingRemoveOpen(false)} width={320}>
+                      <button className="btn ghost btn-block" style={{ padding: "10px 12px", borderRadius: 0, justifyContent: "flex-start", borderColor: "transparent", overflowWrap: "anywhere" }} disabled={nettingRemoveMut.isPending} onClick={() => nettingRemoveMut.mutate()}>
+                        {`Remove ${nettingSidePhrase(groupedSelected)} from ${selectedNettingGroups.size} group${selectedNettingGroups.size !== 1 ? "s" : ""}`}
+                      </button>
+                      <div style={{ borderTop: "1px solid var(--line)" }} />
+                      <button className="btn ghost btn-block" style={{ padding: "10px 12px", borderRadius: 0, justifyContent: "flex-start", borderColor: "transparent", color: "var(--danger)", overflowWrap: "anywhere" }} disabled={nettingDissolveMut.isPending} onClick={() => nettingDissolveMut.mutate()}>
+                        {`Dissolve ${selectedNettingGroups.size} group${selectedNettingGroups.size !== 1 ? "s" : ""}`}
+                      </button>
+                    </Popover>
+                  </div>
                 </div>
               )}
               {mode === "tagging" && <div className="row-flex gap-2">
@@ -436,6 +482,7 @@ export default function TransactionsPanel({ syncTransactions, syncStatus, loadin
               <TransactionTable
                 transactions={selectionActive ? selectable : filters.derived.filteredTransactions}
                 taggingMode={selectionActive}
+                nettingMode={mode === "netting"}
                 selectedIds={selectedIds}
                 onSelectionChange={setSelectedIds}
                 tags={tags}

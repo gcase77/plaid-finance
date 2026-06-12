@@ -57,12 +57,37 @@ type Props = {
   emptyMessage?: string;
   keyPrefix?: string;
   taggingMode?: boolean;
+  nettingMode?: boolean;
   selectedIds?: Set<string>;
   onSelectionChange?: (ids: Set<string>) => void;
   tags?: Tag[];
 };
 
-export default function TransactionTable({ transactions, emptyMessage = "No transactions", keyPrefix = "txn", taggingMode = false, selectedIds, onSelectionChange, tags = [] }: Props) {
+type DisplayRow = { t: Txn; groupPos?: "start" | "mid" | "end" | "solo" };
+const txnEpoch = (t: Txn) => new Date(t.datetime ?? t.authorized_datetime ?? 0).valueOf();
+
+/** In netting mode, groups sit at their anchor (largest leg) date; members sort newest-first within. */
+function buildDisplayRows(transactions: Txn[], nettingMode: boolean): DisplayRow[] {
+  if (!nettingMode) return transactions.map((t) => ({ t }));
+  const groups = new Map<string, Txn[]>();
+  const units: { sort: number; rows: DisplayRow[] }[] = [];
+  for (const t of transactions) {
+    if (t.netting_group) { const a = groups.get(t.netting_group) ?? []; a.push(t); groups.set(t.netting_group, a); }
+    else units.push({ sort: txnEpoch(t), rows: [{ t }] });
+  }
+  for (const legs of groups.values()) {
+    legs.sort((a, b) => txnEpoch(b) - txnEpoch(a));
+    const anchor = legs.reduce((m, t) => (Math.abs(t.amount ?? 0) > Math.abs(m.amount ?? 0) ? t : m));
+    units.push({
+      sort: txnEpoch(anchor),
+      rows: legs.map((t, i) => ({ t, groupPos: legs.length === 1 ? "solo" as const : i === 0 ? "start" as const : i === legs.length - 1 ? "end" as const : "mid" as const }))
+    });
+  }
+  units.sort((a, b) => b.sort - a.sort);
+  return units.flatMap((u) => u.rows);
+}
+
+export default function TransactionTable({ transactions, emptyMessage = "No transactions", keyPrefix = "txn", taggingMode = false, nettingMode = false, selectedIds, onSelectionChange, tags = [] }: Props) {
   if (!transactions.length) return <div className="muted">{emptyMessage}</div>;
   const tagMap = new Map(tags.map((t) => [t.id, t]));
   const txnId = (t: Txn, idx: number) => t.transaction_id || `${keyPrefix}-${idx}`;
@@ -75,6 +100,7 @@ export default function TransactionTable({ transactions, emptyMessage = "No tran
   const toggleAll = (c: boolean) => { if (onSelectionChange) onSelectionChange(c ? new Set(transactions.map(txnId)) : new Set()); };
   const allSelected = !!selectedIds && transactions.length > 0 && transactions.every((t, i) => selectedIds.has(txnId(t, i)));
   const { income, spending, count } = getSummary(transactions);
+  const displayRows = buildDisplayRows(transactions, nettingMode);
 
   return (
     <>
@@ -100,11 +126,14 @@ export default function TransactionTable({ transactions, emptyMessage = "No tran
             </tr>
           </thead>
           <tbody>
-            {transactions.map((t, idx) => {
+            {displayRows.map(({ t, groupPos }, idx) => {
               const id = txnId(t, idx);
               const sel = !!selectedIds?.has(id);
+              const groupCls = groupPos
+                ? `net-group ${groupPos === "start" || groupPos === "solo" ? "net-start" : ""} ${groupPos === "end" || groupPos === "solo" ? "net-end" : ""}`
+                : "";
               return (
-                <tr key={id} className={`${taggingMode ? "selectable" : ""} ${sel ? "selected" : ""}`} onClick={taggingMode ? () => toggle(id, !sel) : undefined}>
+                <tr key={id} className={`${taggingMode ? "selectable" : ""} ${sel ? "selected" : ""} ${groupCls}`} onClick={taggingMode ? () => toggle(id, !sel) : undefined}>
                   {taggingMode && (
                     <td onClick={(e) => e.stopPropagation()}>
                       <input type="checkbox" checked={sel} onChange={(e) => toggle(id, e.target.checked)} />

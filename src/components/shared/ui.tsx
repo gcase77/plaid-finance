@@ -171,8 +171,19 @@ export function Popover({ anchor, open, onClose, children, align = "right", widt
   return (
     <div
       ref={ref}
-      className="card card-tight"
-      style={{ position: "absolute", zIndex: 200, top: "calc(100% + 6px)", [align]: 0, width, padding: 0, boxShadow: "var(--shadow-2)" }}
+      className="card card-tight popover-panel"
+      style={{
+        position: "absolute",
+        zIndex: 200,
+        top: "calc(100% + 6px)",
+        [align]: 0,
+        width: `min(${width}px, calc(100vw - 24px))`,
+        maxWidth: "calc(100vw - 24px)",
+        boxSizing: "border-box",
+        padding: 0,
+        boxShadow: "var(--shadow-2)",
+        overflowWrap: "anywhere"
+      }}
     >
       {children}
     </div>
