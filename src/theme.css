@@ -305,7 +305,7 @@ hr { border: 0; border-top: 1px solid var(--line); margin: var(--s4) 0; }
 }
 .table tbody td { padding: var(--s2) var(--s3); border-bottom: 1px solid var(--line); vertical-align: middle; }
 .table tbody tr:last-child td { border-bottom: 0; }
-.table tbody tr:nth-child(even) td { background: var(--surface-alt); }
+.table tbody tr:nth-child(even):not([aria-hidden]) td { background: var(--surface-alt); }
 .table tbody tr.selectable { cursor: pointer; }
 .table tbody tr.selectable:hover td { background: var(--brand-soft); }
 .table tbody tr.selected td { background: var(--brand-soft); }
