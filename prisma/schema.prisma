@@ -86,6 +86,7 @@ model transactions {
 model transaction_meta {
   transaction_id         String  @id
   account_transfer_group String?
+  netting_group          String?
   bucket_1_tag_id        Int?
   bucket_2_tag_id        Int?
 
@@ -95,6 +96,7 @@ model transaction_meta {
   meta_tags    transaction_tags[]
 
   @@index([account_transfer_group])
+  @@index([netting_group])
 }
 
 enum TagType {

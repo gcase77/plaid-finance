@@ -138,6 +138,8 @@ class
 | GET    | [api/transaction_meta](server/routes/transaction_meta.ts#L19)         | query: — body: —                    | `{ transaction_id, account_transfer_group, bucket_1_tag_id, bucket_2_tag_id, meta_tag_ids }[]` |
 | POST   | [api/transaction_meta/transfer_group](server/routes/transaction_meta.ts#L51) | query: — body: `{ transaction_ids: [id1, id2] }` | `{ account_transfer_group: uuid }` |
 | DELETE | [api/transaction_meta/transfer_group](server/routes/transaction_meta.ts#L82) | query: — body: `{ transaction_ids: [id1, id2] }` or `{ transaction_ids: [id] }` (clears whole group for that transfer) | `{ success: true }` |
+| POST   | [api/transaction_meta/netting_group](server/routes/transaction_meta.ts#L156) | query: — body: `{ transaction_ids: [id1, id2, ...] }` (2+ ids; rejects ids already in a netting or transfer group) | `{ netting_group: uuid }` |
+| PATCH  | [api/transaction_meta/netting_group](server/routes/transaction_meta.ts#L182) | query: — body: `{ netting_group, add_ids?, remove_ids? }` (removing all members dissolves the group; leaving exactly 1 is rejected) | `{ success: true, netting_group, member_count }` |
 | POST   | [api/transaction_meta/tags](server/routes/transaction_meta.ts#L115)    | query: — body: `TransactionTagChange[]` (set bucket tags and add meta tags) | `{ success: true }` |
 | DELETE | [api/transaction_meta/tags](server/routes/transaction_meta.ts#L268)    | query: — body: `TransactionTagChange[]` (remove specified bucket/meta tags only) | `{ success: true }` |
 | GET    | [api/tags](server/routes/tags.ts#L34)                                 | query: — body: —                    | tag array                                                      |

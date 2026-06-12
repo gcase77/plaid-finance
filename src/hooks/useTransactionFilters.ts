@@ -127,6 +127,7 @@ export function useTransactionFilters(transactions: Txn[]): UseTransactionFilter
     if (tagStateFilter !== "all") {
       predicates.push((t) => {
         const hasAnyTag = t.account_transfer_group != null
+          || t.netting_group != null
           || t.bucket_1_tag_id != null
           || t.bucket_2_tag_id != null
           || (t.meta_tag_ids?.length ?? 0) > 0;

@@ -9,7 +9,7 @@ import { TagBadge } from "../shared/TagBadge";
 import AppliedFiltersBar from "../shared/AppliedFiltersBar";
 import TransactionsFilterSection from "../shared/FilterSection";
 import TransactionTable from "../shared/TransactionTable";
-import { Alert, InfoTip, Popover, Switch } from "../shared/ui";
+import { Alert, InfoTip, Popover } from "../shared/ui";
 
 type Props = {
   syncTransactions: () => Promise<void>;
@@ -24,6 +24,9 @@ type Props = {
 };
 
 type TagChange = { transaction_id: string; bucket_1_tag_id?: number | null; bucket_2_tag_id?: number | null; meta_tag_ids?: number[] | null };
+
+type TableMode = "none" | "tagging" | "netting";
+const MODE_LABEL: Record<TableMode, string> = { none: "None", tagging: "Tagging Mode", netting: "Cash Netting Mode" };
 
 type TagKind = "income" | "spending" | "meta";
 const KIND_LABEL: Record<TagKind, string> = { income: "Income", spending: "Spending", meta: "Meta" };
@@ -82,7 +85,9 @@ function ColorPicker({ value, onChange, size = 24 }: { value: string; onChange: 
 export default function TransactionsPanel({ syncTransactions, syncStatus, loadingTxns, filters, tags, tagsLoading, tagsError, token, invalidateTransactionMeta }: Props) {
   const queryClient = useQueryClient();
   const [tab, setTab] = useState<"tag-transactions" | "my-tags">("tag-transactions");
-  const [taggingMode, setTaggingMode] = useState(false);
+  const [mode, setMode] = useState<TableMode>("none");
+  const taggingMode = mode === "tagging";
+  const selectionActive = mode !== "none";
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   const [creating, setCreating] = useState(false);
@@ -119,9 +124,9 @@ export default function TransactionsPanel({ syncTransactions, syncStatus, loadin
   }, [selectable, selectedIds, tags]);
 
   useEffect(() => { setCreateColor(getDefaultTagColor(KIND_TO_TYPE[createKind])); }, [createKind]);
-  useEffect(() => { if (!taggingMode) { setSelectedIds(new Set()); setApplyOpen(false); setRemoveOpen(false); } }, [taggingMode]);
+  useEffect(() => { setSelectedIds(new Set()); setApplyOpen(false); setRemoveOpen(false); }, [mode]);
   useEffect(() => {
-    if (!taggingMode) return;
+    if (!selectionActive) return;
     const visible = new Set(selectable.map((t) => t.transaction_id));
     setSelectedIds((prev) => {
       if (!prev.size) return prev;
@@ -129,7 +134,7 @@ export default function TransactionsPanel({ syncTransactions, syncStatus, loadin
       prev.forEach((id) => { if (visible.has(id)) next.add(id); });
       return next.size === prev.size ? prev : next;
     });
-  }, [taggingMode, selectable]);
+  }, [selectionActive, selectable]);
 
   const createMut = useMutation({
     mutationFn: async () => {
@@ -161,6 +166,29 @@ export default function TransactionsPanel({ syncTransactions, syncStatus, loadin
       if (!res.ok) { const d = await res.json().catch(() => ({})); throw new Error(friendlyError(d?.error || `Failed to apply tags (${res.status})`)); }
     },
     onSuccess: async () => { await invalidateTransactionMeta(); }
+  });
+
+  const selectedTxns = useMemo(() => selectable.filter((t) => selectedIds.has(t.transaction_id)), [selectable, selectedIds]);
+  const selectedNettingGroups = useMemo(() => new Set(selectedTxns.map((t) => t.netting_group).filter((g): g is string => !!g)), [selectedTxns]);
+
+  const nettingCreateMut = useMutation({
+    mutationFn: async () => {
+      const res = await fetch("/api/transaction_meta/netting_group", { method: "POST", headers: { "Content-Type": "application/json", ...buildAuthHeaders(token) }, body: JSON.stringify({ transaction_ids: [...selectedIds] }) });
+      if (!res.ok) { const d = await res.json().catch(() => ({})); throw new Error(d?.error || `Failed to create netting group (${res.status})`); }
+    },
+    onSuccess: async () => { await invalidateTransactionMeta(); setSelectedIds(new Set()); }
+  });
+
+  const nettingRemoveMut = useMutation({
+    mutationFn: async () => {
+      const byGroup = new Map<string, string[]>();
+      selectedTxns.forEach((t) => { if (t.netting_group) byGroup.set(t.netting_group, [...(byGroup.get(t.netting_group) ?? []), t.transaction_id]); });
+      for (const [netting_group, remove_ids] of byGroup) {
+        const res = await fetch("/api/transaction_meta/netting_group", { method: "PATCH", headers: { "Content-Type": "application/json", ...buildAuthHeaders(token) }, body: JSON.stringify({ netting_group, remove_ids }) });
+        if (!res.ok) { const d = await res.json().catch(() => ({})); throw new Error(d?.error || `Failed to update netting group (${res.status})`); }
+      }
+    },
+    onSuccess: async () => { await invalidateTransactionMeta(); setSelectedIds(new Set()); }
   });
 
   const applySingle = async (tagId: number) => {
@@ -221,7 +249,7 @@ export default function TransactionsPanel({ syncTransactions, syncStatus, loadin
   };
 
   const errorMsg = tagsError?.message || (createMut.error as Error | null)?.message || (updateMut.error as Error | null)?.message || (deleteMut.error as Error | null)?.message;
-  const applyErr = (applyMut.error as Error | null)?.message;
+  const applyErr = (applyMut.error as Error | null)?.message || (nettingCreateMut.error as Error | null)?.message || (nettingRemoveMut.error as Error | null)?.message;
 
   return (
     <>
@@ -336,8 +364,30 @@ export default function TransactionsPanel({ syncTransactions, syncStatus, loadin
           </div>
           <div>
             <div className="row-flex between mb-3 flex-wrap gap-2">
-              <Switch checked={taggingMode} onChange={setTaggingMode} label="Tagging mode" />
-              <div className="row-flex gap-2">
+              <div className="row-flex gap-1">
+                {(Object.keys(MODE_LABEL) as TableMode[]).map((m) => (
+                  <button key={m} className={`btn btn-sm ${mode === m ? "primary" : "ghost"}`} onClick={() => setMode(m)}>{MODE_LABEL[m]}</button>
+                ))}
+              </div>
+              {mode === "netting" && (
+                <div className="row-flex gap-2">
+                  <button
+                    className="btn primary btn-sm"
+                    disabled={selectedIds.size < 2 || selectedNettingGroups.size > 0 || selectedTxns.some((t) => t.account_transfer_group) || nettingCreateMut.isPending}
+                    onClick={() => nettingCreateMut.mutate()}
+                  >
+                    Create netting group
+                  </button>
+                  <button
+                    className="btn ghost btn-sm"
+                    disabled={selectedNettingGroups.size === 0 || nettingRemoveMut.isPending}
+                    onClick={() => nettingRemoveMut.mutate()}
+                  >
+                    Remove from group
+                  </button>
+                </div>
+              )}
+              {mode === "tagging" && <div className="row-flex gap-2">
                 <div style={{ position: "relative" }}>
                   <button ref={setApplyBtn} className="btn primary btn-sm" disabled={!taggingMode || selectedIds.size === 0 || applyMut.isPending} onClick={() => { setApplyOpen((o) => !o); setRemoveOpen(false); }}>
                     Apply tag
@@ -376,7 +426,7 @@ export default function TransactionsPanel({ syncTransactions, syncStatus, loadin
                     </div>
                   </Popover>
                 </div>
-              </div>
+              </div>}
             </div>
 
             <AppliedFiltersBar filters={filters} />
@@ -384,8 +434,8 @@ export default function TransactionsPanel({ syncTransactions, syncStatus, loadin
 
             {loadingTxns ? <LoadingSpinner /> : (
               <TransactionTable
-                transactions={taggingMode ? selectable : filters.derived.filteredTransactions}
-                taggingMode={taggingMode}
+                transactions={selectionActive ? selectable : filters.derived.filteredTransactions}
+                taggingMode={selectionActive}
                 selectedIds={selectedIds}
                 onSelectionChange={setSelectedIds}
                 tags={tags}

@@ -1,8 +1,9 @@
 import type { Tag, Txn } from "../types";
 import { getTxnIconUrl, formatTxnDate, formatTxnAmount, formatTxnDetectedCategory, getDisplayTagColor, getTextColorForBackground } from "../../utils/transactionUtils";
+import { collapseNettingGroups } from "../../utils/nettingUtils";
 
 function getSummary(txns: Txn[]) {
-  const nt = txns.filter((t) => !t.account_transfer_group);
+  const nt = collapseNettingGroups(txns.filter((t) => !t.account_transfer_group));
   const income = nt.filter((t) => (t.amount ?? 0) < 0).reduce((s, t) => s + Math.abs(t.amount ?? 0), 0);
   const spending = nt.filter((t) => (t.amount ?? 0) > 0).reduce((s, t) => s + (t.amount ?? 0), 0);
   return { income, spending, count: txns.length };
@@ -20,6 +21,7 @@ function tagBadges(t: Txn, tagMap: Map<number, Tag>): Badge[] {
   const out: Badge[] = [];
   const seen = new Set<string>();
   if (t.account_transfer_group) { out.push({ key: "tx", label: "account_transfer", transfer: true }); seen.add("tx"); }
+  if (t.netting_group) { out.push({ key: "net", label: (t.amount ?? 0) > 0 ? "contra_spend" : "contra_income", transfer: true }); seen.add("net"); }
   const add = (id: number) => {
     const tag = tagMap.get(id);
     const key = tag ? String(tag.id) : String(id);

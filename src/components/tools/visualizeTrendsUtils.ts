@@ -5,6 +5,7 @@ import {
   normalizeDetectedCategoryValue,
   TAG_COLOR_PALETTE
 } from "../../utils/transactionUtils";
+import { collapseNettingGroups } from "../../utils/nettingUtils";
 
 export type TrendPieGrouping = "detected" | "buckets" | "meta";
 
@@ -20,7 +21,9 @@ const INCOME_TYPES = new Set(["income_bucket_1", "income_bucket_2"]);
 
 export function filterTrendsTransactions(txns: Txn[], startIso: string, endIso: string): Txn[] {
   const needDate = Boolean(startIso || endIso);
-  return txns.filter((t) => {
+  // Netting groups collapse to a single net transaction anchored on the
+  // largest-magnitude leg, so date filtering applies to the anchor date.
+  return collapseNettingGroups(txns).filter((t) => {
     if (t.account_transfer_group) return false;
     const d = getTxnDateOnly(t);
     if (needDate) {

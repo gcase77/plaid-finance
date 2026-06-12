@@ -45,6 +45,7 @@ export type TransactionBaseRow = {
 export type TransactionMetaRow = {
   transaction_id?: string;
   account_transfer_group?: string | null;
+  netting_group?: string | null;
   bucket_1_tag_id?: number | null;
   bucket_2_tag_id?: number | null;
   meta_tag_ids?: number[];

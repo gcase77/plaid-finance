@@ -35,6 +35,7 @@ router.get("/transaction_meta", async (req, res) => {
       select: {
         transaction_id: true,
         account_transfer_group: true,
+        netting_group: true,
         bucket_1_tag_id: true,
         bucket_2_tag_id: true,
         meta_tags: { select: { tag_id: true } }
@@ -44,6 +45,7 @@ router.get("/transaction_meta", async (req, res) => {
     const mappedRows = rows.map((row) => ({
       transaction_id: row.transaction_id,
       account_transfer_group: row.account_transfer_group,
+      netting_group: row.netting_group,
       bucket_1_tag_id: row.bucket_1_tag_id,
       bucket_2_tag_id: row.bucket_2_tag_id,
       meta_tag_ids: row.meta_tags.map((link) => link.tag_id)
@@ -68,6 +70,11 @@ router.post("/transaction_meta/transfer_group", async (req, res) => {
       select: { id: true }
     });
     if (txns.length !== 2) return res.status(404).json({ error: "One or more transactions not found" });
+
+    const netted = await prisma.transaction_meta.count({
+      where: { transaction_id: { in: transaction_ids }, netting_group: { not: null } }
+    });
+    if (netted > 0) return res.status(409).json({ error: "One or more transactions already belong to a netting group" });
 
     const group = randomUUID();
     await prisma.$transaction(
@@ -131,6 +138,99 @@ router.delete("/transaction_meta/transfer_group", async (req, res) => {
 
     clearTransactionMetaCache(user.id);
     res.json({ success: true });
+  } catch (e: any) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+/** Validates ids belong to the user and are free of transfer/netting groups; returns an error string or null. */
+async function validateNettingCandidates(prisma: ServerRequest["prisma"], userId: string, ids: string[]): Promise<string | null> {
+  const txns = await prisma.transactions.findMany({
+    where: { id: { in: ids }, user_id: userId, is_removed: false },
+    select: { id: true }
+  });
+  if (txns.length !== ids.length) return "One or more transactions not found";
+  const conflicting = await prisma.transaction_meta.count({
+    where: {
+      transaction_id: { in: ids },
+      OR: [{ netting_group: { not: null } }, { account_transfer_group: { not: null } }]
+    }
+  });
+  return conflicting > 0 ? "One or more transactions already belong to a netting or transfer group" : null;
+}
+
+router.post("/transaction_meta/netting_group", async (req, res) => {
+  try {
+    const { user, prisma } = req as unknown as ServerRequest;
+    const { transaction_ids }: { transaction_ids: string[] } = req.body;
+    if (!Array.isArray(transaction_ids) || transaction_ids.length < 2 || new Set(transaction_ids).size !== transaction_ids.length)
+      return res.status(400).json({ error: "transaction_ids must be an array of 2 or more unique ids" });
+
+    const err = await validateNettingCandidates(prisma, user.id, transaction_ids);
+    if (err) return res.status(err.includes("not found") ? 404 : 409).json({ error: err });
+
+    const group = randomUUID();
+    await prisma.$transaction(
+      transaction_ids.map(id =>
+        prisma.transaction_meta.upsert({
+          where: { transaction_id: id },
+          create: { transaction_id: id, netting_group: group },
+          update: { netting_group: group }
+        })
+      )
+    );
+
+    clearTransactionMetaCache(user.id);
+    res.status(201).json({ netting_group: group });
+  } catch (e: any) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+router.patch("/transaction_meta/netting_group", async (req, res) => {
+  try {
+    const { user, prisma } = req as unknown as ServerRequest;
+    const { netting_group, add_ids = [], remove_ids = [] }: { netting_group: string; add_ids?: string[]; remove_ids?: string[] } = req.body;
+    if (typeof netting_group !== "string" || !netting_group)
+      return res.status(400).json({ error: "netting_group is required" });
+    if (!Array.isArray(add_ids) || !Array.isArray(remove_ids) || (add_ids.length === 0 && remove_ids.length === 0))
+      return res.status(400).json({ error: "Provide add_ids and/or remove_ids arrays" });
+    if (add_ids.some(id => remove_ids.includes(id)))
+      return res.status(400).json({ error: "An id cannot appear in both add_ids and remove_ids" });
+
+    const members = await prisma.transaction_meta.findMany({
+      where: { netting_group, transaction: { user_id: user.id, is_removed: false } },
+      select: { transaction_id: true }
+    });
+    if (!members.length) return res.status(404).json({ error: "Netting group not found" });
+    const memberIds = new Set(members.map(m => m.transaction_id));
+
+    if (remove_ids.some(id => !memberIds.has(id)))
+      return res.status(400).json({ error: "remove_ids must all be members of the group" });
+    if (add_ids.length) {
+      const err = await validateNettingCandidates(prisma, user.id, add_ids);
+      if (err) return res.status(err.includes("not found") ? 404 : 409).json({ error: err });
+    }
+
+    const resulting = memberIds.size - remove_ids.length + add_ids.length;
+    if (resulting === 1)
+      return res.status(400).json({ error: "A netting group cannot have exactly 1 transaction; remove all to dissolve it" });
+
+    await prisma.$transaction([
+      ...(remove_ids.length
+        ? [prisma.transaction_meta.updateMany({ where: { transaction_id: { in: remove_ids } }, data: { netting_group: null } })]
+        : []),
+      ...add_ids.map(id =>
+        prisma.transaction_meta.upsert({
+          where: { transaction_id: id },
+          create: { transaction_id: id, netting_group },
+          update: { netting_group }
+        })
+      )
+    ]);
+
+    clearTransactionMetaCache(user.id);
+    res.json({ success: true, netting_group, member_count: resulting });
   } catch (e: any) {
     res.status(500).json({ error: e.message });
   }

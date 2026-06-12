@@ -181,6 +181,7 @@ export const buildBudgetRuleCache = async (
       transaction_meta: {
         select: {
           account_transfer_group: true,
+          netting_group: true,
           bucket_1_tag_id: true,
           bucket_2_tag_id: true,
           meta_tags: { select: { tag_id: true } }
@@ -198,7 +199,24 @@ export const buildBudgetRuleCache = async (
     associated_income: 0
   }));
 
+  // Collapse netting groups: the largest-magnitude leg (anchor) carries the
+  // group's net amount, so the cohort counts once on the anchor's date.
+  const nettingGroups = new Map<string, typeof rows>();
+  const effectiveRows: typeof rows = [];
   for (const row of rows) {
+    const g = row.transaction_meta?.netting_group;
+    if (g) {
+      const arr = nettingGroups.get(g) ?? [];
+      arr.push(row);
+      nettingGroups.set(g, arr);
+    } else effectiveRows.push(row);
+  }
+  for (const legs of nettingGroups.values()) {
+    const anchor = legs.reduce((m, r) => (Math.abs(r.amount ?? 0) > Math.abs(m.amount ?? 0) ? r : m));
+    effectiveRows.push({ ...anchor, amount: legs.reduce((s, r) => s + (r.amount ?? 0), 0) });
+  }
+
+  for (const row of effectiveRows) {
     const amount = row.amount ?? 0;
     const date = getTxnDate(row);
     if (!date || !isWithinRange(date, rangeStart, rangeEnd)) continue;
