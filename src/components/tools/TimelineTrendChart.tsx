@@ -1,34 +1,13 @@
 import { useMemo, useState } from "react";
 import type { Tag, Txn } from "../types";
 import TransactionTable from "../shared/TransactionTable";
-import { getTxnDateOnly } from "../../utils/transactionUtils";
 import { Segmented } from "../shared/ui";
+import { buildTrendPeriodRows } from "./visualizeTrendsUtils";
 
 export type TimelineView = "area" | "net";
 export type TimelineGranularity = "month" | "week";
-type Row = { key: string; label: string; income: number; spending: number; net: number; transactions: Txn[] };
 
 const fmt = (n: number) => `$${n.toLocaleString("en-US", { maximumFractionDigits: 2 })}`;
-function toMonthLabel(s: string) { const [y, m] = s.split("-"); return new Date(Number(y), Number(m) - 1, 1).toLocaleDateString("en-US", { month: "short", year: "2-digit" }); }
-function mondayOf(s: string) { const d = new Date(`${s}T12:00:00`); const day = d.getDay(); d.setDate(d.getDate() + (day === 0 ? -6 : 1 - day)); return d.toISOString().slice(0, 10); }
-function weekLabel(s: string) { return `Week of ${new Date(`${s}T12:00:00`).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "2-digit" })}`; }
-
-function buildRows(txns: Txn[], gran: TimelineGranularity): Row[] {
-  const map = new Map<string, Row>();
-  for (const t of txns) {
-    const d = getTxnDateOnly(t);
-    if (!d) continue;
-    const key = gran === "month" ? d.slice(0, 7) : mondayOf(d);
-    const amt = t.amount ?? 0;
-    if (amt === 0) continue;
-    const row = map.get(key) ?? { key, label: gran === "month" ? toMonthLabel(key) : weekLabel(key), income: 0, spending: 0, net: 0, transactions: [] };
-    if (amt < 0) row.income += Math.abs(amt); else row.spending += amt;
-    row.net = row.income - row.spending;
-    row.transactions.push(t);
-    map.set(key, row);
-  }
-  return [...map.values()].sort((a, b) => a.key.localeCompare(b.key));
-}
 
 const padL = 72, padR = 22, padTop = 34, padBottom = 28;
 function axisTicksArea(vMax: number) {
@@ -48,7 +27,7 @@ export default function TimelineTrendChart({ transactions, tags, view, granulari
   onViewChange: (v: TimelineView) => void; onGranularityChange: (g: TimelineGranularity) => void;
 }) {
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
-  const rows = useMemo(() => buildRows(transactions, granularity), [transactions, granularity]);
+  const rows = useMemo(() => buildTrendPeriodRows(transactions, granularity), [transactions, granularity]);
   const selected = rows.find((r) => r.key === selectedKey) ?? null;
 
   const width = 1200, height = 420;
