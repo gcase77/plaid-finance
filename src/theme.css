@@ -313,7 +313,7 @@ hr { border: 0; border-top: 1px solid var(--line); margin: var(--s4) 0; }
 .popover-panel .btn { white-space: normal; text-align: left; }
 
 .table tbody tr.net-group td:first-child { box-shadow: inset 3px 0 0 var(--ink); }
-.table tbody tr.net-start td { border-top: 2px solid var(--ink); }
+.table tbody tr.net-start td { border-top: 4px solid var(--ink); }
 .table tbody tr.net-end td { border-bottom: 2px solid var(--ink); }
 .text-end { text-align: right; }
 .text-nowrap { white-space: nowrap; }

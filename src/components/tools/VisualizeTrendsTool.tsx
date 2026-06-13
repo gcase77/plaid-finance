@@ -198,6 +198,7 @@ export default function VisualizeTrendsTool({ transactions, token }: Props) {
       {vizTab === "trendline" && (
         <TrendlineScatterChart
           transactions={baseTxns}
+          allTransactions={transactions}
           tags={tags}
           kind={trendlineKind}
           windowSize={trendlineWindow}

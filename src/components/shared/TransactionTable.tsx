@@ -88,7 +88,7 @@ type Props = {
 };
 
 type GroupPos = "start" | "mid" | "end" | "solo";
-type DisplayRow = { t: Txn; id: string; groupPos?: GroupPos };
+type DisplayRow = { t: Txn; id: string; groupPos?: GroupPos; netAmount?: number };
 const txnEpoch = (t: Txn) => new Date(t.datetime ?? t.authorized_datetime ?? 0).valueOf();
 
 /** In netting mode, groups sit at their anchor (largest leg) date; members sort newest-first within. */
@@ -104,9 +104,14 @@ function buildDisplayRows(transactions: Txn[], nettingMode: boolean, keyPrefix: 
   for (const legs of groups.values()) {
     legs.sort((a, b) => txnEpoch(b.t) - txnEpoch(a.t));
     const anchor = legs.reduce((m, r) => (Math.abs(r.t.amount ?? 0) > Math.abs(m.t.amount ?? 0) ? r : m));
+    const netAmount = legs.reduce((s, r) => s + (r.t.amount ?? 0), 0);
     units.push({
       sort: txnEpoch(anchor.t),
-      rows: legs.map((r, i) => ({ ...r, groupPos: legs.length === 1 ? "solo" as const : i === 0 ? "start" as const : i === legs.length - 1 ? "end" as const : "mid" as const }))
+      rows: legs.map((r, i) => ({
+        ...r,
+        groupPos: legs.length === 1 ? "solo" as const : i === 0 ? "start" as const : i === legs.length - 1 ? "end" as const : "mid" as const,
+        netAmount: i === 0 ? netAmount : undefined
+      }))
     });
   }
   units.sort((a, b) => b.sort - a.sort);
@@ -123,12 +128,14 @@ type RowProps = {
   onToggle: (id: string, c: boolean) => void;
   measureRef: (el: HTMLTableRowElement | null) => void;
   dataIndex: number;
+  netAmount?: number;
 };
 
-const Row = memo(function Row({ t, id, groupPos, sel, taggingMode, tagMap, onToggle, measureRef, dataIndex }: RowProps) {
+const Row = memo(function Row({ t, id, groupPos, sel, taggingMode, tagMap, onToggle, measureRef, dataIndex, netAmount }: RowProps) {
   const groupCls = groupPos
     ? `net-group ${groupPos === "start" || groupPos === "solo" ? "net-start" : ""} ${groupPos === "end" || groupPos === "solo" ? "net-end" : ""}`
     : "";
+  const amountTxn = netAmount == null ? t : { ...t, amount: netAmount };
   return (
     <tr
       ref={measureRef}
@@ -146,7 +153,7 @@ const Row = memo(function Row({ t, id, groupPos, sel, taggingMode, tagMap, onTog
       {taggingMode && <td><Badges badges={tagBadges(t, tagMap)} /></td>}
       <td>{(t.original_description || "").trim() || t.name || ""}</td>
       <td>{t.merchant_name || ""}</td>
-      <td className={`text-end ${(t.amount ?? 0) < 0 ? "money-positive" : ""}`}>{formatTxnAmount(t)}</td>
+      <td className={`text-end ${(amountTxn.amount ?? 0) < 0 ? "money-positive" : ""}`}>{formatTxnAmount(amountTxn)}</td>
       {!taggingMode && <td><Badges badges={tagBadges(t, tagMap)} /></td>}
       <td>{accountDisplay(t.institution_name || "", t.account_name || t.account_official_name || "")}</td>
       <td>{formatTxnDetectedCategory(t.personal_finance_category)}</td>
@@ -230,7 +237,7 @@ export default function TransactionTable({ transactions, emptyMessage = "No tran
           <tbody>
             {padTop > 0 && <tr aria-hidden style={{ height: padTop }} />}
             {items.map((vi) => {
-              const { t, id, groupPos } = displayRows[vi.index];
+              const { t, id, groupPos, netAmount } = displayRows[vi.index];
               return (
                 <Row
                   key={id}
@@ -243,6 +250,7 @@ export default function TransactionTable({ transactions, emptyMessage = "No tran
                   onToggle={toggle}
                   measureRef={virtualizer.measureElement}
                   dataIndex={vi.index}
+                  netAmount={netAmount}
                 />
               );
             })}
