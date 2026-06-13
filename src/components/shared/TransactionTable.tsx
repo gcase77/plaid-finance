@@ -87,8 +87,8 @@ type Props = {
   tags?: Tag[];
 };
 
-type GroupPos = "start" | "mid" | "end" | "solo";
-type DisplayRow = { t: Txn; id: string; groupPos?: GroupPos; netAmount?: number };
+type GroupPos = "summary" | "start" | "mid" | "end" | "solo";
+type DisplayRow = { t: Txn; id: string; groupPos?: GroupPos; netAmount?: number; netGroupCount?: number };
 const txnEpoch = (t: Txn) => new Date(t.datetime ?? t.authorized_datetime ?? 0).valueOf();
 
 /** In netting mode, groups sit at their anchor (largest leg) date; members sort newest-first within. */
@@ -107,11 +107,13 @@ function buildDisplayRows(transactions: Txn[], nettingMode: boolean, keyPrefix: 
     const netAmount = legs.reduce((s, r) => s + (r.t.amount ?? 0), 0);
     units.push({
       sort: txnEpoch(anchor.t),
-      rows: legs.map((r, i) => ({
-        ...r,
-        groupPos: legs.length === 1 ? "solo" as const : i === 0 ? "start" as const : i === legs.length - 1 ? "end" as const : "mid" as const,
-        netAmount: i === 0 ? netAmount : undefined
-      }))
+      rows: [
+        { ...anchor, id: `${keyPrefix}-net-${anchor.t.netting_group}`, groupPos: "summary" as const, netAmount, netGroupCount: legs.length },
+        ...legs.map((r, i) => ({
+          ...r,
+          groupPos: legs.length === 1 ? "solo" as const : i === 0 ? "start" as const : i === legs.length - 1 ? "end" as const : "mid" as const
+        }))
+      ]
     });
   }
   units.sort((a, b) => b.sort - a.sort);
@@ -129,34 +131,36 @@ type RowProps = {
   measureRef: (el: HTMLTableRowElement | null) => void;
   dataIndex: number;
   netAmount?: number;
+  netGroupCount?: number;
 };
 
-const Row = memo(function Row({ t, id, groupPos, sel, taggingMode, tagMap, onToggle, measureRef, dataIndex, netAmount }: RowProps) {
+const Row = memo(function Row({ t, id, groupPos, sel, taggingMode, tagMap, onToggle, measureRef, dataIndex, netAmount, netGroupCount }: RowProps) {
   const groupCls = groupPos
-    ? `net-group ${groupPos === "start" || groupPos === "solo" ? "net-start" : ""} ${groupPos === "end" || groupPos === "solo" ? "net-end" : ""}`
+    ? `net-group ${groupPos === "summary" || groupPos === "start" || groupPos === "solo" ? "net-start" : ""} ${groupPos === "end" || groupPos === "solo" ? "net-end" : ""} ${groupPos === "summary" ? "net-summary" : ""}`
     : "";
-  const amountTxn = netAmount == null ? t : { ...t, amount: netAmount };
+  const isSummary = groupPos === "summary";
+  const amountTxn = isSummary ? { ...t, amount: netAmount ?? 0 } : t;
   return (
     <tr
       ref={measureRef}
       data-index={dataIndex}
       className={`${taggingMode ? "selectable" : ""} ${sel ? "selected" : ""} ${groupCls}`}
-      onClick={taggingMode ? () => onToggle(id, !sel) : undefined}
+      onClick={taggingMode && !isSummary ? () => onToggle(id, !sel) : undefined}
     >
       {taggingMode && (
         <td onClick={(e) => e.stopPropagation()}>
-          <input type="checkbox" checked={sel} onChange={(e) => onToggle(id, e.target.checked)} />
+          {!isSummary && <input type="checkbox" checked={sel} onChange={(e) => onToggle(id, e.target.checked)} />}
         </td>
       )}
-      <td>{getTxnIconUrl(t) && <img src={getTxnIconUrl(t)} alt="" style={{ width: 22, height: 22, borderRadius: 6 }} />}</td>
-      <td className="text-nowrap">{formatTxnDate(t)}</td>
-      {taggingMode && <td><Badges badges={tagBadges(t, tagMap)} /></td>}
-      <td>{(t.original_description || "").trim() || t.name || ""}</td>
-      <td>{t.merchant_name || ""}</td>
+      <td>{!isSummary && getTxnIconUrl(t) && <img src={getTxnIconUrl(t)} alt="" style={{ width: 22, height: 22, borderRadius: 6 }} />}</td>
+      <td className="text-nowrap">{isSummary ? "" : formatTxnDate(t)}</td>
+      {taggingMode && <td>{isSummary ? <span className="muted xs">—</span> : <Badges badges={tagBadges(t, tagMap)} />}</td>}
+      <td>{isSummary ? `Netted amount (${netGroupCount ?? 0} transactions)` : (t.original_description || "").trim() || t.name || ""}</td>
+      <td>{isSummary ? "" : t.merchant_name || ""}</td>
       <td className={`text-end ${(amountTxn.amount ?? 0) < 0 ? "money-positive" : ""}`}>{formatTxnAmount(amountTxn)}</td>
-      {!taggingMode && <td><Badges badges={tagBadges(t, tagMap)} /></td>}
-      <td>{accountDisplay(t.institution_name || "", t.account_name || t.account_official_name || "")}</td>
-      <td>{formatTxnDetectedCategory(t.personal_finance_category)}</td>
+      {!taggingMode && <td>{isSummary ? <span className="muted xs">—</span> : <Badges badges={tagBadges(t, tagMap)} />}</td>}
+      <td>{isSummary ? "" : accountDisplay(t.institution_name || "", t.account_name || t.account_official_name || "")}</td>
+      <td>{isSummary ? "" : formatTxnDetectedCategory(t.personal_finance_category)}</td>
     </tr>
   );
 });
@@ -196,8 +200,9 @@ export default function TransactionTable({ transactions, emptyMessage = "No tran
   }, [transactions, tagMap]);
 
   if (!transactions.length) return <div className="muted">{emptyMessage}</div>;
-  const toggleAll = (c: boolean) => { if (onSelectionChange) onSelectionChange(c ? new Set(displayRows.map((r) => r.id)) : new Set()); };
-  const allSelected = !!selectedIds && displayRows.length > 0 && displayRows.every((r) => selectedIds.has(r.id));
+  const selectableRows = displayRows.filter((r) => r.groupPos !== "summary");
+  const toggleAll = (c: boolean) => { if (onSelectionChange) onSelectionChange(c ? new Set(selectableRows.map((r) => r.id)) : new Set()); };
+  const allSelected = !!selectedIds && selectableRows.length > 0 && selectableRows.every((r) => selectedIds.has(r.id));
 
   const items = virtualizer.getVirtualItems();
   const padTop = items.length ? items[0].start : 0;
@@ -237,7 +242,7 @@ export default function TransactionTable({ transactions, emptyMessage = "No tran
           <tbody>
             {padTop > 0 && <tr aria-hidden style={{ height: padTop }} />}
             {items.map((vi) => {
-              const { t, id, groupPos, netAmount } = displayRows[vi.index];
+              const { t, id, groupPos, netAmount, netGroupCount } = displayRows[vi.index];
               return (
                 <Row
                   key={id}
@@ -251,6 +256,7 @@ export default function TransactionTable({ transactions, emptyMessage = "No tran
                   measureRef={virtualizer.measureElement}
                   dataIndex={vi.index}
                   netAmount={netAmount}
+                  netGroupCount={netGroupCount}
                 />
               );
             })}
