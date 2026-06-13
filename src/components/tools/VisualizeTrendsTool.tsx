@@ -8,11 +8,12 @@ import { buildDatePreset } from "../../utils/datePresets";
 import FlowSankeySvg from "./FlowSankeySvg";
 import { buildFlowOfFundsModel, type FlowGrouping } from "./flowOfFundsSankey";
 import TimelineTrendChart, { type TimelineGranularity, type TimelineView } from "./TimelineTrendChart";
+import RibbonTrendChart from "./RibbonTrendChart";
 import { buildTrendPieSlices, filterTrendsTransactions, sliceColors, type TrendPieGrouping, type TrendPieSlice } from "./visualizeTrendsUtils";
 import { Segmented } from "../shared/ui";
 
 type Props = { transactions: Txn[]; token: string | null };
-type VizTab = "pie" | "flow" | "timeline";
+type VizTab = "pie" | "flow" | "timeline" | "ribbon";
 type Selection = { side: "spending" | "income"; slice: TrendPieSlice };
 
 const CX = 100, CY = 100, R = 90;
@@ -83,7 +84,7 @@ const FLOW_GROUPING: { value: FlowGrouping; label: string }[] = [
 const EMPTY_TAGS: Tag[] = [];
 
 const VIZ_TRENDS_KEY = "funds-up-visualize-trends";
-const VIZ_TABS = new Set<VizTab>(["pie", "flow", "timeline"]);
+const VIZ_TABS = new Set<VizTab>(["pie", "flow", "timeline", "ribbon"]);
 const PIE_GROUP = new Set<TrendPieGrouping>(["detected", "buckets", "meta"]);
 const FLOW_GROUP = new Set<FlowGrouping>(["detected", "tags"]);
 const TIMELINE_V = new Set<TimelineView>(["area", "net"]);
@@ -92,7 +93,8 @@ const TIMELINE_G = new Set<TimelineGranularity>(["month", "week"]);
 function loadVizPrefs() {
   const d = {
     vizTab: "pie" as VizTab, grouping: "detected" as TrendPieGrouping, flowGrouping: "detected" as FlowGrouping,
-    timelineView: "area" as TimelineView, timelineGranularity: "month" as TimelineGranularity
+    timelineView: "area" as TimelineView, timelineGranularity: "month" as TimelineGranularity,
+    ribbonGrouping: "detected" as TrendPieGrouping, ribbonGranularity: "month" as TimelineGranularity
   };
   if (typeof window === "undefined") return d;
   try {
@@ -104,6 +106,8 @@ function loadVizPrefs() {
     if (typeof o.flowGrouping === "string" && FLOW_GROUP.has(o.flowGrouping as FlowGrouping)) d.flowGrouping = o.flowGrouping as FlowGrouping;
     if (typeof o.timelineView === "string" && TIMELINE_V.has(o.timelineView as TimelineView)) d.timelineView = o.timelineView as TimelineView;
     if (typeof o.timelineGranularity === "string" && TIMELINE_G.has(o.timelineGranularity as TimelineGranularity)) d.timelineGranularity = o.timelineGranularity as TimelineGranularity;
+    if (typeof o.ribbonGrouping === "string" && PIE_GROUP.has(o.ribbonGrouping as TrendPieGrouping)) d.ribbonGrouping = o.ribbonGrouping as TrendPieGrouping;
+    if (typeof o.ribbonGranularity === "string" && TIMELINE_G.has(o.ribbonGranularity as TimelineGranularity)) d.ribbonGranularity = o.ribbonGranularity as TimelineGranularity;
   } catch { /* ignore */ }
   return d;
 }
@@ -119,14 +123,16 @@ export default function VisualizeTrendsTool({ transactions, token }: Props) {
   const [flowNodeId, setFlowNodeId] = useState<string | null>(null);
   const [timelineView, setTimelineView] = useState<TimelineView>(initPrefs.timelineView);
   const [timelineGranularity, setTimelineGranularity] = useState<TimelineGranularity>(initPrefs.timelineGranularity);
+  const [ribbonGrouping, setRibbonGrouping] = useState<TrendPieGrouping>(initPrefs.ribbonGrouping);
+  const [ribbonGranularity, setRibbonGranularity] = useState<TimelineGranularity>(initPrefs.ribbonGranularity);
 
   useEffect(() => {
     try {
       localStorage.setItem(VIZ_TRENDS_KEY, JSON.stringify({
-        vizTab, grouping, flowGrouping, timelineView, timelineGranularity
+        vizTab, grouping, flowGrouping, timelineView, timelineGranularity, ribbonGrouping, ribbonGranularity
       }));
     } catch { /* ignore */ }
-  }, [vizTab, grouping, flowGrouping, timelineView, timelineGranularity]);
+  }, [vizTab, grouping, flowGrouping, timelineView, timelineGranularity, ribbonGrouping, ribbonGranularity]);
 
   const tagsQuery = useQuery({
     queryKey: ["tags"], enabled: !!token,
@@ -171,9 +177,11 @@ export default function VisualizeTrendsTool({ transactions, token }: Props) {
         <button className={vizTab === "pie" ? "active" : ""} onClick={() => goTab("pie")}>Pie chart</button>
         <button className={vizTab === "flow" ? "active" : ""} onClick={() => goTab("flow")}>Flow of funds</button>
         <button className={vizTab === "timeline" ? "active" : ""} onClick={() => goTab("timeline")}>Timeline</button>
+        <button className={vizTab === "ribbon" ? "active" : ""} onClick={() => goTab("ribbon")}>Ribbon</button>
       </div>
 
       {vizTab === "timeline" && <TimelineTrendChart transactions={baseTxns} tags={tags} view={timelineView} granularity={timelineGranularity} onViewChange={setTimelineView} onGranularityChange={setTimelineGranularity} />}
+      {vizTab === "ribbon" && <RibbonTrendChart transactions={baseTxns} tags={tags} grouping={ribbonGrouping} granularity={ribbonGranularity} onGroupingChange={setRibbonGrouping} onGranularityChange={setRibbonGranularity} />}
 
       {vizTab === "pie" && (
         <>
