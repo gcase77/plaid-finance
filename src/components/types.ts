@@ -5,7 +5,13 @@ export type TagStateFilter = "all" | "untagged" | "tagged";
 export type MissingTagFilter = "all" | "no_meta" | "no_income" | "no_spending";
 export type Tag = { id: number; name: string; type: TagType; user_id: string; color?: string | null };
 
-export type Item = { id: string; institution_name?: string | null };
+export type Item = {
+  id: string;
+  institution_name?: string | null;
+  inst_url?: string | null;
+  inst_logo?: string | null;
+  inst_color?: string | null;
+};
 /** Mirrors Plaid AccountBalances; stored as Json on `accounts.balances`. */
 export type AccountBalances = {
   available?: number | null;

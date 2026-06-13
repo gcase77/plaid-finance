@@ -35,6 +35,15 @@ function readBalances(b: AccountBalances | null | undefined) {
   };
 }
 
+function logoSrc(logo: string | null | undefined) {
+  if (!logo) return null;
+  return logo.startsWith("data:") ? logo : `data:image/png;base64,${logo}`;
+}
+
+function brandColor(color: string | null | undefined) {
+  return color && /^#[0-9a-f]{6}$/i.test(color) ? color : null;
+}
+
 function CreditBar({ current, available, limit, currency }: { current: number; available: number | null; limit: number; currency: string }) {
   const fmt = (n: number | null) => fmtMoney(n, currency);
   const over = current > limit;
@@ -187,18 +196,33 @@ export default function MainPage() {
             const accs = accountsByItem[item.id] ?? [];
             const open = expanded[item.id] ?? true;
             const label = item.institution_name || item.id;
+            const logo = logoSrc(item.inst_logo);
+            const color = brandColor(item.inst_color);
             return (
               <div key={item.id} className="card" style={{ padding: 0 }}>
                 <div className="between" style={{ padding: "var(--s3) var(--s4)" }}>
-                  <button className="row-flex gap-2" style={{ border: 0, background: "transparent", padding: 0, cursor: "pointer", color: "inherit", flex: 1, justifyContent: "flex-start" }} onClick={() => setExpanded((p) => {
-                    const next = { ...p, [item.id]: !open };
-                    syncBanksCollapseStorage(next, items);
-                    return next;
-                  })}>
-                    <span style={{ display: "inline-block", width: 14, transform: open ? "rotate(0)" : "rotate(-90deg)", transition: "transform 120ms", color: "var(--ink-muted)" }}>▾</span>
-                    <span className="fw-semi">{label}</span>
-                    <span className="chip">{accs.length} account{accs.length !== 1 ? "s" : ""}</span>
-                  </button>
+                  <div className="row-flex gap-2" style={{ flex: 1, justifyContent: "flex-start" }}>
+                    <button className="row-flex gap-2" style={{ border: 0, background: "transparent", padding: 0, cursor: "pointer", color: "inherit", justifyContent: "flex-start" }} onClick={() => setExpanded((p) => {
+                      const next = { ...p, [item.id]: !open };
+                      syncBanksCollapseStorage(next, items);
+                      return next;
+                    })}>
+                      <span style={{ display: "inline-block", width: 14, transform: open ? "rotate(0)" : "rotate(-90deg)", transition: "transform 120ms", color: "var(--ink-muted)" }}>▾</span>
+                    </button>
+                    {logo && (
+                      item.inst_url ? <a href={item.inst_url} target="_blank" rel="noreferrer" aria-label={`Open ${label} website`}>
+                        <img src={logo} alt="" style={{ width: 18, height: 18, objectFit: "contain", borderRadius: 4, display: "block" }} />
+                      </a> : <img src={logo} alt="" style={{ width: 18, height: 18, objectFit: "contain", borderRadius: 4, display: "block" }} />
+                    )}
+                    <button className="row-flex gap-2" style={{ border: 0, background: "transparent", padding: 0, cursor: "pointer", color: "inherit", justifyContent: "flex-start" }} onClick={() => setExpanded((p) => {
+                      const next = { ...p, [item.id]: !open };
+                      syncBanksCollapseStorage(next, items);
+                      return next;
+                    })}>
+                      <span className="fw-semi">{label}</span>
+                      <span className="chip" style={color ? { background: color, color: "#fff", borderColor: color } : undefined}>{accs.length} account{accs.length !== 1 ? "s" : ""}</span>
+                    </button>
+                  </div>
                   <div className="row-flex gap-2">
                     <button className="btn ghost btn-sm btn-icon" title="Refresh balances" disabled={busyId === item.id} onClick={async () => {
                       setBusyId(item.id);

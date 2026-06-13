@@ -1,6 +1,7 @@
 import express from "express";
 import { logger } from "../logger";
 import { plaid } from "../lib/plaid";
+import { getInstitutionMetadata } from "../lib/institutions";
 import type { ServerRequest } from "../middleware/auth";
 
 const router = express.Router();
@@ -45,6 +46,7 @@ router.post("/link/exchange", async (req, res) => {
     logger.log("info", "plaid itemGet", { input: itemReq, output: item.data });
 
     const itemData = item.data.item;
+    const institution = await getInstitutionMetadata(itemData.institution_id);
     await prisma.items.create({
       data: {
         id: data.item_id,
@@ -52,6 +54,9 @@ router.post("/link/exchange", async (req, res) => {
         access_token: data.access_token,
         institution_id: itemData.institution_id ?? null,
         institution_name: itemData.institution_name ?? null,
+        inst_url: institution?.url ?? null,
+        inst_logo: institution?.logo ?? null,
+        inst_color: institution?.primary_color ?? null,
         created_at: itemData.created_at ? new Date(itemData.created_at) : null,
         consented_products: itemData.consented_products ?? undefined,
         consented_data_scopes: itemData.consented_data_scopes ?? undefined,

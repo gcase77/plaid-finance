@@ -1,5 +1,6 @@
 import express from "express";
 import { plaid } from "../lib/plaid";
+import { getInstitutionMetadata } from "../lib/institutions";
 import type { ServerRequest } from "../middleware/auth";
 
 const router = express.Router();
@@ -16,7 +17,7 @@ router.post("/:itemId/accounts/refresh", async (req, res) => {
   try {
     const [dbAccounts, item] = await Promise.all([
       prisma.accounts.findMany({ where: { item_id: itemId }, select: { id: true } }),
-      prisma.items.findFirst({ where: { id: itemId }, select: { access_token: true } })
+      prisma.items.findFirst({ where: { id: itemId }, select: { access_token: true, institution_id: true } })
     ]);
 
     if (!item) return res.status(404).json({ error: "Item not found" });
@@ -56,6 +57,18 @@ router.post("/:itemId/accounts/refresh", async (req, res) => {
       }
       return count;
     });
+
+    const institution = await getInstitutionMetadata(item.institution_id);
+    if (institution) {
+      await prisma.items.update({
+        where: { id: itemId },
+        data: {
+          inst_url: institution.url ?? null,
+          inst_logo: institution.logo ?? null,
+          inst_color: institution.primary_color ?? null
+        }
+      });
+    }
 
     return res.json({ success: true, item_id: itemId, updated_accounts: updated });
   } catch (e: any) {

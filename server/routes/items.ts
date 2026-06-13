@@ -8,7 +8,7 @@ const router = express.Router();
 
 router.get("/items", async (req, res) => {
   const items = await (req as unknown as ServerRequest).prisma.items.findMany({
-    select: { id: true, institution_name: true }
+    select: { id: true, institution_name: true, inst_url: true, inst_logo: true, inst_color: true }
   });
   res.json(items);
 });

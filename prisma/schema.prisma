@@ -26,6 +26,9 @@ model items {
   transaction_cursor      String?
   institution_id          String?
   institution_name        String?
+  inst_url                String?
+  inst_logo               String?
+  inst_color              String?
   created_at              DateTime?
   consented_products      Json?
   consented_data_scopes   Json?
