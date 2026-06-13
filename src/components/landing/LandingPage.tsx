@@ -60,10 +60,10 @@ function FlowPreview() {
       <span className="eyebrow">Flow of Funds</span>
       <h3>See money movement</h3>
       <svg viewBox="0 0 420 190" style={{ width: "100%", padding: 8, background: "var(--surface-alt)", borderRadius: "var(--r-md)" }}>
-        <path d="M55 45 C160 45 190 95 300 95" fill="none" stroke="rgba(51,88,255,0.32)" strokeWidth={22} strokeLinecap="round" />
-        <path d="M55 145 C160 145 210 115 300 115" fill="none" stroke="rgba(51,88,255,0.32)" strokeWidth={22} strokeLinecap="round" />
-        <path d="M300 95 C345 95 355 65 382 65" fill="none" stroke="rgba(51,88,255,0.32)" strokeWidth={22} strokeLinecap="round" />
-        <path d="M300 115 C345 115 355 145 382 145" fill="none" stroke="rgba(51,88,255,0.32)" strokeWidth={22} strokeLinecap="round" />
+        <path d="M55 45 C160 45 190 95 300 95" fill="none" stroke="var(--brand-soft)" strokeWidth={22} strokeLinecap="round" />
+        <path d="M55 145 C160 145 210 115 300 115" fill="none" stroke="var(--brand-soft)" strokeWidth={22} strokeLinecap="round" />
+        <path d="M300 95 C345 95 355 65 382 65" fill="none" stroke="var(--brand-soft)" strokeWidth={22} strokeLinecap="round" />
+        <path d="M300 115 C345 115 355 145 382 145" fill="none" stroke="var(--brand-soft)" strokeWidth={22} strokeLinecap="round" />
         <rect x="28" y="24" width="48" height="48" rx="8" fill="var(--brand)" />
         <rect x="28" y="121" width="48" height="48" rx="8" fill="var(--brand)" />
         <rect x="276" y="78" width="48" height="54" rx="8" fill="var(--brand)" />
@@ -80,7 +80,7 @@ function TimelinePreview() {
       <span className="eyebrow">Timeline</span>
       <h3>Track income & spending</h3>
       <svg viewBox="0 0 420 170" style={{ width: "100%", padding: 8, background: "var(--surface-alt)", borderRadius: "var(--r-md)" }}>
-        <path d="M20 124 L92 82 L164 96 L236 58 L308 72 L392 45 L392 132 L20 132 Z" fill="rgba(22,163,74,0.18)" />
+        <path d="M20 124 L92 82 L164 96 L236 58 L308 72 L392 45 L392 132 L20 132 Z" fill="var(--success-soft)" />
         <path d="M20 124 L92 82 L164 96 L236 58 L308 72 L392 45" fill="none" stroke="var(--success)" strokeWidth={5} strokeLinejoin="round" strokeLinecap="round" />
         <path d="M20 96 L92 116 L164 84 L236 112 L308 92 L392 104" fill="none" stroke="var(--danger)" strokeWidth={5} strokeLinejoin="round" strokeLinecap="round" />
       </svg>

@@ -39,7 +39,7 @@ function SvgPie({ slices, colors, selectedKey, onSelect }: { slices: TrendPieSli
   const paths: ReactNode[] = slices.map((sl, i) => {
     const a0 = starts[i];
     const a1 = a0 + sweeps[i];
-    const c = colors.get(sl.key) ?? "#888";
+    const c = colors.get(sl.key) ?? "var(--ink-muted)";
     const dim = selectedKey && selectedKey !== sl.key;
     return (
       <path key={sl.key} d={pieSlicePath(a0, a1)} fill={c} opacity={dim ? 0.35 : 1} stroke="var(--surface)" strokeWidth={1} style={{ cursor: "pointer" }} onClick={() => onSelect(sl)}>
@@ -57,7 +57,7 @@ function Legend({ slices, colors, selectedKey, onSelect }: { slices: TrendPieSli
     <ul className="viz-pie-legend" style={{ listStyle: "none", padding: 0, margin: "8px 0 0" }}>
       {slices.map((sl) => {
         const pct = total > 0 ? (100 * sl.amount) / total : 0;
-        const c = colors.get(sl.key) ?? "#888";
+        const c = colors.get(sl.key) ?? "var(--ink-muted)";
         const active = selectedKey === sl.key;
         return (
           <li key={sl.key} style={{ breakInside: "avoid", marginBottom: 4 }}>

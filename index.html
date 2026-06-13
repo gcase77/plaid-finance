@@ -10,6 +10,14 @@
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
     <meta name="theme-color" content="#ffffff" />
+    <script>
+      try {
+        var v = localStorage.getItem("fundsup:theme");
+        var sys = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        if (v === "dark" || (v !== "light" && sys)) document.documentElement.dataset.theme = "dark";
+        else delete document.documentElement.dataset.theme;
+      } catch (e) {}
+    </script>
     <script src="https://cdn.plaid.com/link/v2/stable/link-initialize.js"></script>
   </head>
   <body>

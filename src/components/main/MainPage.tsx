@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { getTextColorForBackground } from "../../utils/transactionUtils";
 import type { Session } from "@supabase/supabase-js";
 import { usePlaidData } from "../../hooks/usePlaidData";
 import { supabase } from "../../lib/supabase";
@@ -220,7 +221,7 @@ export default function MainPage() {
                       return next;
                     })}>
                       <span className="fw-semi">{label}</span>
-                      <span className="chip" style={color ? { background: color, color: "#fff", borderColor: color } : undefined}>{accs.length} account{accs.length !== 1 ? "s" : ""}</span>
+                      <span className="chip" style={color ? { background: color, color: getTextColorForBackground(color), borderColor: color } : undefined}>{accs.length} account{accs.length !== 1 ? "s" : ""}</span>
                     </button>
                   </div>
                   <div className="row-flex gap-2">

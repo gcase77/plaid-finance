@@ -80,7 +80,7 @@ export default function TimelineTrendChart({ transactions, tags, view, granulari
           {view === "area" && rows.slice(0, -1).map((_, i) => {
             const a = incomePts[i], b = incomePts[i + 1], c = spendPts[i + 1], d = spendPts[i];
             const avg = (rows[i].net + rows[i + 1].net) / 2;
-            const fill = avg >= 0 ? "rgba(22,163,74,0.16)" : "rgba(220,38,38,0.16)";
+            const fill = avg >= 0 ? "var(--success-soft)" : "var(--danger-soft)";
             return <path key={`gap-${rows[i].key}`} d={`M ${a.x} ${a.y} L ${b.x} ${b.y} L ${c.x} ${c.y} L ${d.x} ${d.y} Z`} fill={fill} />;
           })}
           {view === "area" && (
@@ -97,7 +97,7 @@ export default function TimelineTrendChart({ transactions, tags, view, granulari
           )}
           {view === "net" && (
             <>
-              <line x1={pad} y1={zeroY} x2={width - pad} y2={zeroY} stroke="rgba(120,120,120,0.35)" />
+              <line x1={pad} y1={zeroY} x2={width - pad} y2={zeroY} stroke="var(--line-strong)" strokeOpacity={0.55} />
               {rows.map((r, i) => {
                 const x = xy(i, 0, rows.length, 1, width, height, pad).x - barW / 2;
                 const h = (Math.abs(r.net) / Math.max(vMax, 1)) * (height / 2 - pad);

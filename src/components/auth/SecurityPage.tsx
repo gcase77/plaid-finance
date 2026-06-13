@@ -1,4 +1,5 @@
 import { FormEvent, useEffect, useState } from "react";
+import { applyStoredTheme, persistTheme, readStoredTheme, APP_THEME_KEY, type AppThemeMode } from "../../lib/appTheme";
 import { supabase } from "../../lib/supabase";
 import { Alert } from "../shared/ui";
 
@@ -18,6 +19,7 @@ export default function SecurityPage() {
   const [busy, setBusy] = useState<"start" | "verify" | string | null>(null);
   const [signOutErr, setSignOutErr] = useState<string | null>(null);
   const [signingOut, setSigningOut] = useState(false);
+  const [themeMode, setThemeMode] = useState<AppThemeMode>(() => readStoredTheme());
 
   const load = async () => {
     setLoading(true); setError(null);
@@ -29,6 +31,15 @@ export default function SecurityPage() {
   };
 
   useEffect(() => { void load(); }, []);
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key !== APP_THEME_KEY) return;
+      applyStoredTheme();
+      setThemeMode(readStoredTheme());
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
 
   const removeUnverified = async () => {
     const { data, error: e } = await supabase.auth.mfa.listFactors();
@@ -121,6 +132,20 @@ export default function SecurityPage() {
       {signOutErr && <div className="mb-3"><Alert tone="danger" onClose={() => setSignOutErr(null)}>{signOutErr}</Alert></div>}
       {error && <div className="mb-3"><Alert tone="danger" onClose={() => setError(null)}>{error}</Alert></div>}
       {success && <div className="mb-3"><Alert tone="success" onClose={() => setSuccess(null)}>{success}</Alert></div>}
+
+      <div className="card mb-4">
+        <div className="between mb-3">
+          <div>
+            <h3>Appearance</h3>
+            <p className="small muted mt-2">Match your device or pick a fixed look.</p>
+          </div>
+        </div>
+        <div className="segmented" role="group" aria-label="Theme">
+          <button type="button" className={themeMode === "system" ? "active" : ""} onClick={() => { setThemeMode("system"); persistTheme("system"); }}>System</button>
+          <button type="button" className={themeMode === "light" ? "active" : ""} onClick={() => { setThemeMode("light"); persistTheme("light"); }}>Light</button>
+          <button type="button" className={themeMode === "dark" ? "active" : ""} onClick={() => { setThemeMode("dark"); persistTheme("dark"); }}>Dark</button>
+        </div>
+      </div>
 
       <div className="card mb-4">
         <div className="between mb-3">

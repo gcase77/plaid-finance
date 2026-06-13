@@ -42,25 +42,26 @@ export default function FlowSankeySvg({ model, width, height, selectedId, onSele
         <defs>
           {links.map((L, i) => (
             <linearGradient key={lk(L.source, L.target)} id={gradId(i)} x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor={model.colors.get(L.source) ?? "#888"} stopOpacity={0.5} />
-              <stop offset="100%" stopColor={model.colors.get(L.target) ?? "#888"} stopOpacity={0.5} />
+              <stop offset="0%" stopColor={model.colors.get(L.source) ?? "var(--ink-muted)"} stopOpacity={0.5} />
+              <stop offset="100%" stopColor={model.colors.get(L.target) ?? "var(--ink-muted)"} stopOpacity={0.5} />
             </linearGradient>
           ))}
         </defs>
-        {links.map((L, i) => (
-          <path
-            key={lk(L.source, L.target)}
-            d={linkRegionPath(L)}
-            fill={`url(#${gradId(i)})`}
-            stroke="none"
-            opacity={linkOpacity(L)}
-            style={{ mixBlendMode: "multiply" }}
-          >
-            <title>{`${L.source} → ${L.target}: $${L.value.toFixed(2)}`}</title>
-          </path>
-        ))}
+        <g className="sankey-link-layer">
+          {links.map((L, i) => (
+            <path
+              key={lk(L.source, L.target)}
+              d={linkRegionPath(L)}
+              fill={`url(#${gradId(i)})`}
+              stroke="none"
+              opacity={linkOpacity(L)}
+            >
+              <title>{`${L.source} → ${L.target}: $${L.value.toFixed(2)}`}</title>
+            </path>
+          ))}
+        </g>
         {nodes.map((n) => {
-          const c = model.colors.get(n.id) ?? "#666";
+          const c = model.colors.get(n.id) ?? "var(--ink-muted)";
           const active = selectedId === n.id;
           const faded = selectedId && !active ? 0.38 : 1;
           const tx = n.x + n.w + 4;

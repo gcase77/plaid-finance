@@ -2,6 +2,7 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
 
 :root {
+  color-scheme: light;
   --ink: #0c1730;
   --ink-muted: #5b6677;
   --bg: #f7f8fb;
@@ -380,7 +381,7 @@ hr { border: 0; border-top: 1px solid var(--line); margin: var(--s4) 0; }
 /* ───────── Auth / Landing ───────── */
 .centered-pane {
   min-height: 100vh; display: flex; align-items: center; justify-content: center;
-  padding: var(--s5); background: linear-gradient(180deg, var(--bg) 0%, #ffffff 100%);
+  padding: var(--s5); background: linear-gradient(180deg, var(--bg) 0%, var(--surface) 100%);
 }
 .auth-card { width: 100%; max-width: 400px; }
 .auth-card h1 { font-size: 1.4rem; margin-bottom: var(--s4); }
@@ -390,7 +391,7 @@ hr { border: 0; border-top: 1px solid var(--line); margin: var(--s4) 0; }
   min-height: 100vh; color: var(--ink);
   background:
     radial-gradient(circle at 10% 0%, rgba(51,88,255,0.12), transparent 30rem),
-    linear-gradient(180deg, #ffffff 0%, var(--bg) 60%, #ffffff 100%);
+    linear-gradient(180deg, var(--surface) 0%, var(--bg) 60%, var(--surface) 100%);
   display: flex; flex-direction: column;
 }
 .landing-nav { display: flex; align-items: center; justify-content: space-between; padding: var(--s4) clamp(var(--s4), 4vw, var(--s7)); }
@@ -487,3 +488,42 @@ input[type="range"] { width: 100%; accent-color: var(--brand); }
 
 /* Pie / sankey container */
 .viz-wrap { background: var(--surface-alt); border-radius: var(--r-md); padding: var(--s3); border: 1px solid var(--line); }
+
+/* Dark theme — set on <html> via Account → Appearance */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --ink: #e8ecf4;
+  --ink-muted: #96a2b8;
+  --bg: #0b0f16;
+  --surface: #121826;
+  --surface-alt: #1a2233;
+  --line: #2a3548;
+  --line-strong: #3e4d66;
+  --brand: #6d8cff;
+  --brand-hover: #91a8ff;
+  --brand-soft: rgba(109, 140, 255, 0.22);
+  --accent: #a78bfa;
+  --success: #34d399;
+  --success-soft: rgba(52, 211, 153, 0.14);
+  --danger: #f87171;
+  --danger-soft: rgba(248, 113, 113, 0.14);
+  --warning: #fbbf24;
+  --warning-soft: rgba(251, 191, 36, 0.14);
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --shadow-2: 0 6px 22px rgba(0, 0, 0, 0.42);
+  --shadow-3: 0 18px 50px rgba(0, 0, 0, 0.55);
+}
+:root[data-theme="dark"] .tag-badge { border-color: rgba(255, 255, 255, 0.1); }
+:root[data-theme="dark"] .modal-backdrop { background: rgba(0, 0, 0, 0.72); }
+:root[data-theme="dark"] .tip-content { background: #374151; color: #f9fafb; }
+:root[data-theme="dark"] .centered-pane { background: linear-gradient(180deg, var(--bg) 0%, var(--surface) 100%); }
+:root[data-theme="dark"] .landing {
+  background:
+    radial-gradient(circle at 10% 0%, rgba(109, 140, 255, 0.14), transparent 28rem),
+    linear-gradient(180deg, var(--surface) 0%, var(--bg) 55%, var(--surface) 100%);
+}
+:root[data-theme="dark"] .landing-security { background: rgba(26, 34, 51, 0.85); }
+:root[data-theme="dark"] .btn.danger:hover:not(:disabled) { background: #ef4444; border-color: #ef4444; }
+
+.sankey-link-layer path { mix-blend-mode: multiply; }
+:root[data-theme="dark"] .sankey-link-layer path { mix-blend-mode: normal; }

@@ -61,7 +61,7 @@ function nodeColors(nodes: FlowSankeyNode[]): Map<string, string> {
     arr.sort((a, b) => b.value - a.value);
     arr.forEach((n, i) => m.set(n.id, TAG_COLOR_PALETTE[i % TAG_COLOR_PALETTE.length]));
   }
-  m.set(BRIDGE, "#495057");
+  m.set(BRIDGE, "var(--line-strong)");
   return m;
 }
 

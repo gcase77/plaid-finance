@@ -67,7 +67,7 @@ function Badges({ badges }: { badges: Badge[] }) {
         <span
           key={b.key}
           className="tag-badge"
-          style={b.transfer ? { background: "var(--ink)", color: "#fff", borderColor: "transparent" } : b.color ? { background: b.color, color: getTextColorForBackground(b.color) } : undefined}
+          style={b.transfer ? { background: "var(--ink)", color: "var(--surface)", borderColor: "transparent" } : b.color ? { background: b.color, color: getTextColorForBackground(b.color) } : undefined}
         >
           {b.label}
         </span>
