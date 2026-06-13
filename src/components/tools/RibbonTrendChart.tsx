@@ -10,7 +10,7 @@ type Side = "spending" | "income";
 type Series = { key: string; label: string; color: string; values: number[]; periodTxns: Txn[][]; total: number };
 type Period = { key: string; label: string; txns: Txn[] };
 type Segment = { series: Series; period: Period; periodIndex: number; y0: number; y1: number };
-type Selection = { seriesKey: string; periodKey: string };
+type Selection = { seriesKey: string; periodKey: string | null };
 
 const fmt = (n: number) => `$${n.toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
 const monthLabel = (s: string) => { const [y, m] = s.split("-"); return new Date(Number(y), Number(m) - 1, 1).toLocaleDateString("en-US", { month: "short", year: "2-digit" }); };
@@ -38,7 +38,7 @@ function buildSeries(periods: Period[], side: Side, grouping: TrendPieGrouping, 
     labels.set(s.key, s.label);
     totals.set(s.key, (totals.get(s.key) ?? 0) + s.amount);
   }
-  const keys = [...totals.entries()].sort((a, b) => b[1] - a[1]).slice(0, 8).map(([key]) => key);
+  const keys = [...totals.entries()].sort((a, b) => b[1] - a[1]).slice(0, 16).map(([key]) => key);
   const otherTotal = [...totals.entries()].filter(([k]) => !keys.includes(k)).reduce((sum, [, v]) => sum + v, 0);
   if (otherTotal > 0) keys.push("__other__");
   return keys.map((key, i) => ({
@@ -97,13 +97,17 @@ function RibbonSvg({ periods, series, selected, onSelect }: {
       {periods.slice(0, -1).flatMap((_, i) => segments[i].map((seg) => {
         const next = segments[i + 1].find((s) => s.series.key === seg.series.key);
         if (!next || (seg.y1 === seg.y0 && next.y1 === next.y0)) return null;
-        const active = selected?.seriesKey === seg.series.key && (selected.periodKey === seg.period.key || selected.periodKey === next.period.key);
-        const dim = selected && selected.seriesKey !== seg.series.key;
+        const active = selected?.seriesKey === seg.series.key && (
+          selected.periodKey == null ||
+          selected.periodKey === seg.period.key ||
+          selected.periodKey === next.period.key
+        );
+        const dim = selected && !active;
         return <path key={`${seg.series.key}-${seg.period.key}`} d={ribbonPath(seg, next, x(i), x(i + 1), barW, y)} fill={seg.series.color} opacity={active ? 0.9 : dim ? 0.18 : 0.58} />;
       }))}
       {segments.flatMap((periodSegments, i) => periodSegments.map((seg) => {
         if (seg.y1 === seg.y0) return null;
-        const active = selected?.seriesKey === seg.series.key && selected.periodKey === seg.period.key;
+        const active = selected?.seriesKey === seg.series.key && (selected.periodKey == null || selected.periodKey === seg.period.key);
         const dim = selected && !active;
         return (
           <rect
@@ -139,23 +143,42 @@ function RibbonCard({ title, side, transactions, tags, grouping, granularity, ta
   const periods = useMemo(() => buildPeriods(transactions, granularity), [transactions, granularity]);
   const series = useMemo(() => buildSeries(periods, side, grouping, tagMap), [periods, side, grouping, tagMap]);
   const selectedSeries = selected ? series.find((s) => s.key === selected.seriesKey) : null;
-  const selectedPeriodIndex = selected ? periods.findIndex((p) => p.key === selected.periodKey) : -1;
+  const legendSel = selected?.periodKey === null;
+  const selectedPeriodIndex = selected?.periodKey != null ? periods.findIndex((p) => p.key === selected.periodKey) : -1;
   const selectedPeriod = selectedPeriodIndex >= 0 ? periods[selectedPeriodIndex] : null;
-  const selectedTxns = selectedSeries && selectedPeriodIndex >= 0 ? selectedSeries.periodTxns[selectedPeriodIndex] : [];
-  const selectedAmount = selectedSeries && selectedPeriodIndex >= 0 ? selectedSeries.values[selectedPeriodIndex] : 0;
-  const select = (seriesKey: string, periodKey: string) => setSelected((s) => s?.seriesKey === seriesKey && s.periodKey === periodKey ? null : { seriesKey, periodKey });
+  const selectedTxns = selectedSeries
+    ? legendSel ? selectedSeries.periodTxns.flat() : selectedPeriodIndex >= 0 ? selectedSeries.periodTxns[selectedPeriodIndex] : []
+    : [];
+  const selectedAmount = selectedSeries
+    ? legendSel ? selectedSeries.total : selectedPeriodIndex >= 0 ? selectedSeries.values[selectedPeriodIndex] : 0
+    : 0;
+  const selectBar = (seriesKey: string, periodKey: string) => setSelected((s) => (s?.seriesKey === seriesKey && s.periodKey === periodKey ? null : { seriesKey, periodKey }));
+  const selectLegend = (seriesKey: string) => setSelected((s) => (s?.seriesKey === seriesKey ? null : { seriesKey, periodKey: null }));
   if (!periods.length || !series.length) return <div className="card"><h4 className="mb-2">{title}</h4><p className="muted small">No data in this range.</p></div>;
   return (
     <div className="card">
       <h4 className="mb-2">{title}</h4>
-      <div className="viz-wrap" style={{ overflowX: "auto" }}><RibbonSvg periods={periods} series={series} selected={selected} onSelect={select} /></div>
-      <div className="row-flex gap-3 flex-wrap mt-3 small">
-        {series.map((s) => <span key={s.key} className="row-flex gap-2"><span style={{ width: 10, height: 10, borderRadius: 2, background: s.color }} /><span>{s.label}</span><span className="muted">{fmt(s.total)}</span></span>)}
-      </div>
-      {selectedSeries && selectedPeriod && (
+      <div className="viz-wrap" style={{ overflowX: "auto" }}><RibbonSvg periods={periods} series={series} selected={selected} onSelect={selectBar} /></div>
+      <ul className="viz-pie-legend" style={{ listStyle: "none", padding: 0, margin: "8px 0 0" }}>
+        {series.map((s) => {
+          const rowActive = selected?.seriesKey === s.key;
+          return (
+            <li key={s.key} style={{ breakInside: "avoid", marginBottom: 4 }}>
+              <button type="button" className="btn link btn-sm viz-pie-legend-row" style={{ fontWeight: rowActive ? 700 : 500, color: "inherit" }} onClick={() => selectLegend(s.key)}>
+                <span className="viz-pie-legend-swatch" style={{ background: s.color, borderRadius: 2 }} aria-hidden />
+                <span className="viz-pie-legend-label">{s.label}</span>
+                <span className="viz-pie-legend-pct muted">{fmt(s.total)}</span>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+      {selectedSeries && (legendSel || selectedPeriod) && (
         <div className="card mt-3">
           <div className="between mb-3 flex-wrap gap-2">
-            <h4>{selectedPeriod.label} — {selectedSeries.label} <span className="muted small">({fmt(selectedAmount)})</span></h4>
+            <h4>
+              {legendSel ? <>{selectedSeries.label} <span className="muted small">(all periods, {fmt(selectedAmount)})</span></> : <>{selectedPeriod?.label} — {selectedSeries.label} <span className="muted small">({fmt(selectedAmount)})</span></>}
+            </h4>
             <button className="btn ghost btn-sm" onClick={() => setSelected(null)}>Clear</button>
           </div>
           <TransactionTable transactions={selectedTxns} tags={tags} keyPrefix={`viz-ribbon-${side}`} />
