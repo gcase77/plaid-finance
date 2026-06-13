@@ -1,58 +1,8 @@
-import { memo, useCallback, useMemo, useRef } from "react";
-import { useVirtualizer } from "@tanstack/react-virtual";
+import { useMemo, useState } from "react";
 import type { Tag, Txn } from "./types";
-import { getTxnIconUrl, formatTxnDate, formatTxnAmount, formatTxnDetectedCategory, getDisplayTagColor, getTextColorForBackground } from "./transactionUtils";
-import { collapseNettingGroups } from "./nettingUtils";
-
-function getSummary(txns: Txn[]) {
-  const nt = collapseNettingGroups(txns.filter((t) => !t.account_transfer_group));
-  const income = nt.filter((t) => (t.amount ?? 0) < 0).reduce((s, t) => s + Math.abs(t.amount ?? 0), 0);
-  const spending = nt.filter((t) => (t.amount ?? 0) > 0).reduce((s, t) => s + (t.amount ?? 0), 0);
-  return { income, spending, count: txns.length };
-}
-const fmt = (n: number) => `$${n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-
-function accountDisplay(inst: string, acct: string) {
-  if (!acct) return inst;
-  if (!inst) return acct;
-  return acct.trim().toLowerCase().includes(inst.trim().toLowerCase()) ? acct : `${inst} · ${acct}`;
-}
-
-type Badge = { key: string; label: string; color?: string; transfer?: boolean };
-function tagBadges(t: Txn, tagMap: Map<number, Tag>): Badge[] {
-  const out: Badge[] = [];
-  const seen = new Set<string>();
-  if (t.account_transfer_group) { out.push({ key: "tx", label: "account_transfer", transfer: true }); seen.add("tx"); }
-  if (t.netting_group) { out.push({ key: "net", label: (t.amount ?? 0) > 0 ? "contra_spend" : "contra_income", transfer: true }); seen.add("net"); }
-  const add = (id: number) => {
-    const tag = tagMap.get(id);
-    const key = tag ? String(tag.id) : String(id);
-    if (seen.has(key)) return;
-    seen.add(key);
-    out.push({ key, label: tag?.name ?? String(id), color: tag ? getDisplayTagColor(tag.type, tag.color) : undefined });
-  };
-  if (t.bucket_1_tag_id != null) add(t.bucket_1_tag_id);
-  if (t.bucket_2_tag_id != null) add(t.bucket_2_tag_id);
-  (t.meta_tag_ids ?? []).forEach(add);
-  return out;
-}
-
-function Badges({ badges }: { badges: Badge[] }) {
-  if (!badges.length) return <span className="muted xs">—</span>;
-  return (
-    <div className="row-flex flex-wrap gap-1">
-      {badges.map((b) => (
-        <span
-          key={b.key}
-          className="tag-badge"
-          style={b.transfer ? { background: "var(--ink)", color: "#fff", borderColor: "transparent" } : b.color ? { background: b.color, color: getTextColorForBackground(b.color) } : undefined}
-        >
-          {b.label}
-        </span>
-      ))}
-    </div>
-  );
-}
+import type { FilterGroup, FilterNode, FilterRule, FilterRuleField } from "./filterAst";
+import { defaultFilterRoot, filterTransactions, newGroup, newRule } from "./filterAst";
+import TxnVirtualizedTable from "./TxnVirtualizedTable";
 
 type Props = {
   transactions: Txn[];
@@ -65,151 +15,182 @@ type Props = {
   tags?: Tag[];
 };
 
-type GroupPos = "start" | "mid" | "end" | "solo";
-type DisplayRow = { t: Txn; id: string; groupPos?: GroupPos };
-const txnEpoch = (t: Txn) => new Date(t.datetime ?? t.authorized_datetime ?? 0).valueOf();
+const FIELD_OPTS: { v: FilterRuleField; l: string }[] = [
+  { v: "txn_date", l: "Date" },
+  { v: "description", l: "Description" },
+  { v: "merchant", l: "Merchant" },
+  { v: "amount", l: "Amount" },
+  { v: "account", l: "Account" },
+  { v: "category", l: "Category" },
+  { v: "tag_id", l: "Tag" }
+];
 
-/** In netting mode, groups sit at their anchor (largest leg) date; members sort newest-first within. */
-function buildDisplayRows(transactions: Txn[], nettingMode: boolean, keyPrefix: string): DisplayRow[] {
-  const withId = transactions.map((t, i) => ({ t, id: t.transaction_id || `${keyPrefix}-${i}` }));
-  if (!nettingMode) return withId;
-  const groups = new Map<string, typeof withId>();
-  const units: { sort: number; rows: DisplayRow[] }[] = [];
-  for (const r of withId) {
-    if (r.t.netting_group) { const a = groups.get(r.t.netting_group) ?? []; a.push(r); groups.set(r.t.netting_group, a); }
-    else units.push({ sort: txnEpoch(r.t), rows: [r] });
+function opsForField(f: FilterRuleField): { v: string; l: string }[] {
+  if (f === "amount") return [{ v: "gt", l: "is greater than" }, { v: "lt", l: "is less than" }, { v: "eq", l: "equals" }];
+  if (f === "tag_id") return [{ v: "has", l: "includes" }, { v: "not", l: "does not include" }];
+  if (f === "txn_date") {
+    return [
+      { v: "on_or_after", l: "is on or after" },
+      { v: "on_or_before", l: "is on or before" },
+      { v: "is_on", l: "is on (calendar day)" },
+      { v: "between", l: "is between" }
+    ];
   }
-  for (const legs of groups.values()) {
-    legs.sort((a, b) => txnEpoch(b.t) - txnEpoch(a.t));
-    const anchor = legs.reduce((m, r) => (Math.abs(r.t.amount ?? 0) > Math.abs(m.t.amount ?? 0) ? r : m));
-    units.push({
-      sort: txnEpoch(anchor.t),
-      rows: legs.map((r, i) => ({ ...r, groupPos: legs.length === 1 ? "solo" as const : i === 0 ? "start" as const : i === legs.length - 1 ? "end" as const : "mid" as const }))
-    });
-  }
-  units.sort((a, b) => b.sort - a.sort);
-  return units.flatMap((u) => u.rows);
+  return [{ v: "contains", l: "contains" }, { v: "not_contains", l: "does not contain" }];
 }
 
-type RowProps = {
-  t: Txn;
-  id: string;
-  groupPos?: GroupPos;
-  sel: boolean;
-  taggingMode: boolean;
-  tagMap: Map<number, Tag>;
-  onToggle: (id: string, c: boolean) => void;
-  measureRef: (el: HTMLTableRowElement | null) => void;
-  dataIndex: number;
-};
+function patchRuleField(r: FilterRule, f: FilterRuleField): FilterRule {
+  const ops = opsForField(f);
+  const op = ops.some((o) => o.v === r.op) ? r.op : ops[0].v;
+  return { ...r, field: f, op, value: "" };
+}
 
-const Row = memo(function Row({ t, id, groupPos, sel, taggingMode, tagMap, onToggle, measureRef, dataIndex }: RowProps) {
-  const groupCls = groupPos
-    ? `net-group ${groupPos === "start" || groupPos === "solo" ? "net-start" : ""} ${groupPos === "end" || groupPos === "solo" ? "net-end" : ""}`
-    : "";
+function RuleRow({ rule, tags, onChange, onRemove }: { rule: FilterRule; tags: Tag[]; onChange: (r: FilterRule) => void; onRemove: () => void }) {
+  const ops = opsForField(rule.field);
+  const isTag = rule.field === "tag_id";
+  const isAmt = rule.field === "amount";
+  const isDate = rule.field === "txn_date";
+  const isBetween = isDate && rule.op === "between";
+  const [d0, d1] = rule.value.split("|").map((s) => s.trim());
   return (
-    <tr
-      ref={measureRef}
-      data-index={dataIndex}
-      className={`${taggingMode ? "selectable" : ""} ${sel ? "selected" : ""} ${groupCls}`}
-      onClick={taggingMode ? () => onToggle(id, !sel) : undefined}
-    >
-      {taggingMode && (
-        <td onClick={(e) => e.stopPropagation()}>
-          <input type="checkbox" checked={sel} onChange={(e) => onToggle(id, e.target.checked)} />
-        </td>
+    <div className="qb-row">
+      <select value={rule.field} onChange={(e) => onChange(patchRuleField(rule, e.target.value as FilterRuleField))}>
+        {FIELD_OPTS.map((o) => (
+          <option key={o.v} value={o.v}>{o.l}</option>
+        ))}
+      </select>
+      <select
+        value={rule.op}
+        onChange={(e) => {
+          const op = e.target.value;
+          let { value } = rule;
+          if (isDate) {
+            if (op === "between" && !value.includes("|")) value = "|";
+            else if (op !== "between" && value.includes("|")) value = value.split("|")[0]?.trim() ?? "";
+          }
+          onChange({ ...rule, op, value });
+        }}
+      >
+        {ops.map((o) => (
+          <option key={o.v} value={o.v}>{o.l}</option>
+        ))}
+      </select>
+      {isTag ? (
+        <select value={rule.value} onChange={(e) => onChange({ ...rule, value: e.target.value })}>
+          <option value="">— tag —</option>
+          {tags.map((t) => (
+            <option key={t.id} value={String(t.id)}>{t.name}</option>
+          ))}
+        </select>
+      ) : isBetween ? (
+        <span className="row-flex gap-1" style={{ flexWrap: "wrap", alignItems: "center", flex: "1 1 200px" }}>
+          <input type="date" value={d0} onChange={(e) => onChange({ ...rule, value: `${e.target.value}|${d1}` })} />
+          <span className="muted small">–</span>
+          <input type="date" value={d1} onChange={(e) => onChange({ ...rule, value: `${d0}|${e.target.value}` })} />
+        </span>
+      ) : (
+        <input
+          type={isAmt ? "number" : isDate ? "date" : "text"}
+          placeholder={isAmt ? "0.00" : "value…"}
+          value={rule.value}
+          onChange={(e) => onChange({ ...rule, value: e.target.value })}
+          style={{ flex: "1 1 140px", minWidth: 100 }}
+        />
       )}
-      <td>{getTxnIconUrl(t) && <img src={getTxnIconUrl(t)} alt="" style={{ width: 22, height: 22, borderRadius: 6 }} />}</td>
-      <td className="text-nowrap">{formatTxnDate(t)}</td>
-      {taggingMode && <td><Badges badges={tagBadges(t, tagMap)} /></td>}
-      <td>{(t.original_description || "").trim() || t.name || ""}</td>
-      <td>{t.merchant_name || ""}</td>
-      <td className={`text-end ${(t.amount ?? 0) < 0 ? "money-positive" : ""}`}>{formatTxnAmount(t)}</td>
-      {!taggingMode && <td><Badges badges={tagBadges(t, tagMap)} /></td>}
-      <td>{accountDisplay(t.institution_name || "", t.account_name || t.account_official_name || "")}</td>
-      <td>{formatTxnDetectedCategory(t.personal_finance_category)}</td>
-    </tr>
+      <button type="button" className="btn btn-sm danger-ghost" aria-label="Remove condition" onClick={onRemove}>×</button>
+    </div>
   );
-});
+}
 
-const ROW_ESTIMATE = 41;
+function GroupEditor({
+  group,
+  depth,
+  isRoot,
+  tags,
+  onChange,
+  onRemove
+}: {
+  group: FilterGroup;
+  depth: number;
+  isRoot?: boolean;
+  tags: Tag[];
+  onChange: (g: FilterGroup) => void;
+  onRemove?: () => void;
+}) {
+  const setChild = (i: number, n: FilterNode) => onChange({ ...group, children: group.children.map((c, j) => (j === i ? n : c)) });
+  const delChild = (i: number) => onChange({ ...group, children: group.children.filter((_, j) => j !== i) });
+  return (
+    <div className={depth ? "query-builder-group" : undefined} style={depth ? { marginTop: 4 } : undefined}>
+      <div className="row-flex flex-wrap gap-2 mb-2" style={{ alignItems: "center" }}>
+        {isRoot && <span className="small" style={{ fontWeight: 650 }}>Filter</span>}
+        <select
+          className="small"
+          value={group.combinator}
+          onChange={(e) => onChange({ ...group, combinator: e.target.value as FilterGroup["combinator"] })}
+          aria-label={isRoot ? "Match logic" : "Subgroup match logic"}
+        >
+          <option value="and">All conditions are true</option>
+          <option value="or">Any condition is true</option>
+        </select>
+        {!isRoot && onRemove && (
+          <button type="button" className="btn btn-sm danger-ghost" onClick={onRemove}>Remove group</button>
+        )}
+      </div>
+      {group.children.map((child, i) =>
+        child.type === "group" ? (
+          <GroupEditor
+            key={child.id}
+            group={child}
+            depth={depth + 1}
+            tags={tags}
+            onChange={(g) => setChild(i, g)}
+            onRemove={() => delChild(i)}
+          />
+        ) : (
+          <RuleRow key={child.id} rule={child} tags={tags} onChange={(r) => setChild(i, r)} onRemove={() => delChild(i)} />
+        )
+      )}
+      <div className="row-flex gap-2 mt-2 flex-wrap">
+        <button type="button" className="btn btn-sm ghost" onClick={() => onChange({ ...group, children: [...group.children, newRule()] })}>+ Add condition</button>
+        <button type="button" className="btn btn-sm ghost" onClick={() => onChange({ ...group, children: [...group.children, newGroup()] })}>+ Add group</button>
+      </div>
+    </div>
+  );
+}
+
+function AstFilterPanel({ root, tags, onChange }: { root: FilterGroup; tags: Tag[]; onChange: (g: FilterGroup) => void }) {
+  return (
+    <div className="query-builder">
+      <div className="qb-head">
+        <span className="muted small">Nested AND / OR groups (custom AST).</span>
+        <button type="button" className="btn btn-sm ghost" onClick={() => onChange(defaultFilterRoot())}>Clear filters</button>
+      </div>
+      <GroupEditor group={root} depth={0} isRoot tags={tags} onChange={onChange} />
+    </div>
+  );
+}
 
 export default function TransactionTable({ transactions, emptyMessage = "No transactions", keyPrefix = "txn", taggingMode = false, nettingMode = false, selectedIds, onSelectionChange, tags = [] }: Props) {
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const tagMap = useMemo(() => new Map(tags.map((t) => [t.id, t])), [tags]);
-  const displayRows = useMemo(() => buildDisplayRows(transactions, nettingMode, keyPrefix), [transactions, nettingMode, keyPrefix]);
-  const summary = useMemo(() => getSummary(transactions), [transactions]);
-
-  const virtualizer = useVirtualizer({
-    count: displayRows.length,
-    getScrollElement: () => scrollRef.current,
-    estimateSize: () => ROW_ESTIMATE,
-    overscan: 12
-  });
-
-  const selectedRef = useRef(selectedIds);
-  selectedRef.current = selectedIds;
-  const toggle = useCallback((id: string, c: boolean) => {
-    if (!onSelectionChange || !selectedRef.current) return;
-    const next = new Set(selectedRef.current);
-    if (c) next.add(id); else next.delete(id);
-    onSelectionChange(next);
-  }, [onSelectionChange]);
+  const [filterRoot, setFilterRoot] = useState(defaultFilterRoot);
+  const filtered = useMemo(() => filterTransactions(transactions, filterRoot), [transactions, filterRoot]);
+  const filterActive = filterRoot.children.length > 0;
+  const noneMatch = filterActive && !filtered.length;
 
   if (!transactions.length) return <div className="muted">{emptyMessage}</div>;
-  const toggleAll = (c: boolean) => { if (onSelectionChange) onSelectionChange(c ? new Set(displayRows.map((r) => r.id)) : new Set()); };
-  const allSelected = !!selectedIds && displayRows.length > 0 && displayRows.every((r) => selectedIds.has(r.id));
-
-  const items = virtualizer.getVirtualItems();
-  const padTop = items.length ? items[0].start : 0;
-  const padBottom = items.length ? virtualizer.getTotalSize() - items[items.length - 1].end : 0;
 
   return (
-    <>
-      <div className="row-flex flex-wrap gap-4 mb-3 small">
-        <span>Income: <strong>{fmt(summary.income)}</strong></span>
-        <span>Spending: <strong>{fmt(summary.spending)}</strong></span>
-        <span><strong>{summary.count.toLocaleString()}</strong> transactions</span>
-      </div>
-      <div className="table-wrap" ref={scrollRef} style={{ maxHeight: "70vh", overflowY: "auto" }}>
-        <table className="table">
-          <thead>
-            <tr>
-              {taggingMode && <th style={{ width: 32 }}><input type="checkbox" checked={allSelected} onChange={(e) => toggleAll(e.target.checked)} /></th>}
-              <th style={{ width: 30 }}></th>
-              <th>Date</th>
-              {taggingMode && <th>Tags</th>}
-              <th>Name</th>
-              <th>Merchant</th>
-              <th className="text-end">Amount</th>
-              {!taggingMode && <th>Tags</th>}
-              <th>Account</th>
-              <th>Detected</th>
-            </tr>
-          </thead>
-          <tbody>
-            {padTop > 0 && <tr aria-hidden style={{ height: padTop }} />}
-            {items.map((vi) => {
-              const { t, id, groupPos } = displayRows[vi.index];
-              return (
-                <Row
-                  key={id}
-                  t={t}
-                  id={id}
-                  groupPos={groupPos}
-                  sel={!!selectedIds?.has(id)}
-                  taggingMode={taggingMode}
-                  tagMap={tagMap}
-                  onToggle={toggle}
-                  measureRef={virtualizer.measureElement}
-                  dataIndex={vi.index}
-                />
-              );
-            })}
-            {padBottom > 0 && <tr aria-hidden style={{ height: padBottom }} />}
-          </tbody>
-        </table>
-      </div>
-    </>
+    <TxnVirtualizedTable
+      transactions={filtered}
+      sourceTotal={transactions.length}
+      emptyMessage={emptyMessage}
+      keyPrefix={keyPrefix}
+      taggingMode={taggingMode}
+      nettingMode={nettingMode}
+      selectedIds={selectedIds}
+      onSelectionChange={onSelectionChange}
+      tags={tags}
+      header={<AstFilterPanel root={filterRoot} tags={tags} onChange={setFilterRoot} />}
+      noneMatchHint={noneMatch ? <p className="muted small mb-2">No transactions match the current filter.</p> : undefined}
+    />
   );
 }

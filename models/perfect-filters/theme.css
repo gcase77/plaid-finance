@@ -29,6 +29,166 @@
   --shadow-3: 0 18px 48px rgba(12,23,48,.12);
 }
 
+/* Query builder (perfect-filters lab) */
+.query-builder {
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  padding: var(--s3) var(--s4);
+  margin-bottom: var(--s4);
+  box-shadow: var(--shadow-1);
+}
+.query-builder > .qb-head { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); margin-bottom: var(--s3); flex-wrap: wrap; }
+.query-builder-group {
+  border-left: 3px solid var(--brand);
+  padding-left: var(--s3);
+  margin: var(--s2) 0 var(--s2) var(--s1);
+}
+.query-builder .qb-row {
+  display: flex; flex-wrap: wrap; gap: var(--s2); align-items: center;
+  margin-bottom: var(--s2); padding: var(--s2); border-radius: var(--r-sm); background: var(--surface-alt);
+}
+.query-builder select,
+.query-builder input[type="text"],
+.query-builder input[type="number"],
+.query-builder input[type="date"] {
+  font: inherit; padding: 6px 8px; border-radius: var(--r-sm); border: 1px solid var(--line);
+  background: var(--surface); min-width: 0; max-width: 100%;
+}
+.query-builder select:focus,
+.query-builder input:focus { outline: 2px solid var(--brand-soft); border-color: var(--brand); }
+
+/* react-querybuilder — match Funds Up .btn / .select / surfaces (see standardClassnames) */
+.query-builder.rqb-panel {
+  --rqb-base-color: var(--brand);
+  --rqb-border-color: var(--line);
+  --rqb-background-color: var(--surface-alt);
+  --rqb-branch-color: var(--line-strong);
+  --rqb-branch-style: solid;
+}
+.query-builder.rqb-panel .queryBuilder { font-size: 0.92rem; }
+.query-builder.rqb-panel .ruleGroup,
+.query-builder.rqb-panel .rule.rule-hasSubQuery {
+  border-color: var(--line) !important;
+  background: var(--surface-alt) !important;
+  border-radius: var(--r-md);
+}
+.query-builder.rqb-panel .rule {
+  background: var(--surface-alt);
+  border-radius: var(--r-sm);
+  gap: var(--s2);
+}
+.query-builder.rqb-panel select,
+.query-builder.rqb-panel input[type="text"],
+.query-builder.rqb-panel input[type="number"],
+.query-builder.rqb-panel input[type="date"],
+.query-builder.rqb-panel textarea {
+  font: inherit;
+  padding: var(--s2) var(--s3);
+  border-radius: var(--r-md);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  min-width: 0;
+  max-width: 100%;
+  transition: border-color 80ms ease, box-shadow 80ms ease;
+}
+.query-builder.rqb-panel select {
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, var(--ink-muted) 50%), linear-gradient(135deg, var(--ink-muted) 50%, transparent 50%);
+  background-position: calc(100% - 14px) 50%, calc(100% - 9px) 50%;
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+  padding-right: 28px;
+  cursor: pointer;
+}
+.query-builder.rqb-panel select:focus,
+.query-builder.rqb-panel input:focus,
+.query-builder.rqb-panel textarea:focus {
+  outline: 0;
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px var(--brand-soft);
+}
+.query-builder.rqb-panel button.ruleGroup-addRule,
+.query-builder.rqb-panel button.ruleGroup-addGroup,
+.query-builder.rqb-panel button.rule-cloneRule,
+.query-builder.rqb-panel button.ruleGroup-cloneGroup,
+.query-builder.rqb-panel button.rule-lock,
+.query-builder.rqb-panel button.ruleGroup-lock,
+.query-builder.rqb-panel button.rule-mute,
+.query-builder.rqb-panel button.ruleGroup-mute,
+.query-builder.rqb-panel button.ruleGroup-notToggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s2);
+  padding: 5px var(--s3);
+  font-family: inherit;
+  font-size: 0.84rem;
+  font-weight: 550;
+  line-height: 1.25;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 80ms ease, color 80ms ease, border-color 80ms ease;
+}
+.query-builder.rqb-panel button.ruleGroup-addRule:hover:not(:disabled),
+.query-builder.rqb-panel button.ruleGroup-addGroup:hover:not(:disabled),
+.query-builder.rqb-panel button.rule-cloneRule:hover:not(:disabled),
+.query-builder.rqb-panel button.ruleGroup-cloneGroup:hover:not(:disabled),
+.query-builder.rqb-panel button.rule-lock:hover:not(:disabled),
+.query-builder.rqb-panel button.ruleGroup-lock:hover:not(:disabled),
+.query-builder.rqb-panel button.rule-mute:hover:not(:disabled),
+.query-builder.rqb-panel button.ruleGroup-mute:hover:not(:disabled),
+.query-builder.rqb-panel button.ruleGroup-notToggle:hover:not(:disabled) {
+  background: var(--surface-alt);
+  border-color: var(--line-strong);
+}
+.query-builder.rqb-panel button.rule-remove,
+.query-builder.rqb-panel button.ruleGroup-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px var(--s3);
+  font-family: inherit;
+  font-size: 0.84rem;
+  font-weight: 550;
+  line-height: 1.25;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--danger);
+  cursor: pointer;
+  transition: background-color 80ms ease, border-color 80ms ease;
+}
+.query-builder.rqb-panel button.rule-remove:hover:not(:disabled),
+.query-builder.rqb-panel button.ruleGroup-remove:hover:not(:disabled) {
+  background: var(--danger-soft);
+  border-color: var(--danger);
+}
+.query-builder.rqb-panel button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.query-builder.rqb-panel button.queryBuilder-dragHandle {
+  padding: 4px 6px;
+  min-width: 26px;
+  color: var(--ink-muted);
+}
+.query-builder.rqb-panel .shiftActions > button {
+  width: 100%;
+  justify-content: center;
+}
+.query-builder.rqb-panel input[type="checkbox"] {
+  width: 1.05rem;
+  height: 1.05rem;
+  accent-color: var(--brand);
+  cursor: pointer;
+}
+
 * { box-sizing: border-box; }
 html, body, #root { height: 100%; }
 body {

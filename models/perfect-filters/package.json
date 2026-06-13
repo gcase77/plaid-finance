@@ -11,7 +11,8 @@
   "dependencies": {
     "@tanstack/react-virtual": "^3.14.2",
     "react": "^19.2.0",
-    "react-dom": "^19.2.0"
+    "react-dom": "^19.2.0",
+    "react-querybuilder": "^8.19.1"
   },
   "devDependencies": {
     "@types/react": "^19.2.7",
