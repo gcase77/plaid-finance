@@ -1,7 +1,7 @@
 import { memo, useCallback, useMemo, useRef } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import type { Tag, Txn } from "../types";
-import { getTxnIconUrl, formatTxnDate, formatTxnAmount, formatTxnDetectedCategory, getDisplayTagColor, getTextColorForBackground } from "../../utils/transactionUtils";
+import { getTxnIconUrl, formatTxnDate, formatTxnAmount, formatTxnDetectedCategory, getDisplayTagColor, getTextColorForBackground, getTxnDateOnly } from "../../utils/transactionUtils";
 import { collapseNettingGroups } from "../../utils/nettingUtils";
 
 function getSummary(txns: Txn[]) {
@@ -19,6 +19,11 @@ function accountDisplay(inst: string, acct: string) {
 }
 
 type Badge = { key: string; label: string; color?: string; transfer?: boolean };
+const csvEsc = (v: unknown) => {
+  const s = v == null ? "" : String(v);
+  return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+};
+
 function tagBadges(t: Txn, tagMap: Map<number, Tag>): Badge[] {
   const out: Badge[] = [];
   const seen = new Set<string>();
@@ -35,6 +40,23 @@ function tagBadges(t: Txn, tagMap: Map<number, Tag>): Badge[] {
   if (t.bucket_2_tag_id != null) add(t.bucket_2_tag_id);
   (t.meta_tag_ids ?? []).forEach(add);
   return out;
+}
+
+function transactionsToCsv(rows: Txn[], tagMap: Map<number, Tag>) {
+  const h = ["Date", "Name", "Merchant", "Amount", "Currency", "Tags", "Account", "Detected"].map(csvEsc).join(",");
+  const b = rows.map((t) =>
+    [
+      getTxnDateOnly(t),
+      (t.original_description || "").trim() || t.name || "",
+      t.merchant_name || "",
+      t.amount ?? "",
+      t.iso_currency_code || "",
+      tagBadges(t, tagMap).map((x) => x.label).join("; "),
+      accountDisplay(t.institution_name || "", t.account_name || t.account_official_name || ""),
+      formatTxnDetectedCategory(t.personal_finance_category),
+    ].map(csvEsc).join(",")
+  );
+  return `\ufeff${h}\r\n${b.join("\r\n")}`;
 }
 
 function Badges({ badges }: { badges: Badge[] }) {
@@ -156,6 +178,16 @@ export default function TransactionTable({ transactions, emptyMessage = "No tran
     onSelectionChange(next);
   }, [onSelectionChange]);
 
+  const downloadCsv = useCallback(() => {
+    const blob = new Blob([transactionsToCsv(transactions, tagMap)], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `transactions-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [transactions, tagMap]);
+
   if (!transactions.length) return <div className="muted">{emptyMessage}</div>;
   const toggleAll = (c: boolean) => { if (onSelectionChange) onSelectionChange(c ? new Set(displayRows.map((r) => r.id)) : new Set()); };
   const allSelected = !!selectedIds && displayRows.length > 0 && displayRows.every((r) => selectedIds.has(r.id));
@@ -176,7 +208,15 @@ export default function TransactionTable({ transactions, emptyMessage = "No tran
           <thead>
             <tr>
               {taggingMode && <th style={{ width: 32 }}><input type="checkbox" checked={allSelected} onChange={(e) => toggleAll(e.target.checked)} /></th>}
-              <th style={{ width: 30 }}></th>
+              <th style={{ width: 40, verticalAlign: "middle" }}>
+                <button type="button" className="btn ghost btn-sm" style={{ padding: "2px 6px" }} title="Download this view as CSV" aria-label="Download this view as CSV" onClick={downloadCsv}>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="7 10 12 15 17 10" />
+                    <line x1="12" x2="12" y1="15" y2="3" />
+                  </svg>
+                </button>
+              </th>
               <th>Date</th>
               {taggingMode && <th>Tags</th>}
               <th>Name</th>
