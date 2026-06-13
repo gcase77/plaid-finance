@@ -288,14 +288,6 @@ export default function TransferGroupTool({ transactions, token, invalidateTrans
               </div>
             </div>
             {filteredExisting.length === 0 && filteredBroken.length === 0 && <div className="card"><p className="muted">No saved transfer pairs match these filters.</p></div>}
-            {filteredExisting.map(({ id, outflow, inflow }) => (
-              <PairRow
-                key={id}
-                pair={{ pairId: id, outflow, inflow, dayGap: 0 }}
-                old={isEpochOlderThanDays(pairNewestEpochMs({ pairId: id, outflow, inflow, dayGap: 0 }), 30, nowMs)}
-                action={<button className="btn danger-ghost btn-sm" disabled={busyId === id} onClick={() => removeGroup(id, [outflow.transaction_id!, inflow.transaction_id!])}>{busyId === id ? "…" : "Unpair"}</button>}
-              />
-            ))}
             {filteredBroken.map(({ id, t }) => {
               const amt = Math.abs(t.amount ?? 0);
               const isOut = (t.amount ?? 0) > 0;
@@ -313,6 +305,14 @@ export default function TransferGroupTool({ transactions, token, invalidateTrans
                 </div>
               );
             })}
+            {filteredExisting.map(({ id, outflow, inflow }) => (
+              <PairRow
+                key={id}
+                pair={{ pairId: id, outflow, inflow, dayGap: 0 }}
+                old={isEpochOlderThanDays(pairNewestEpochMs({ pairId: id, outflow, inflow, dayGap: 0 }), 30, nowMs)}
+                action={<button className="btn danger-ghost btn-sm" disabled={busyId === id} onClick={() => removeGroup(id, [outflow.transaction_id!, inflow.transaction_id!])}>{busyId === id ? "…" : "Unpair"}</button>}
+              />
+            ))}
           </div>
         )
       )}
