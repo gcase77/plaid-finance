@@ -129,6 +129,11 @@ function RibbonSvg({ periods, series, selected, onSelect }: {
         );
       }))}
       {periods.map((p, i) => {
+        const total = series.reduce((sum, s) => sum + s.values[i], 0);
+        if (total <= 0) return null;
+        return <text key={`total-${p.key}`} x={x(i)} y={y(total) - 5} textAnchor="middle" fontSize="10" fill="var(--ink-muted)">{fmt(total)}</text>;
+      })}
+      {periods.map((p, i) => {
         if (i % xSkip !== 0 && i !== periods.length - 1) return null;
         return <text key={p.key} x={x(i)} y={height - 8} textAnchor="middle" fontSize="10" fill="var(--ink-muted)">{p.label}</text>;
       })}
