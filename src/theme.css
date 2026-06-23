@@ -304,6 +304,7 @@ hr { border: 0; border-top: 1px solid var(--line); margin: var(--s4) 0; }
   text-align: left; font-weight: 600; font-size: 0.74rem; letter-spacing: 0.04em; text-transform: uppercase;
   padding: var(--s2) var(--s3); border-bottom: 1px solid var(--line); white-space: nowrap;
 }
+.table thead th.text-end { text-align: right; }
 .table tbody td { padding: var(--s2) var(--s3); border-bottom: 1px solid var(--line); vertical-align: middle; }
 .table tbody tr:last-child td { border-bottom: 0; }
 .table tbody tr:nth-child(even):not([aria-hidden]) td { background: var(--surface-alt); }
