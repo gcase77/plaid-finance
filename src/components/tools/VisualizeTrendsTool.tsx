@@ -8,7 +8,7 @@ import { buildDatePreset } from "../../utils/datePresets";
 import FlowSankeySvg from "./FlowSankeySvg";
 import { buildFlowOfFundsModel, type FlowGrouping } from "./flowOfFundsSankey";
 import TimelineTrendChart, { type TimelineGranularity, type TimelineView } from "./TimelineTrendChart";
-import TrendlineScatterChart, { type TrendlineKind } from "./TrendlineScatterChart";
+import TrendlineScatterChart, { type TrendlineKind, type TrendlineSeriesView } from "./TrendlineScatterChart";
 import RibbonTrendChart from "./RibbonTrendChart";
 import { buildTrendPieSlices, filterTrendsTransactions, sliceColors, type TrendPieGrouping, type TrendPieSlice } from "./visualizeTrendsUtils";
 import { Segmented } from "../shared/ui";
@@ -90,14 +90,15 @@ const PIE_GROUP = new Set<TrendPieGrouping>(["detected", "buckets", "meta"]);
 const FLOW_GROUP = new Set<FlowGrouping>(["detected", "tags"]);
 const TIMELINE_V = new Set<TimelineView>(["area", "net"]);
 const TIMELINE_G = new Set<TimelineGranularity>(["month", "week"]);
-const TRENDLINE_K = new Set<TrendlineKind>(["ema", "sma", "polynomial", "cumulative"]);
+const TRENDLINE_K = new Set<TrendlineKind>(["polynomial", "cumulative"]);
+const TRENDLINE_SERIES = new Set<TrendlineSeriesView>(["both", "income", "spending"]);
 
 function loadVizPrefs() {
   const d = {
     vizTab: "pie" as VizTab, grouping: "detected" as TrendPieGrouping, flowGrouping: "detected" as FlowGrouping,
     timelineView: "area" as TimelineView, timelineGranularity: "month" as TimelineGranularity,
     ribbonGrouping: "detected" as TrendPieGrouping, ribbonGranularity: "month" as TimelineGranularity,
-    trendlineKind: "ema" as TrendlineKind, trendlineWindow: 14, trendlineDegree: 2, trendlineSuperimpose: false
+    trendlineKind: "polynomial" as TrendlineKind, trendlineSeriesView: "both" as TrendlineSeriesView, trendlineGranularity: "month" as TimelineGranularity, trendlineDegree: 2
   };
   if (typeof window === "undefined") return d;
   try {
@@ -112,9 +113,9 @@ function loadVizPrefs() {
     if (typeof o.ribbonGrouping === "string" && PIE_GROUP.has(o.ribbonGrouping as TrendPieGrouping)) d.ribbonGrouping = o.ribbonGrouping as TrendPieGrouping;
     if (typeof o.ribbonGranularity === "string" && TIMELINE_G.has(o.ribbonGranularity as TimelineGranularity)) d.ribbonGranularity = o.ribbonGranularity as TimelineGranularity;
     if (typeof o.trendlineKind === "string" && TRENDLINE_K.has(o.trendlineKind as TrendlineKind)) d.trendlineKind = o.trendlineKind as TrendlineKind;
-    if (typeof o.trendlineWindow === "number" && Number.isFinite(o.trendlineWindow)) d.trendlineWindow = Math.min(60, Math.max(3, Math.round(o.trendlineWindow)));
-    if (typeof o.trendlineDegree === "number" && Number.isFinite(o.trendlineDegree)) d.trendlineDegree = Math.min(4, Math.max(1, Math.round(o.trendlineDegree)));
-    if (typeof o.trendlineSuperimpose === "boolean") d.trendlineSuperimpose = o.trendlineSuperimpose;
+    if (typeof o.trendlineSeriesView === "string" && TRENDLINE_SERIES.has(o.trendlineSeriesView as TrendlineSeriesView)) d.trendlineSeriesView = o.trendlineSeriesView as TrendlineSeriesView;
+    if (typeof o.trendlineGranularity === "string" && TIMELINE_G.has(o.trendlineGranularity as TimelineGranularity)) d.trendlineGranularity = o.trendlineGranularity as TimelineGranularity;
+    if (typeof o.trendlineDegree === "number" && Number.isFinite(o.trendlineDegree)) d.trendlineDegree = Math.min(10, Math.max(1, Math.round(o.trendlineDegree)));
   } catch { /* ignore */ }
   return d;
 }
@@ -133,18 +134,18 @@ export default function VisualizeTrendsTool({ transactions, token }: Props) {
   const [ribbonGrouping, setRibbonGrouping] = useState<TrendPieGrouping>(initPrefs.ribbonGrouping);
   const [ribbonGranularity, setRibbonGranularity] = useState<TimelineGranularity>(initPrefs.ribbonGranularity);
   const [trendlineKind, setTrendlineKind] = useState<TrendlineKind>(initPrefs.trendlineKind);
-  const [trendlineWindow, setTrendlineWindow] = useState(initPrefs.trendlineWindow);
+  const [trendlineSeriesView, setTrendlineSeriesView] = useState<TrendlineSeriesView>(initPrefs.trendlineSeriesView);
+  const [trendlineGranularity, setTrendlineGranularity] = useState<TimelineGranularity>(initPrefs.trendlineGranularity);
   const [trendlineDegree, setTrendlineDegree] = useState(initPrefs.trendlineDegree);
-  const [trendlineSuperimpose, setTrendlineSuperimpose] = useState(initPrefs.trendlineSuperimpose);
 
   useEffect(() => {
     try {
       localStorage.setItem(VIZ_TRENDS_KEY, JSON.stringify({
         vizTab, grouping, flowGrouping, timelineView, timelineGranularity, ribbonGrouping, ribbonGranularity,
-        trendlineKind, trendlineWindow, trendlineDegree, trendlineSuperimpose
+        trendlineKind, trendlineSeriesView, trendlineGranularity, trendlineDegree
       }));
     } catch { /* ignore */ }
-  }, [vizTab, grouping, flowGrouping, timelineView, timelineGranularity, ribbonGrouping, ribbonGranularity, trendlineKind, trendlineWindow, trendlineDegree, trendlineSuperimpose]);
+  }, [vizTab, grouping, flowGrouping, timelineView, timelineGranularity, ribbonGrouping, ribbonGranularity, trendlineKind, trendlineSeriesView, trendlineGranularity, trendlineDegree]);
 
   const tagsQuery = useQuery({
     queryKey: ["tags"], enabled: !!token,
@@ -201,13 +202,13 @@ export default function VisualizeTrendsTool({ transactions, token }: Props) {
           allTransactions={transactions}
           tags={tags}
           kind={trendlineKind}
-          windowSize={trendlineWindow}
+          seriesView={trendlineSeriesView}
+          granularity={trendlineGranularity}
           degree={trendlineDegree}
-          superimpose={trendlineSuperimpose}
-          onKindChange={(v) => { setTrendlineKind(v); if (v === "cumulative") setTrendlineSuperimpose(false); }}
-          onWindowSizeChange={setTrendlineWindow}
+          onKindChange={setTrendlineKind}
+          onSeriesViewChange={setTrendlineSeriesView}
+          onGranularityChange={setTrendlineGranularity}
           onDegreeChange={setTrendlineDegree}
-          onSuperimposeChange={setTrendlineSuperimpose}
         />
       )}
 

@@ -1,10 +1,12 @@
 import { useMemo, useState } from "react";
 import type { Tag, Txn } from "../types";
 import TransactionTable from "../shared/TransactionTable";
-import { Segmented, Switch } from "../shared/ui";
+import { Segmented } from "../shared/ui";
 import { getTxnDateOnly } from "../../utils/transactionUtils";
+import { buildTrendPeriodRows, type TrendPeriodGranularity, type TrendPeriodRow } from "./visualizeTrendsUtils";
 
-export type TrendlineKind = "ema" | "sma" | "polynomial" | "cumulative";
+export type TrendlineKind = "polynomial" | "cumulative";
+export type TrendlineSeriesView = "both" | "income" | "spending";
 
 const fmt = (n: number) => `$${n.toLocaleString("en-US", { maximumFractionDigits: 2 })}`;
 const tickLabel = (t: number) => `${t < 0 ? "-" : ""}${fmt(Math.abs(t))}`;
@@ -15,60 +17,44 @@ const fmtDay = (ms: number) => new Date(ms).toLocaleDateString("en-US", { month:
 type Pt = { txn: Txn; ms: number; ySigned: number; income: boolean };
 type TrendPt = { ms: number; y: number };
 type TrendSeries = { key: string; label: string; color: string; pts: TrendPt[] };
+type PeriodPt = TrendPeriodRow & { ms: number };
 
 const rowKey = (p: Pt, i: number) => p.txn.transaction_id ?? `__${i}_${p.ms}_${p.txn.amount}_${p.txn.account_id ?? ""}`;
 const clampInt = (n: number, min: number, max: number) => Math.min(max, Math.max(min, Math.round(Number.isFinite(n) ? n : min)));
 const linePath = (pts: TrendPt[], xAt: (ms: number) => number, yAt: (v: number) => number) => pts.map((p, i) => `${i ? "L" : "M"} ${xAt(p.ms)} ${yAt(p.y)}`).join(" ");
 
-function movingAverage(pts: Pt[], windowSize: number, exponential: boolean): TrendPt[] {
-  if (!pts.length) return [];
-  const alpha = 2 / (windowSize + 1);
-  let ema = pts[0].ySigned;
-  return pts.map((p, i) => {
-    if (exponential) {
-      ema = i === 0 ? p.ySigned : p.ySigned * alpha + ema * (1 - alpha);
-      return { ms: p.ms, y: ema };
-    }
-    const start = Math.max(0, i - windowSize + 1);
-    const slice = pts.slice(start, i + 1);
-    return { ms: p.ms, y: slice.reduce((s, x) => s + x.ySigned, 0) / slice.length };
-  });
-}
-
 function polynomialFit(samples: Array<{ x: number; y: number }>, degree: number): number[] {
   const deg = Math.min(degree, Math.max(0, samples.length - 1));
   const n = deg + 1;
-  const a = Array.from({ length: n }, () => Array(n + 1).fill(0) as number[]);
-  for (const { x, y } of samples) {
-    const powers = Array.from({ length: 2 * deg + 1 }, (_, i) => x ** i);
-    for (let r = 0; r < n; r++) {
-      for (let c = 0; c < n; c++) a[r][c] += powers[r + c];
-      a[r][n] += y * powers[r];
+  const a = samples.map(({ x }) => Array.from({ length: n }, (_, i) => x ** i));
+  const q: number[][] = [];
+  const r = Array.from({ length: n }, () => Array(n).fill(0) as number[]);
+  for (let j = 0; j < n; j++) {
+    let v = a.map((row) => row[j]);
+    for (let i = 0; i < j; i++) {
+      r[i][j] = v.reduce((sum, val, k) => sum + val * q[i][k], 0);
+      v = v.map((val, k) => val - r[i][j] * q[i][k]);
     }
+    r[j][j] = Math.hypot(...v);
+    if (r[j][j] < 1e-10) return [samples.reduce((s, p) => s + p.y, 0) / samples.length];
+    q[j] = v.map((val) => val / r[j][j]);
   }
-  for (let i = 0; i < n; i++) {
-    let pivot = i;
-    for (let r = i + 1; r < n; r++) if (Math.abs(a[r][i]) > Math.abs(a[pivot][i])) pivot = r;
-    if (Math.abs(a[pivot][i]) < 1e-12) return [samples.reduce((s, p) => s + p.y, 0) / samples.length];
-    [a[i], a[pivot]] = [a[pivot], a[i]];
-    const div = a[i][i];
-    for (let c = i; c <= n; c++) a[i][c] /= div;
-    for (let r = 0; r < n; r++) {
-      if (r === i) continue;
-      const f = a[r][i];
-      for (let c = i; c <= n; c++) a[r][c] -= f * a[i][c];
-    }
+  const qty = q.map((col) => col.reduce((sum, val, k) => sum + val * samples[k].y, 0));
+  const coeffs = Array(n).fill(0) as number[];
+  for (let i = n - 1; i >= 0; i--) {
+    const known = coeffs.reduce((sum, c, j) => sum + (j > i ? r[i][j] * c : 0), 0);
+    coeffs[i] = (qty[i] - known) / r[i][i];
   }
-  return a.map((r) => r[n]);
+  return coeffs;
 }
 
-function polynomialLine(pts: Pt[], degree: number, t0: number, t1: number): TrendPt[] {
+function polynomialLine(pts: TrendPt[], degree: number, t0: number, t1: number): TrendPt[] {
   if (!pts.length) return [];
   const span = Math.max(t1 - t0, 1);
-  const coeffs = polynomialFit(pts.map((p) => ({ x: (p.ms - t0) / span, y: p.ySigned })), degree);
+  const coeffs = polynomialFit(pts.map((p) => ({ x: ((p.ms - t0) / span) * 2 - 1, y: p.y })), degree);
   return Array.from({ length: 80 }, (_, i) => {
-    const x = i / 79;
-    return { ms: t0 + x * span, y: coeffs.reduce((s, c, pow) => s + c * x ** pow, 0) };
+    const x = (i / 79) * 2 - 1;
+    return { ms: t0 + ((x + 1) / 2) * span, y: coeffs.reduce((s, c, pow) => s + c * x ** pow, 0) };
   });
 }
 
@@ -81,12 +67,13 @@ function cumulativeLine(pts: Pt[]): TrendPt[] {
 }
 
 export default function TrendlineScatterChart({
-  transactions, allTransactions, tags, kind, windowSize, degree, superimpose, onKindChange, onWindowSizeChange, onDegreeChange, onSuperimposeChange
+  transactions, allTransactions, tags, kind, seriesView, granularity, degree, onKindChange, onSeriesViewChange, onGranularityChange, onDegreeChange
 }: {
-  transactions: Txn[]; allTransactions: Txn[]; tags: Tag[]; kind: TrendlineKind; windowSize: number; degree: number; superimpose: boolean;
-  onKindChange: (v: TrendlineKind) => void; onWindowSizeChange: (v: number) => void; onDegreeChange: (v: number) => void; onSuperimposeChange: (v: boolean) => void;
+  transactions: Txn[]; allTransactions: Txn[]; tags: Tag[]; kind: TrendlineKind; seriesView: TrendlineSeriesView; granularity: TrendPeriodGranularity; degree: number;
+  onKindChange: (v: TrendlineKind) => void; onSeriesViewChange: (v: TrendlineSeriesView) => void; onGranularityChange: (v: TrendPeriodGranularity) => void; onDegreeChange: (v: number) => void;
 }) {
   const [selId, setSelId] = useState<string | null>(null);
+  const [selectedPeriodKey, setSelectedPeriodKey] = useState<string | null>(null);
   const points = useMemo((): Pt[] => {
     const out: Pt[] = [];
     transactions.forEach((txn) => {
@@ -100,13 +87,6 @@ export default function TrendlineScatterChart({
     return out;
   }, [transactions]);
 
-  const timeRange = useMemo(() => {
-    if (!points.length) return null;
-    const t0 = Math.min(...points.map((p) => p.ms));
-    const max = Math.max(...points.map((p) => p.ms));
-    return { t0, t1: max <= t0 ? t0 + 864e5 : max };
-  }, [points]);
-
   const selected = useMemo(
     () => (selId ? points.find((p, i) => rowKey(p, i) === selId)?.txn ?? null : null),
     [selId, points]
@@ -118,37 +98,50 @@ export default function TrendlineScatterChart({
     [allTransactions, selected]
   );
 
-  const rawSeries = useMemo((): TrendSeries[] => {
-    if (!timeRange) return [];
-    const label = kind === "ema" ? "EMA" : kind === "sma" ? "SMA" : kind === "polynomial" ? "Polynomial" : "Cumulative net";
-    if (kind === "cumulative") return [{ key: "cumulative", label, color: "var(--brand)", pts: cumulativeLine(points) }];
-    const income = points.filter((p) => p.income);
-    const spending = points.filter((p) => !p.income);
-    const build = kind === "polynomial"
-      ? (pts: Pt[]) => polynomialLine(pts, degree, timeRange.t0, timeRange.t1)
-      : (pts: Pt[]) => movingAverage(pts, windowSize, kind === "ema");
-    return [
-      { key: "income", label: `Income ${label}`, color: "var(--success)", pts: build(income) },
-      { key: "spending", label: `Spending ${label}`, color: "var(--danger)", pts: build(spending) }
-    ].filter((s) => s.pts.length);
-  }, [points, timeRange, kind, degree, windowSize]);
+  const periodPoints = useMemo((): PeriodPt[] => buildTrendPeriodRows(transactions, granularity).map((r) => ({
+    ...r,
+    ms: +new Date(`${r.key.length === 7 ? `${r.key}-01` : r.key}T12:00:00`)
+  })), [transactions, granularity]);
+  const selectedPeriod = periodPoints.find((p) => p.key === selectedPeriodKey) ?? null;
+  const selectedPeriodTransactions = selectedPeriod
+    ? seriesView === "income" ? selectedPeriod.incomeTransactions
+      : seriesView === "spending" ? selectedPeriod.spendingTransactions
+        : selectedPeriod.transactions
+    : [];
 
-  const compareMode = kind !== "cumulative" && superimpose;
+  const rawSeries = useMemo((): TrendSeries[] => {
+    const label = kind === "polynomial" ? "Polynomial" : "Cumulative net";
+    if (kind === "cumulative") return [{ key: "cumulative", label, color: "var(--brand)", pts: cumulativeLine(points) }];
+    if (!periodPoints.length) return [];
+    const t0 = periodPoints[0].ms;
+    const t1 = periodPoints.at(-1)?.ms ?? t0 + 864e5;
+    const build = (field: "income" | "spending") => polynomialLine(periodPoints.map((p) => ({ ms: p.ms, y: p[field] })), degree, t0, t1);
+    return [
+      ...(seriesView !== "spending" ? [{ key: "income", label: `Income ${label}`, color: "var(--success)", pts: build("income") }] : []),
+      ...(seriesView !== "income" ? [{ key: "spending", label: `Spending ${label}`, color: "var(--danger)", pts: build("spending") }] : [])
+    ].filter((s) => s.pts.length);
+  }, [points, periodPoints, kind, degree, seriesView]);
+
+  const compareMode = false;
   const series = useMemo(
-    () => compareMode ? rawSeries.map((s) => ({ ...s, pts: s.pts.map((p) => ({ ...p, y: Math.abs(p.y) })) })) : rawSeries,
-    [rawSeries, compareMode]
+    () => rawSeries,
+    [rawSeries]
   );
 
   const layout = useMemo(() => {
     const ih = H - padTop - padBottom, iw = W - padL - padR;
-    if (!points.length || !timeRange) return null;
+    const source = kind === "polynomial" ? periodPoints : points;
+    if (!source.length) return null;
     const lineVals = series.flatMap((s) => s.pts.map((p) => p.y));
-    const { t0, t1 } = timeRange;
+    const t0 = Math.min(...source.map((p) => p.ms));
+    const max = Math.max(...source.map((p) => p.ms));
+    const t1 = max <= t0 ? t0 + 864e5 : max;
     const xAt = (ms: number) => padL + ((ms - t0) / (t1 - t0)) * iw;
-    const xTicks = Array.from({ length: 6 }, (_, i) => Math.round(t0 + ((t1 - t0) * i) / 5));
+    const xTicks = kind === "polynomial" ? periodPoints.map((p) => p.ms) : Array.from({ length: 6 }, (_, i) => Math.round(t0 + ((t1 - t0) * i) / 5));
 
-    if (compareMode) {
-      const vm = Math.max(...lineVals.map((v) => Math.abs(v)), 1);
+    if (kind === "polynomial" || compareMode) {
+      const periodVals = periodPoints.flatMap((p) => seriesView === "income" ? [p.income] : seriesView === "spending" ? [p.spending] : [p.income, p.spending]);
+      const vm = Math.max(...lineVals.map((v) => Math.abs(v)), ...periodVals, 1);
       const zeroY = padTop + ih, half = ih;
       const yAt = (s: number) => zeroY - (s / vm) * half;
       return { zeroY, half, xAt, yAt, xTicks, yTicks: axisTicksPositive(vm) };
@@ -163,13 +156,16 @@ export default function TrendlineScatterChart({
       zeroY, half, xAt, yAt, xTicks,
       yTicks: [...axisTicksPositive(posMax).filter((t) => t > 0), ...axisTicksPositive(negMax).filter((t) => t > 0).map((t) => -t)]
     };
-  }, [points, timeRange, series, compareMode]);
+  }, [points, periodPoints, series, kind, compareMode, seriesView]);
 
-  if (!points.length || !layout) return <p className="muted small">No transactions in this range (transfers excluded; netting groups collapsed).</p>;
+  if ((kind === "polynomial" ? !periodPoints.length : !points.length) || !layout) return <p className="muted small">No transactions in this range (transfers excluded; netting groups collapsed).</p>;
 
   const { zeroY, xAt, yAt, xTicks, yTicks } = layout;
   const r = points.length > 400 ? 2.8 : 3.8;
-  const shownSelected = compareMode ? null : selected;
+  const shownSelected = kind === "polynomial" || compareMode ? null : selected;
+  const barW = Math.max(12, Math.min(46, (W - padL - padR) / Math.max(periodPoints.length, 1) - 4));
+  const xSkip = Math.max(1, Math.ceil(xTicks.length / 12));
+  const cumulativeFinal = kind === "cumulative" ? series[0]?.pts.at(-1) : null;
 
   return (
     <>
@@ -179,37 +175,33 @@ export default function TrendlineScatterChart({
             <div className="row-flex gap-2" style={{ alignItems: "center" }}><span style={{ width: 18, height: 3, background: "var(--brand)", borderRadius: 2 }} aria-hidden /><span className="fw-semi">Cumulative net</span></div>
           ) : (
             <>
-              <div className="row-flex gap-2" style={{ alignItems: "center" }}><span style={{ width: 18, height: 3, background: "var(--success)", borderRadius: 2 }} aria-hidden /><span className="fw-semi">Income {compareMode ? "absolute" : "(+)"}</span></div>
-              <div className="row-flex gap-2" style={{ alignItems: "center" }}><span style={{ width: 18, height: 3, background: "var(--danger)", borderRadius: 2 }} aria-hidden /><span className="fw-semi">Spending {compareMode ? "absolute" : "(−)"}</span></div>
+              {seriesView !== "spending" && <div className="row-flex gap-2" style={{ alignItems: "center" }}><span style={{ width: 18, height: 3, background: "var(--success)", borderRadius: 2 }} aria-hidden /><span className="fw-semi">Income</span></div>}
+              {seriesView !== "income" && <div className="row-flex gap-2" style={{ alignItems: "center" }}><span style={{ width: 18, height: 3, background: "var(--danger)", borderRadius: 2 }} aria-hidden /><span className="fw-semi">Spending</span></div>}
             </>
           )}
         </div>
-        <span className="small muted">{points.length} points</span>
+        <span className="small muted">{kind === "polynomial" ? `${periodPoints.length} periods` : `${points.length} points`}</span>
       </div>
       <div className="row-flex gap-2 flex-wrap mb-3">
         <span className="small muted">Trendline</span>
         <Segmented value={kind} onChange={onKindChange} options={[
-          { value: "ema", label: "EMA" },
-          { value: "sma", label: "SMA" },
           { value: "polynomial", label: "Polynomial" },
           { value: "cumulative", label: "Cumulative Sum" }
         ]} />
-        {kind === "ema" || kind === "sma" ? (
-          <label className="row-flex gap-2 small" style={{ alignItems: "center" }}>
-            <span className="muted">Time Window</span>
-            <input type="number" min={3} max={60} step={1} className="input input-sm" value={windowSize} onChange={(e) => onWindowSizeChange(clampInt(Number(e.target.value), 3, 60))} style={{ width: "5rem" }} />
-          </label>
-        ) : kind === "polynomial" ? (
-          <label className="row-flex gap-2 small" style={{ alignItems: "center" }}>
-            <span className="muted">Degree</span>
-            <input type="number" min={1} max={4} step={1} className="input input-sm" value={degree} onChange={(e) => onDegreeChange(clampInt(Number(e.target.value), 1, 4))} style={{ width: "5rem" }} />
-          </label>
-        ) : null}
-        {kind !== "cumulative" && <Switch checked={superimpose} onChange={onSuperimposeChange} label={<span className="small">Superimpose</span>} />}
+        {kind === "polynomial" && (
+          <>
+            <Segmented value={granularity} onChange={(v) => { onGranularityChange(v); setSelectedPeriodKey(null); }} options={[{ value: "week", label: "Week" }, { value: "month", label: "Month" }]} />
+            <Segmented value={seriesView} onChange={onSeriesViewChange} options={[{ value: "both", label: "Both" }, { value: "income", label: "Income" }, { value: "spending", label: "Spending" }]} />
+            <label className="row-flex gap-2 small" style={{ alignItems: "center" }}>
+              <span className="muted">Degree</span>
+              <input type="number" min={1} max={10} step={1} className="input input-sm" value={degree} onChange={(e) => onDegreeChange(clampInt(Number(e.target.value), 1, 10))} style={{ width: "5rem" }} />
+            </label>
+          </>
+        )}
       </div>
       <div className="viz-wrap" style={{ overflowX: "auto" }}>
         <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", minWidth: 980, maxHeight: H }} role="img" aria-label="One point per transaction, date on horizontal axis, signed amount on vertical axis">
-          {!compareMode && (
+          {kind !== "polynomial" && !compareMode && (
             <>
               <rect x={padL - 8} y={padTop} width={W - padL - padR + 16} height={layout.half} fill="var(--success-soft)" opacity={0.22} />
               <rect x={padL - 8} y={zeroY} width={W - padL - padR + 16} height={layout.half} fill="var(--danger-soft)" opacity={0.22} />
@@ -225,12 +217,33 @@ export default function TrendlineScatterChart({
             );
           })}
           <line x1={padL - 8} x2={W - padR} y1={zeroY} y2={zeroY} stroke="var(--ink)" strokeOpacity={0.45} strokeWidth={2.75} strokeLinecap="square" pointerEvents="none" />
+          {kind === "polynomial" && periodPoints.map((p) => {
+            const x = xAt(p.ms) - barW / 2;
+            const hi = seriesView === "income" ? p.income : seriesView === "spending" ? p.spending : Math.max(p.income, p.spending);
+            const lo = seriesView === "both" ? Math.min(p.income, p.spending) : 0;
+            const active = selectedPeriodKey === p.key;
+            return (
+              <g key={`period-${p.key}`} style={{ cursor: "pointer" }} onClick={() => setSelectedPeriodKey((k) => k === p.key ? null : p.key)}>
+                {hi > 0 && <rect x={x} y={yAt(hi)} width={barW} height={Math.max(1, yAt(lo) - yAt(hi))} rx={3} fill={seriesView === "income" || (seriesView === "both" && p.income >= p.spending) ? "var(--success)" : "var(--danger)"} opacity={active ? 0.95 : 0.72} />}
+                {lo > 0 && <rect x={x} y={yAt(lo)} width={barW} height={Math.max(1, yAt(0) - yAt(lo))} rx={3} fill={p.income >= p.spending ? "var(--danger)" : "var(--success)"} opacity={active ? 0.95 : 0.72} />}
+                <title>{`${p.label}: income ${fmt(p.income)}, spending ${fmt(p.spending)}`}</title>
+              </g>
+            );
+          })}
           {series.map((s) => (
             <path key={s.key} d={linePath(s.pts, xAt, yAt)} fill="none" stroke={s.color} strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" opacity={0.95}>
               <title>{s.label}</title>
             </path>
           ))}
-          {!compareMode && points.map((p, i) => {
+          {cumulativeFinal && (
+            <g>
+              <circle cx={xAt(cumulativeFinal.ms)} cy={yAt(cumulativeFinal.y)} r={4.5} fill="var(--brand)" />
+              <text x={Math.min(W - padR - 6, xAt(cumulativeFinal.ms) + 10)} y={yAt(cumulativeFinal.y) - 8} textAnchor="end" fontSize="12" fontWeight={700} fill="var(--ink)">
+                {fmt(cumulativeFinal.y)}
+              </text>
+            </g>
+          )}
+          {kind !== "polynomial" && !compareMode && points.map((p, i) => {
             const id = rowKey(p, i);
             const active = selId === id;
             return (
@@ -249,11 +262,23 @@ export default function TrendlineScatterChart({
             );
           })}
           <text aria-hidden x={padL - 12} y={zeroY + 4} textAnchor="end" fontSize="11" fontWeight={700} fill="var(--ink)">{tickLabel(0)}</text>
-          {xTicks.map((ms) => (
-            <text key={ms} x={xAt(ms)} y={H - 8} textAnchor="middle" fontSize="10" fill="var(--ink-muted)">{fmtDay(ms)}</text>
+          {xTicks.map((ms, i) => (
+            (i % xSkip === 0 || i === xTicks.length - 1) && <text key={ms} x={xAt(ms)} y={H - 8} textAnchor="middle" fontSize="10" fill="var(--ink-muted)">{kind === "polynomial" ? periodPoints.find((p) => p.ms === ms)?.label : fmtDay(ms)}</text>
           ))}
         </svg>
       </div>
+      {selectedPeriod && (
+        <p className="muted small mt-3">{selectedPeriod.label}: income {fmt(selectedPeriod.income)}, spending {fmt(selectedPeriod.spending)}, {selectedPeriod.net >= 0 ? `saved ${fmt(selectedPeriod.net)}` : `deficit ${fmt(Math.abs(selectedPeriod.net))}`}</p>
+      )}
+      {selectedPeriod && (
+        <div className="card mt-3">
+          <div className="between mb-3 flex-wrap gap-2">
+            <h4>{selectedPeriod.label}</h4>
+            <button type="button" className="btn ghost btn-sm" onClick={() => setSelectedPeriodKey(null)}>Clear</button>
+          </div>
+          <TransactionTable transactions={selectedPeriodTransactions} tags={tags} keyPrefix="viz-trendline-period" nettingMode />
+        </div>
+      )}
       {shownSelected && (
         <p className="muted small mt-3">
           {fmtDay(+new Date(`${getTxnDateOnly(shownSelected) ?? ""}T12:00:00`))} — {(shownSelected.amount ?? 0) < 0 ? `Income +${fmt(Math.abs(shownSelected.amount ?? 0))}` : `Spending −${fmt(shownSelected.amount ?? 0)}`}
