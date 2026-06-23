@@ -319,6 +319,26 @@ hr { border: 0; border-top: 1px solid var(--line); margin: var(--s4) 0; }
 .table tbody tr.net-summary td { background: var(--surface-alt); font-weight: 700; }
 .text-end { text-align: right; }
 .text-nowrap { white-space: nowrap; }
+.txn-table th:not(.txn-col-fixed), .txn-table td:not(.txn-col-fixed) { overflow: hidden; text-overflow: ellipsis; }
+.txn-col-fixed { overflow: visible; text-overflow: clip; padding-left: 6px; padding-right: 6px; text-align: center; }
+.txn-table thead th { position: sticky; user-select: none; }
+.txn-table thead th[draggable="true"] { cursor: grab; }
+.txn-table thead th[draggable="true"]:active { cursor: grabbing; }
+.txn-th-label { display: inline-block; max-width: calc(100% - 10px); overflow: hidden; text-overflow: ellipsis; vertical-align: middle; }
+.col-resizer {
+  position: absolute; top: 0; right: -3px; width: 7px; height: 100%;
+  cursor: col-resize; touch-action: none; z-index: 2;
+}
+.col-resizer:hover { background: color-mix(in srgb, var(--brand) 28%, transparent); }
+.column-menu { position: relative; margin-left: auto; }
+.column-menu summary { cursor: pointer; color: var(--brand); font-weight: 600; list-style: none; }
+.column-menu summary::-webkit-details-marker { display: none; }
+.column-menu-panel {
+  position: absolute; right: 0; top: calc(100% + 6px); z-index: 5;
+  display: grid; gap: var(--s2); min-width: 180px; padding: var(--s3);
+  border: 1px solid var(--line); border-radius: var(--r-md); background: var(--surface);
+  box-shadow: var(--shadow-2);
+}
 
 /* ───────── Alerts ───────── */
 .alert {
