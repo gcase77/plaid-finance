@@ -12,7 +12,7 @@
     <meta name="theme-color" content="#ffffff" />
     <script>
       try {
-        var v = localStorage.getItem("fundsup:theme");
+        var v = localStorage.getItem("funds-up-theme");
         var sys = window.matchMedia("(prefers-color-scheme: dark)").matches;
         if (v === "dark" || (v !== "light" && sys)) document.documentElement.dataset.theme = "dark";
         else delete document.documentElement.dataset.theme;

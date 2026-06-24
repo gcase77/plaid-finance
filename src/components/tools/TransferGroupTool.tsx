@@ -8,7 +8,7 @@ type Props = { transactions: Txn[]; token: string | null; invalidateTransactionM
 type Pair = { pairId: string; outflow: Txn; inflow: Txn; dayGap: number };
 
 const errMsg = (e: unknown) => e instanceof Error ? e.message : "Unexpected error";
-const TAB_KEY = "fundsup:transfer-group-tab";
+const TAB_KEY = "funds-up-transfer-group-tab";
 const DAY_MS = 86_400_000;
 
 function txnDateEpochMs(t: Txn): number {

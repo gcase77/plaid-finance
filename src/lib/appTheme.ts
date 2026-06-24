@@ -1,4 +1,4 @@
-export const APP_THEME_KEY = "fundsup:theme";
+export const APP_THEME_KEY = "funds-up-theme";
 
 export type AppThemeMode = "light" | "dark" | "system";
 
