@@ -1,4 +1,4 @@
-export type DatePreset = "all" | "last7" | "last30" | "last365" | "lastMonth" | "lastYear";
+export type DatePreset = "all" | "last7" | "last30" | "last365" | "lastMonth" | "thisYear" | "lastYear";
 
 const toInput = (d: Date) => 
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -27,6 +27,9 @@ export const buildDatePreset = (preset: DatePreset | string): { start: string; e
     e.setDate(e.getDate() - 1);
     const s = new Date(e.getFullYear(), e.getMonth(), 1);
     return { start: toInput(s), end: toInput(e) };
+  }
+  if (preset === "thisYear") {
+    return { start: `${now.getFullYear()}-01-01`, end: toInput(now) };
   }
   if (preset === "lastYear") {
     const y = now.getFullYear() - 1;

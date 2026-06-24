@@ -6,6 +6,7 @@ export const DATE_RANGE_PRESETS: { value: DatePreset; label: string }[] = [
   { value: "last30", label: "Last 30 days" },
   { value: "last365", label: "Last 365 days" },
   { value: "lastMonth", label: "Last month" },
+  { value: "thisYear", label: "This year" },
   { value: "lastYear", label: "Last year" }
 ];
 
