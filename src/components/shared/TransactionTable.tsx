@@ -139,7 +139,7 @@ type ColumnId = "select" | "actions" | "date" | "tags" | "name" | "merchant" | "
 type ColumnDef = { id: ColumnId; label: string; width?: number; minWidth: number; hideable?: boolean; align?: "right"; fixed?: boolean };
 type ColumnPrefs = { order: ColumnId[]; widths: Partial<Record<ColumnId, number>>; hidden: ColumnId[] };
 
-const DATA_COLUMNS: ColumnDef[] = [
+const DATA_COLUMNS_SELECTING: ColumnDef[] = [
   { id: "date", label: "Date", minWidth: 92 },
   { id: "tags", label: "Tags", minWidth: 120 },
   { id: "name", label: "Name", minWidth: 180 },
@@ -148,7 +148,16 @@ const DATA_COLUMNS: ColumnDef[] = [
   { id: "account", label: "Account", minWidth: 150 },
   { id: "detected", label: "Detected", minWidth: 140 }
 ];
-const PREF_VERSION = 1;
+const DATA_COLUMNS_VIEWING: ColumnDef[] = [
+  { id: "date", label: "Date", minWidth: 92 },
+  { id: "name", label: "Name", minWidth: 180 },
+  { id: "merchant", label: "Merchant", minWidth: 120 },
+  { id: "amount", label: "Amount", minWidth: 96, align: "right" },
+  { id: "tags", label: "Tags", minWidth: 120 },
+  { id: "account", label: "Account", minWidth: 150 },
+  { id: "detected", label: "Detected", minWidth: 140 }
+];
+const PREF_VERSION = 2;
 const clampWidth = (w: number, min: number) => Math.max(min, Math.round(w));
 
 function defaultPrefs(cols: ColumnDef[]): ColumnPrefs {
@@ -213,7 +222,7 @@ export default function TransactionTable({ transactions, emptyMessage = "No tran
   const baseColumns = useMemo<ColumnDef[]>(() => [
     ...(taggingMode ? [{ id: "select" as const, label: "Select", width: 32, minWidth: 32, hideable: false, fixed: true }] : []),
     { id: "actions", label: "Export", width: 38, minWidth: 38, hideable: false, fixed: true },
-    ...DATA_COLUMNS,
+    ...(taggingMode ? DATA_COLUMNS_SELECTING : DATA_COLUMNS_VIEWING),
     { id: "reset", label: "Reset", width: 40, minWidth: 40, hideable: false, fixed: true }
   ], [taggingMode]);
   const prefKey = `txn-table-columns:v${PREF_VERSION}:${taggingMode ? "selecting" : "viewing"}`;
