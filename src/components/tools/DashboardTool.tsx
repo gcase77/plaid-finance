@@ -10,7 +10,8 @@ import { Popover, Segmented } from "../shared/ui";
 import { buildTrendPieSlices, sliceColors, type TrendPieGrouping } from "./visualizeTrendsUtils";
 
 type Props = { transactions: Txn[]; token: string | null };
-type Settings = { targetSpendPct: number; incomeTagId: number | null };
+type Period = "month" | "year";
+type Settings = { targetSpendPct: number; incomeTagId: number | null; period: Period };
 type DrillDown = "spending" | "income" | null;
 
 const SETTINGS_KEY = "funds-up-dashboard-settings";
@@ -22,9 +23,10 @@ function loadSettings(): Settings {
     const p = JSON.parse(localStorage.getItem(SETTINGS_KEY) || "{}");
     return {
       targetSpendPct: typeof p.targetSpendPct === "number" ? Math.min(100, Math.max(1, p.targetSpendPct)) : 80,
-      incomeTagId: typeof p.incomeTagId === "number" ? p.incomeTagId : null
+      incomeTagId: typeof p.incomeTagId === "number" ? p.incomeTagId : null,
+      period: p.period === "year" ? "year" : "month"
     };
-  } catch { return { targetSpendPct: 80, incomeTagId: null }; }
+  } catch { return { targetSpendPct: 80, incomeTagId: null, period: "month" }; }
 }
 
 function saveSettings(s: Settings) {
@@ -44,6 +46,10 @@ function MonthMark({ monthKey, short }: { monthKey: string; short?: boolean }) {
   return showYear ? <>{month}<span className="dashboard-month-year">{year}</span></> : <>{month}</>;
 }
 
+function PeriodMark({ periodKey, period, short }: { periodKey: string; period: Period; short?: boolean }) {
+  return period === "year" ? <>{periodKey}</> : <MonthMark monthKey={periodKey} short={short} />;
+}
+
 function HeroNum({ kind, active, onClick, children }: { kind: "spend" | "income"; active: boolean; onClick: () => void; children: ReactNode }) {
   return (
     <button type="button" className={`dashboard-hero-num dashboard-hero-num-btn ${kind}${active ? " active" : ""}`} onClick={onClick} aria-pressed={active}>
@@ -52,22 +58,24 @@ function HeroNum({ kind, active, onClick, children }: { kind: "spend" | "income"
   );
 }
 
-function monthKeys(txns: Txn[]) {
+function periodKeys(txns: Txn[], period: Period) {
+  const len = period === "year" ? 4 : 7;
+  const fallback = new Date().toISOString().slice(0, len);
   const set = new Set<string>();
   for (const t of txns) {
     const d = getTxnDateOnly(t);
-    if (d) set.add(d.slice(0, 7));
+    if (d) set.add(d.slice(0, len));
   }
   const keys = [...set].sort();
-  return (keys.length ? keys : [new Date().toISOString().slice(0, 7)]).reverse();
+  return (keys.length ? keys : [fallback]).reverse();
 }
 
 function hasIncomeTag(t: Txn, tagId: number) {
   return t.bucket_1_tag_id === tagId || t.bucket_2_tag_id === tagId;
 }
 
-function monthBreakdown(txns: Txn[], month: string, incomeTagId: number | null) {
-  const nt = collapseNettingGroups(txns.filter((t) => !t.account_transfer_group)).filter((t) => getTxnDateOnly(t).startsWith(month));
+function periodBreakdown(txns: Txn[], periodKey: string, incomeTagId: number | null) {
+  const nt = collapseNettingGroups(txns.filter((t) => !t.account_transfer_group)).filter((t) => getTxnDateOnly(t).startsWith(periodKey));
   const incomeTxns: Txn[] = [];
   const spendingTxns: Txn[] = [];
   let income = 0;
@@ -87,18 +95,19 @@ function monthBreakdown(txns: Txn[], month: string, incomeTagId: number | null) 
 }
 
 export default function DashboardTool({ transactions, token }: Props) {
-  const months = useMemo(() => monthKeys(transactions), [transactions]);
-  const current = new Date().toISOString().slice(0, 7);
-  const [monthKey, setMonthKey] = useState(current);
   const [settings, setSettings] = useState<Settings>(loadSettings);
+  const periods = useMemo(() => periodKeys(transactions, settings.period), [transactions, settings.period]);
+  const current = new Date().toISOString().slice(0, settings.period === "year" ? 4 : 7);
+  const [periodKey, setPeriodKey] = useState(current);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [settingsBtn, setSettingsBtn] = useState<HTMLButtonElement | null>(null);
   const [drillDown, setDrillDown] = useState<DrillDown>(null);
   const [pieSliceKey, setPieSliceKey] = useState<string | null>(null);
   const [pieGrouping, setPieGrouping] = useState<TrendPieGrouping>("detected");
-  const activeMonth = months.includes(monthKey) ? monthKey : (months.includes(current) ? current : months[0]);
+  const activePeriod = periods.includes(periodKey) ? periodKey : (periods.includes(current) ? current : periods[0]);
   const activeRef = useRef<HTMLButtonElement>(null);
-  const isCurrentMonth = activeMonth === current;
+  const isCurrentPeriod = activePeriod === current;
+  const periodPhrase = isCurrentPeriod ? (settings.period === "year" ? "this year" : "this month") : <>in <PeriodMark periodKey={activePeriod} period={settings.period} /></>;
 
   const tagsQuery = useQuery({
     queryKey: ["tags"], enabled: !!token,
@@ -115,31 +124,34 @@ export default function DashboardTool({ transactions, token }: Props) {
     [tags]
   );
 
-  const patchSettings = (patch: Partial<Settings>) => setSettings((prev) => {
-    const next = { ...prev, ...patch };
-    saveSettings(next);
-    return next;
-  });
+  const patchSettings = (patch: Partial<Settings>) => {
+    setSettings((prev) => {
+      const next = { ...prev, ...patch };
+      saveSettings(next);
+      return next;
+    });
+    if (patch.period) setPeriodKey(new Date().toISOString().slice(0, patch.period === "year" ? 4 : 7));
+  };
 
   const { income, spending, pct, incomeTxns, spendingTxns } = useMemo(
-    () => monthBreakdown(transactions, activeMonth, settings.incomeTagId),
-    [transactions, activeMonth, settings.incomeTagId]
+    () => periodBreakdown(transactions, activePeriod, settings.incomeTagId),
+    [transactions, activePeriod, settings.incomeTagId]
   );
   const targetSpend = income * (settings.targetSpendPct / 100);
   const leftToSpend = Math.max(0, targetSpend - spending);
   const overspentBy = Math.max(0, spending - targetSpend);
   const savedOffTarget = Math.max(0, targetSpend - spending);
 
-  useEffect(() => { activeRef.current?.scrollIntoView({ inline: "nearest", block: "nearest" }); }, [activeMonth]);
-  useEffect(() => { setPieSliceKey(null); }, [activeMonth]);
+  useEffect(() => { activeRef.current?.scrollIntoView({ inline: "nearest", block: "nearest" }); }, [activePeriod]);
+  useEffect(() => { setPieSliceKey(null); }, [activePeriod]);
   useEffect(() => { setPieSliceKey(null); }, [drillDown, pieGrouping]);
 
   let subline: ReactNode = null;
   if (overspentBy > 0) {
     subline = <>You overspent by <span className="dashboard-hero-num spend">{fmt(overspentBy)}</span>.</>;
-  } else if (!isCurrentMonth && savedOffTarget > 0) {
+  } else if (!isCurrentPeriod && savedOffTarget > 0) {
     subline = <>You saved <span className="dashboard-hero-num income">{fmt(savedOffTarget)}</span> off your target of {settings.targetSpendPct}%.</>;
-  } else if (isCurrentMonth) {
+  } else if (isCurrentPeriod) {
     subline = <>You have <span className={`dashboard-hero-num${leftToSpend > 0 ? " income" : ""}`}>{fmt(leftToSpend)}</span> left to spend before your limit of {settings.targetSpendPct}%.</>;
   }
 
@@ -161,7 +173,7 @@ export default function DashboardTool({ transactions, token }: Props) {
         <p className="dashboard-hero">
           {income === 0 ? (
             <>
-              <span className="dashboard-hero-text">You had no income {isCurrentMonth ? "this month" : <>in <MonthMark monthKey={activeMonth} /></>} and spent </span>
+              <span className="dashboard-hero-text">You had no income {periodPhrase} and spent </span>
               <HeroNum kind="spend" active={drillDown === "spending"} onClick={() => setDrillDown((d) => d === "spending" ? null : "spending")}>{fmt(spending)}</HeroNum>
               <span className="dashboard-hero-text">.</span>
             </>
@@ -180,7 +192,7 @@ export default function DashboardTool({ transactions, token }: Props) {
                 <HeroNum kind="income" active={drillDown === "income"} onClick={() => setDrillDown((d) => d === "income" ? null : "income")}>{fmt(income)}</HeroNum>
                 <span className="dashboard-hero-text">)</span>
               </span>
-              <span className="dashboard-hero-text"> {isCurrentMonth ? "this month" : <>in <MonthMark monthKey={activeMonth} /></>}.</span>
+              <span className="dashboard-hero-text"> {periodPhrase}.</span>
             </>
           )}
         </p>
@@ -195,6 +207,10 @@ export default function DashboardTool({ transactions, token }: Props) {
           </button>
           <Popover anchor={settingsBtn} open={settingsOpen} onClose={() => setSettingsOpen(false)} width={280}>
             <div style={{ padding: "var(--s4)" }} className="col-flex gap-3">
+              <div className="field">
+                <label>View by</label>
+                <Segmented value={settings.period} onChange={(v) => patchSettings({ period: v })} options={[{ value: "month", label: "Monthly" }, { value: "year", label: "Yearly" }]} />
+              </div>
               <div className="field">
                 <label htmlFor="dashboard-target-pct">Target spend %</label>
                 <input
@@ -232,7 +248,7 @@ export default function DashboardTool({ transactions, token }: Props) {
         <div className="mt-3">
           <div className="between mb-3 flex-wrap gap-2">
             <h4>
-              {drillLabel} — <MonthMark monthKey={activeMonth} />
+              {drillLabel} — <PeriodMark periodKey={activePeriod} period={settings.period} />
               {pieSlice ? <> — {pieSlice.label} <span className="muted small">({fmt(pieSlice.amount)})</span></> : null}
               {!pieSlice && <span className="muted small"> ({fmt(drillDown === "spending" ? spending : income)})</span>}
             </h4>
@@ -252,16 +268,16 @@ export default function DashboardTool({ transactions, token }: Props) {
           </div>
         </div>
       )}
-      <div className="dashboard-month-toggle" role="group" aria-label="Month">
-        {months.map((key) => (
+      <div className="dashboard-month-toggle" role="group" aria-label={settings.period === "year" ? "Year" : "Month"}>
+        {periods.map((key) => (
           <button
             key={key}
-            ref={activeMonth === key ? activeRef : undefined}
+            ref={activePeriod === key ? activeRef : undefined}
             type="button"
-            className={activeMonth === key ? "active" : ""}
-            onClick={() => setMonthKey(key)}
+            className={activePeriod === key ? "active" : ""}
+            onClick={() => setPeriodKey(key)}
           >
-            <MonthMark monthKey={key} short />
+            <PeriodMark periodKey={key} period={settings.period} short />
           </button>
         ))}
       </div>

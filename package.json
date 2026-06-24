@@ -1,5 +1,5 @@
 {
-  "name": "newapp",
+  "name": "fundsup",
   "version": "1.0.0",
   "main": "server/index.ts",
   "scripts": {
