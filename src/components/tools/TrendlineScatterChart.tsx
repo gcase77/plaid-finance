@@ -227,10 +227,12 @@ export default function TrendlineScatterChart({
             const hi = seriesView === "income" ? p.income : seriesView === "spending" ? p.spending : Math.max(p.income, p.spending);
             const lo = seriesView === "both" ? Math.min(p.income, p.spending) : 0;
             const active = selectedPeriodKey === p.key;
+            const barTotal = seriesView === "income" ? p.income : seriesView === "spending" ? p.spending : 0;
             return (
               <g key={`period-${p.key}`} style={{ cursor: "pointer" }} onClick={() => setSelectedPeriodKey((k) => k === p.key ? null : p.key)}>
                 {hi > 0 && <rect x={x} y={yAt(hi)} width={barW} height={Math.max(1, yAt(lo) - yAt(hi))} rx={3} fill={seriesView === "income" || (seriesView === "both" && p.income >= p.spending) ? "var(--success)" : "var(--danger)"} opacity={active ? 0.95 : 0.72} />}
                 {lo > 0 && <rect x={x} y={yAt(lo)} width={barW} height={Math.max(1, yAt(0) - yAt(lo))} rx={3} fill={p.income >= p.spending ? "var(--danger)" : "var(--success)"} opacity={active ? 0.95 : 0.72} />}
+                {barTotal > 0 && <text x={xAt(p.ms)} y={yAt(barTotal) - 5} textAnchor="middle" fontSize="10" fill="var(--ink-muted)">{fmt(barTotal)}</text>}
                 <title>{`${p.label}: income ${fmt(p.income)}, spending ${fmt(p.spending)}`}</title>
               </g>
             );

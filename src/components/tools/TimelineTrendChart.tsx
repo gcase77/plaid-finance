@@ -106,7 +106,13 @@ export default function TimelineTrendChart({ transactions, allTransactions, tags
                 const x = xAt(i) - barW / 2;
                 const h = (Math.abs(r.net) / vm) * halfBand;
                 const y = r.net >= 0 ? zeroY - h : zeroY;
-                return <rect key={`bar-${r.key}`} x={x} y={y} width={barW} height={Math.max(1, h)} rx={3} fill={r.net >= 0 ? "var(--success)" : "var(--danger)"} opacity={0.75} style={{ cursor: "pointer" }} onClick={() => setSelectedKey(r.key)} />;
+                const labelY = r.net >= 0 ? y - 5 : y + h + 12;
+                return (
+                  <g key={`bar-${r.key}`}>
+                    <rect x={x} y={y} width={barW} height={Math.max(1, h)} rx={3} fill={r.net >= 0 ? "var(--success)" : "var(--danger)"} opacity={0.75} style={{ cursor: "pointer" }} onClick={() => setSelectedKey(r.key)} />
+                    {r.net !== 0 && <text x={xAt(i)} y={labelY} textAnchor="middle" fontSize="10" fill="var(--ink-muted)">Net {tickLabel(r.net)}</text>}
+                  </g>
+                );
               })}
             </>
           )}
