@@ -121,7 +121,7 @@ hr { border: 0; border-top: 1px solid var(--line); margin: var(--s4) 0; }
 .dashboard-hero-row { display: flex; align-items: flex-start; gap: var(--s3); max-width: 56rem; }
 .dashboard-hero-row .dashboard-hero { flex: 1; min-width: 0; }
 .dashboard-settings-wrap { position: relative; flex-shrink: 0; margin-top: 0.2em; }
-.dashboard-settings-btn { font-size: clamp(1.75rem, 3.5vw, 2.25rem); color: var(--ink-muted); min-width: 2.5rem; min-height: 2.5rem; }
+.dashboard-settings-btn { color: var(--ink-muted); margin-top: 0.35em; }
 .dashboard-settings-btn:hover { color: var(--ink); }
 .dashboard-subline { font-size: clamp(0.95rem, 2vw, 1.15rem); color: var(--ink-muted); margin: var(--s3) 0 0; max-width: 52rem; font-weight: 500; }
 .dashboard-subline .dashboard-hero-num { font-size: 1em; }

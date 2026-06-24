@@ -188,11 +188,10 @@ export default function DashboardTool({ transactions, token }: Props) {
           <button
             ref={setSettingsBtn}
             type="button"
-            className="btn ghost btn-icon dashboard-settings-btn"
-            aria-label="Dashboard settings"
+            className="btn ghost btn-sm dashboard-settings-btn"
             onClick={() => setSettingsOpen((o) => !o)}
           >
-            ⚙
+            Settings
           </button>
           <Popover anchor={settingsBtn} open={settingsOpen} onClose={() => setSettingsOpen(false)} width={280}>
             <div style={{ padding: "var(--s4)" }} className="col-flex gap-3">
