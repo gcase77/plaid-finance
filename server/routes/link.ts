@@ -26,7 +26,7 @@ router.post("/link/token", async (req, res) => {
     logger.log("info", "plaid linkTokenCreate", { input: linkTokenRequest, output: data });
     res.json(data);
   } catch (e: any) {
-    logger.log("error", "link-token", { err: e });
+    logger.log("error", "link-token", { err: e, plaid: e?.response?.data, message: e?.message, request: e?.request });
     res.status(500).json({ error: e.response?.data?.error_message || e.message });
   }
 });
