@@ -5,9 +5,11 @@ import { useTransactionsData } from "../../hooks/useTransactionsData";
 import TransferGroupTool from "./TransferGroupTool";
 import BudgetRulesTool from "./BudgetRulesTool";
 import VisualizeTrendsTool from "./VisualizeTrendsTool";
+import DashboardTool from "./DashboardTool";
 
-type ToolKey = "budget-rules" | "account-transfers" | "visualize-trends";
-const TOOLS: { key: ToolKey; label: string; desc: string }[] = [
+type ToolKey = "dashboard" | "budget-rules" | "account-transfers" | "visualize-trends";
+const TOOLS: { key: ToolKey; label: string; desc?: string }[] = [
+  { key: "dashboard", label: "Dashboard" },
   { key: "budget-rules", label: "Budget Rules", desc: "Set spending targets and track them per period." },
   { key: "account-transfers", label: "Find Transfers", desc: "Pair transfers between your own accounts so they don't skew totals." },
   { key: "visualize-trends", label: "Visualize Trends", desc: "Pie, flow-of-funds and timeline views of your money." }
@@ -19,7 +21,7 @@ function loadStoredToolKey(): ToolKey {
     const v = localStorage.getItem(TOOLS_ACTIVE_KEY);
     if (v && TOOLS.some((t) => t.key === v)) return v as ToolKey;
   } catch { /* private mode / quota */ }
-  return "budget-rules";
+  return "dashboard";
 }
 
 export default function ToolsPage() {
@@ -37,7 +39,7 @@ export default function ToolsPage() {
       <header className="page-header">
         <div>
           <h1>{tool.label}</h1>
-          <p className="desc">{tool.desc}</p>
+          {tool.desc && <p className="desc">{tool.desc}</p>}
         </div>
         <div className="page-actions tabs" style={{ margin: 0, borderBottom: 0 }}>
           {TOOLS.map((t) => (
@@ -46,6 +48,7 @@ export default function ToolsPage() {
         </div>
       </header>
 
+      {active === "dashboard" && <DashboardTool transactions={transactions} token={token} />}
       {active === "budget-rules" && <BudgetRulesTool token={token} />}
       {active === "account-transfers" && <TransferGroupTool transactions={transactions} token={token} invalidateTransactionMeta={invalidateTransactionMeta} />}
       {active === "visualize-trends" && <VisualizeTrendsTool transactions={transactions} token={token} />}
