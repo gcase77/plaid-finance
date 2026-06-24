@@ -21,3 +21,26 @@ export function collapseNettingGroups<T extends Nettable>(txns: T[]): T[] {
   }
   return out;
 }
+
+export function expandNettingGroupsForDisplay<T extends Nettable>(rows: T[], allRows: T[]): T[] {
+  const byGroup = new Map<string, T[]>();
+  for (const row of allRows) {
+    if (!row.netting_group) continue;
+    const group = byGroup.get(row.netting_group) ?? [];
+    group.push(row);
+    byGroup.set(row.netting_group, group);
+  }
+
+  const seenGroups = new Set<string>();
+  const out: T[] = [];
+  for (const row of rows) {
+    const group = row.netting_group;
+    if (!group) {
+      out.push(row);
+    } else if (!seenGroups.has(group)) {
+      seenGroups.add(group);
+      out.push(...(byGroup.get(group) ?? [row]));
+    }
+  }
+  return out;
+}

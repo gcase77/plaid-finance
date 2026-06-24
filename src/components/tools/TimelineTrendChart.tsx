@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import type { Tag, Txn } from "../types";
 import TransactionTable from "../shared/TransactionTable";
 import { Segmented } from "../shared/ui";
+import { expandNettingGroupsForDisplay } from "../../utils/nettingUtils";
 import { buildTrendPeriodRows } from "./visualizeTrendsUtils";
 
 export type TimelineView = "area" | "net";
@@ -22,13 +23,14 @@ function tickLabel(t: number) {
   return `${s}${fmt(Math.abs(t))}`;
 }
 
-export default function TimelineTrendChart({ transactions, tags, view, granularity, onViewChange, onGranularityChange }: {
-  transactions: Txn[]; tags: Tag[]; view: TimelineView; granularity: TimelineGranularity;
+export default function TimelineTrendChart({ transactions, allTransactions, tags, view, granularity, onViewChange, onGranularityChange }: {
+  transactions: Txn[]; allTransactions: Txn[]; tags: Tag[]; view: TimelineView; granularity: TimelineGranularity;
   onViewChange: (v: TimelineView) => void; onGranularityChange: (g: TimelineGranularity) => void;
 }) {
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const rows = useMemo(() => buildTrendPeriodRows(transactions, granularity), [transactions, granularity]);
   const selected = rows.find((r) => r.key === selectedKey) ?? null;
+  const selectedTransactions = useMemo(() => expandNettingGroupsForDisplay(selected?.transactions ?? [], allTransactions), [selected, allTransactions]);
 
   const width = 1200, height = 420;
   const vMax = useMemo(() => {
@@ -126,7 +128,7 @@ export default function TimelineTrendChart({ transactions, tags, view, granulari
             <h4>{selected.label}</h4>
             <button className="btn ghost btn-sm" onClick={() => setSelectedKey(null)}>Clear</button>
           </div>
-          <TransactionTable transactions={selected.transactions} tags={tags} keyPrefix="viz-timeline" />
+          <TransactionTable transactions={selectedTransactions} tags={tags} keyPrefix="viz-timeline" nettingMode />
         </div>
       )}
     </>

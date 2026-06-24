@@ -3,6 +3,7 @@ import type { Tag, Txn } from "../types";
 import { Segmented } from "../shared/ui";
 import TransactionTable from "../shared/TransactionTable";
 import { getTxnDateOnly, TAG_COLOR_PALETTE } from "../../utils/transactionUtils";
+import { expandNettingGroupsForDisplay } from "../../utils/nettingUtils";
 import { buildTrendPieSlices, type TrendPieGrouping } from "./visualizeTrendsUtils";
 import type { TimelineGranularity } from "./TimelineTrendChart";
 
@@ -141,8 +142,8 @@ function RibbonSvg({ periods, series, selected, onSelect }: {
   );
 }
 
-function RibbonCard({ title, side, transactions, tags, grouping, granularity, tagMap }: {
-  title: string; side: Side; transactions: Txn[]; tags: Tag[]; grouping: TrendPieGrouping; granularity: TimelineGranularity; tagMap: Map<number, Tag>;
+function RibbonCard({ title, side, transactions, allTransactions, tags, grouping, granularity, tagMap }: {
+  title: string; side: Side; transactions: Txn[]; allTransactions: Txn[]; tags: Tag[]; grouping: TrendPieGrouping; granularity: TimelineGranularity; tagMap: Map<number, Tag>;
 }) {
   const [selected, setSelected] = useState<Selection | null>(null);
   const periods = useMemo(() => buildPeriods(transactions, granularity), [transactions, granularity]);
@@ -154,6 +155,7 @@ function RibbonCard({ title, side, transactions, tags, grouping, granularity, ta
   const selectedTxns = selectedSeries
     ? legendSel ? selectedSeries.periodTxns.flat() : selectedPeriodIndex >= 0 ? selectedSeries.periodTxns[selectedPeriodIndex] : []
     : [];
+  const expandedSelectedTxns = useMemo(() => expandNettingGroupsForDisplay(selectedTxns, allTransactions), [selectedTxns, allTransactions]);
   const selectedAmount = selectedSeries
     ? legendSel ? selectedSeries.total : selectedPeriodIndex >= 0 ? selectedSeries.values[selectedPeriodIndex] : 0
     : 0;
@@ -186,15 +188,15 @@ function RibbonCard({ title, side, transactions, tags, grouping, granularity, ta
             </h4>
             <button className="btn ghost btn-sm" onClick={() => setSelected(null)}>Clear</button>
           </div>
-          <TransactionTable transactions={selectedTxns} tags={tags} keyPrefix={`viz-ribbon-${side}`} />
+          <TransactionTable transactions={expandedSelectedTxns} tags={tags} keyPrefix={`viz-ribbon-${side}`} nettingMode />
         </div>
       )}
     </div>
   );
 }
 
-export default function RibbonTrendChart({ transactions, tags, grouping, granularity, onGroupingChange, onGranularityChange }: {
-  transactions: Txn[]; tags: Tag[]; grouping: TrendPieGrouping; granularity: TimelineGranularity;
+export default function RibbonTrendChart({ transactions, allTransactions, tags, grouping, granularity, onGroupingChange, onGranularityChange }: {
+  transactions: Txn[]; allTransactions: Txn[]; tags: Tag[]; grouping: TrendPieGrouping; granularity: TimelineGranularity;
   onGroupingChange: (g: TrendPieGrouping) => void; onGranularityChange: (g: TimelineGranularity) => void;
 }) {
   const tagMap = useMemo(() => new Map(tags.map((t) => [t.id, t])), [tags]);
@@ -208,8 +210,8 @@ export default function RibbonTrendChart({ transactions, tags, grouping, granula
         </div>
       </div>
       <div className="gap-4" style={{ display: "flex", flexDirection: "column" }}>
-        <RibbonCard title="Absolute Spending" side="spending" transactions={transactions} tags={tags} grouping={grouping} granularity={granularity} tagMap={tagMap} />
-        <RibbonCard title="Absolute Income" side="income" transactions={transactions} tags={tags} grouping={grouping} granularity={granularity} tagMap={tagMap} />
+        <RibbonCard title="Absolute Spending" side="spending" transactions={transactions} allTransactions={allTransactions} tags={tags} grouping={grouping} granularity={granularity} tagMap={tagMap} />
+        <RibbonCard title="Absolute Income" side="income" transactions={transactions} allTransactions={allTransactions} tags={tags} grouping={grouping} granularity={granularity} tagMap={tagMap} />
       </div>
     </>
   );

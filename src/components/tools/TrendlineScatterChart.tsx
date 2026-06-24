@@ -3,9 +3,10 @@ import type { Tag, Txn } from "../types";
 import TransactionTable from "../shared/TransactionTable";
 import { Segmented } from "../shared/ui";
 import { getTxnDateOnly } from "../../utils/transactionUtils";
+import { expandNettingGroupsForDisplay } from "../../utils/nettingUtils";
 import { buildTrendPeriodRows, type TrendPeriodGranularity, type TrendPeriodRow } from "./visualizeTrendsUtils";
 
-export type TrendlineKind = "polynomial" | "cumulative";
+export type TrendlineKind = "regression" | "cumulative";
 export type TrendlineSeriesView = "both" | "income" | "spending";
 
 const fmt = (n: number) => `$${n.toLocaleString("en-US", { maximumFractionDigits: 2 })}`;
@@ -108,9 +109,13 @@ export default function TrendlineScatterChart({
       : seriesView === "spending" ? selectedPeriod.spendingTransactions
         : selectedPeriod.transactions
     : [];
+  const expandedSelectedPeriodTransactions = useMemo(
+    () => expandNettingGroupsForDisplay(selectedPeriodTransactions, allTransactions),
+    [selectedPeriodTransactions, allTransactions]
+  );
 
   const rawSeries = useMemo((): TrendSeries[] => {
-    const label = kind === "polynomial" ? "Polynomial" : "Cumulative net";
+    const label = kind === "regression" ? "Regression" : "Cumulative net";
     if (kind === "cumulative") return [{ key: "cumulative", label, color: "var(--brand)", pts: cumulativeLine(points) }];
     if (!periodPoints.length) return [];
     const t0 = periodPoints[0].ms;
@@ -130,16 +135,16 @@ export default function TrendlineScatterChart({
 
   const layout = useMemo(() => {
     const ih = H - padTop - padBottom, iw = W - padL - padR;
-    const source = kind === "polynomial" ? periodPoints : points;
+    const source = kind === "regression" ? periodPoints : points;
     if (!source.length) return null;
     const lineVals = series.flatMap((s) => s.pts.map((p) => p.y));
     const t0 = Math.min(...source.map((p) => p.ms));
     const max = Math.max(...source.map((p) => p.ms));
     const t1 = max <= t0 ? t0 + 864e5 : max;
     const xAt = (ms: number) => padL + ((ms - t0) / (t1 - t0)) * iw;
-    const xTicks = kind === "polynomial" ? periodPoints.map((p) => p.ms) : Array.from({ length: 6 }, (_, i) => Math.round(t0 + ((t1 - t0) * i) / 5));
+    const xTicks = kind === "regression" ? periodPoints.map((p) => p.ms) : Array.from({ length: 6 }, (_, i) => Math.round(t0 + ((t1 - t0) * i) / 5));
 
-    if (kind === "polynomial" || compareMode) {
+    if (kind === "regression" || compareMode) {
       const periodVals = periodPoints.flatMap((p) => seriesView === "income" ? [p.income] : seriesView === "spending" ? [p.spending] : [p.income, p.spending]);
       const vm = Math.max(...lineVals.map((v) => Math.abs(v)), ...periodVals, 1);
       const zeroY = padTop + ih, half = ih;
@@ -158,11 +163,11 @@ export default function TrendlineScatterChart({
     };
   }, [points, periodPoints, series, kind, compareMode, seriesView]);
 
-  if ((kind === "polynomial" ? !periodPoints.length : !points.length) || !layout) return <p className="muted small">No transactions in this range (transfers excluded; netting groups collapsed).</p>;
+  if ((kind === "regression" ? !periodPoints.length : !points.length) || !layout) return <p className="muted small">No transactions in this range (transfers excluded; netting groups collapsed).</p>;
 
   const { zeroY, xAt, yAt, xTicks, yTicks } = layout;
   const r = points.length > 400 ? 2.8 : 3.8;
-  const shownSelected = kind === "polynomial" || compareMode ? null : selected;
+  const shownSelected = kind === "regression" || compareMode ? null : selected;
   const barW = Math.max(12, Math.min(46, (W - padL - padR) / Math.max(periodPoints.length, 1) - 4));
   const xSkip = Math.max(1, Math.ceil(xTicks.length / 12));
   const cumulativeFinal = kind === "cumulative" ? series[0]?.pts.at(-1) : null;
@@ -180,15 +185,15 @@ export default function TrendlineScatterChart({
             </>
           )}
         </div>
-        <span className="small muted">{kind === "polynomial" ? `${periodPoints.length} periods` : `${points.length} points`}</span>
+        <span className="small muted">{kind === "regression" ? `${periodPoints.length} periods` : `${points.length} points`}</span>
       </div>
       <div className="row-flex gap-2 flex-wrap mb-3">
         <span className="small muted">Trendline</span>
         <Segmented value={kind} onChange={onKindChange} options={[
-          { value: "polynomial", label: "Polynomial" },
+          { value: "regression", label: "Regression" },
           { value: "cumulative", label: "Cumulative Sum" }
         ]} />
-        {kind === "polynomial" && (
+        {kind === "regression" && (
           <>
             <Segmented value={granularity} onChange={(v) => { onGranularityChange(v); setSelectedPeriodKey(null); }} options={[{ value: "week", label: "Week" }, { value: "month", label: "Month" }]} />
             <Segmented value={seriesView} onChange={onSeriesViewChange} options={[{ value: "both", label: "Both" }, { value: "income", label: "Income" }, { value: "spending", label: "Spending" }]} />
@@ -201,7 +206,7 @@ export default function TrendlineScatterChart({
       </div>
       <div className="viz-wrap" style={{ overflowX: "auto" }}>
         <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", minWidth: 980, maxHeight: H }} role="img" aria-label="One point per transaction, date on horizontal axis, signed amount on vertical axis">
-          {kind !== "polynomial" && !compareMode && (
+          {kind !== "regression" && !compareMode && (
             <>
               <rect x={padL - 8} y={padTop} width={W - padL - padR + 16} height={layout.half} fill="var(--success-soft)" opacity={0.22} />
               <rect x={padL - 8} y={zeroY} width={W - padL - padR + 16} height={layout.half} fill="var(--danger-soft)" opacity={0.22} />
@@ -217,7 +222,7 @@ export default function TrendlineScatterChart({
             );
           })}
           <line x1={padL - 8} x2={W - padR} y1={zeroY} y2={zeroY} stroke="var(--ink)" strokeOpacity={0.45} strokeWidth={2.75} strokeLinecap="square" pointerEvents="none" />
-          {kind === "polynomial" && periodPoints.map((p) => {
+          {kind === "regression" && periodPoints.map((p) => {
             const x = xAt(p.ms) - barW / 2;
             const hi = seriesView === "income" ? p.income : seriesView === "spending" ? p.spending : Math.max(p.income, p.spending);
             const lo = seriesView === "both" ? Math.min(p.income, p.spending) : 0;
@@ -243,7 +248,7 @@ export default function TrendlineScatterChart({
               </text>
             </g>
           )}
-          {kind !== "polynomial" && !compareMode && points.map((p, i) => {
+          {kind !== "regression" && !compareMode && points.map((p, i) => {
             const id = rowKey(p, i);
             const active = selId === id;
             return (
@@ -263,7 +268,7 @@ export default function TrendlineScatterChart({
           })}
           <text aria-hidden x={padL - 12} y={zeroY + 4} textAnchor="end" fontSize="11" fontWeight={700} fill="var(--ink)">{tickLabel(0)}</text>
           {xTicks.map((ms, i) => (
-            (i % xSkip === 0 || i === xTicks.length - 1) && <text key={ms} x={xAt(ms)} y={H - 8} textAnchor="middle" fontSize="10" fill="var(--ink-muted)">{kind === "polynomial" ? periodPoints.find((p) => p.ms === ms)?.label : fmtDay(ms)}</text>
+            (i % xSkip === 0 || i === xTicks.length - 1) && <text key={ms} x={xAt(ms)} y={H - 8} textAnchor="middle" fontSize="10" fill="var(--ink-muted)">{kind === "regression" ? periodPoints.find((p) => p.ms === ms)?.label : fmtDay(ms)}</text>
           ))}
         </svg>
       </div>
@@ -276,7 +281,7 @@ export default function TrendlineScatterChart({
             <h4>{selectedPeriod.label}</h4>
             <button type="button" className="btn ghost btn-sm" onClick={() => setSelectedPeriodKey(null)}>Clear</button>
           </div>
-          <TransactionTable transactions={selectedPeriodTransactions} tags={tags} keyPrefix="viz-trendline-period" nettingMode />
+          <TransactionTable transactions={expandedSelectedPeriodTransactions} tags={tags} keyPrefix="viz-trendline-period" nettingMode />
         </div>
       )}
       {shownSelected && (

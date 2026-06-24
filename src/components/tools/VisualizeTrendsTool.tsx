@@ -6,6 +6,7 @@ import { DATE_RANGE_PRESETS } from "../shared/dateRangeUtils";
 import TransactionTable from "../shared/TransactionTable";
 import { TrendPiePanel } from "../shared/TrendPieChart";
 import { buildDatePreset } from "../../utils/datePresets";
+import { expandNettingGroupsForDisplay } from "../../utils/nettingUtils";
 import FlowSankeySvg from "./FlowSankeySvg";
 import { buildFlowOfFundsModel, type FlowGrouping } from "./flowOfFundsSankey";
 import TimelineTrendChart, { type TimelineGranularity, type TimelineView } from "./TimelineTrendChart";
@@ -33,7 +34,7 @@ const PIE_GROUP = new Set<TrendPieGrouping>(["detected", "buckets", "meta"]);
 const FLOW_GROUP = new Set<FlowGrouping>(["detected", "tags"]);
 const TIMELINE_V = new Set<TimelineView>(["area", "net"]);
 const TIMELINE_G = new Set<TimelineGranularity>(["month", "week"]);
-const TRENDLINE_K = new Set<TrendlineKind>(["polynomial", "cumulative"]);
+const TRENDLINE_K = new Set<TrendlineKind>(["regression", "cumulative"]);
 const TRENDLINE_SERIES = new Set<TrendlineSeriesView>(["both", "income", "spending"]);
 
 function loadVizPrefs() {
@@ -41,7 +42,7 @@ function loadVizPrefs() {
     vizTab: "pie" as VizTab, grouping: "detected" as TrendPieGrouping, flowGrouping: "detected" as FlowGrouping,
     timelineView: "area" as TimelineView, timelineGranularity: "month" as TimelineGranularity,
     ribbonGrouping: "detected" as TrendPieGrouping, ribbonGranularity: "month" as TimelineGranularity,
-    trendlineKind: "polynomial" as TrendlineKind, trendlineSeriesView: "both" as TrendlineSeriesView, trendlineGranularity: "month" as TimelineGranularity, trendlineDegree: 2
+    trendlineKind: "regression" as TrendlineKind, trendlineSeriesView: "both" as TrendlineSeriesView, trendlineGranularity: "month" as TimelineGranularity, trendlineDegree: 2
   };
   if (typeof window === "undefined") return d;
   try {
@@ -55,7 +56,8 @@ function loadVizPrefs() {
     if (typeof o.timelineGranularity === "string" && TIMELINE_G.has(o.timelineGranularity as TimelineGranularity)) d.timelineGranularity = o.timelineGranularity as TimelineGranularity;
     if (typeof o.ribbonGrouping === "string" && PIE_GROUP.has(o.ribbonGrouping as TrendPieGrouping)) d.ribbonGrouping = o.ribbonGrouping as TrendPieGrouping;
     if (typeof o.ribbonGranularity === "string" && TIMELINE_G.has(o.ribbonGranularity as TimelineGranularity)) d.ribbonGranularity = o.ribbonGranularity as TimelineGranularity;
-    if (typeof o.trendlineKind === "string" && TRENDLINE_K.has(o.trendlineKind as TrendlineKind)) d.trendlineKind = o.trendlineKind as TrendlineKind;
+    if (o.trendlineKind === "polynomial") d.trendlineKind = "regression";
+    else if (typeof o.trendlineKind === "string" && TRENDLINE_K.has(o.trendlineKind as TrendlineKind)) d.trendlineKind = o.trendlineKind as TrendlineKind;
     if (typeof o.trendlineSeriesView === "string" && TRENDLINE_SERIES.has(o.trendlineSeriesView as TrendlineSeriesView)) d.trendlineSeriesView = o.trendlineSeriesView as TrendlineSeriesView;
     if (typeof o.trendlineGranularity === "string" && TIMELINE_G.has(o.trendlineGranularity as TimelineGranularity)) d.trendlineGranularity = o.trendlineGranularity as TimelineGranularity;
     if (typeof o.trendlineDegree === "number" && Number.isFinite(o.trendlineDegree)) d.trendlineDegree = Math.min(10, Math.max(1, Math.round(o.trendlineDegree)));
@@ -108,6 +110,8 @@ export default function VisualizeTrendsTool({ transactions, token }: Props) {
   const incomeColors = useMemo(() => sliceColors(incomeSlices), [incomeSlices]);
   const flowModel = useMemo(() => buildFlowOfFundsModel(baseTxns, flowGrouping, tagMap), [baseTxns, flowGrouping, tagMap]);
   const flowDetail = useMemo(() => flowModel?.nodes.find((n) => n.id === flowNodeId), [flowModel, flowNodeId]);
+  const selectionTxns = useMemo(() => expandNettingGroupsForDisplay(selection?.slice.transactions ?? [], transactions), [selection, transactions]);
+  const flowDetailTxns = useMemo(() => expandNettingGroupsForDisplay(flowDetail?.transactions ?? [], transactions), [flowDetail, transactions]);
 
   const bumpRange = (start: string, end: string) => { setStartDate(start); setEndDate(end); setSelection(null); setFlowNodeId(null); };
   const goTab = (t: VizTab) => { setVizTab(t); setFlowNodeId(null); };
@@ -137,8 +141,8 @@ export default function VisualizeTrendsTool({ transactions, token }: Props) {
         <button className={vizTab === "trendline" ? "active" : ""} onClick={() => goTab("trendline")}>Trendline</button>
       </div>
 
-      {vizTab === "timeline" && <TimelineTrendChart transactions={baseTxns} tags={tags} view={timelineView} granularity={timelineGranularity} onViewChange={setTimelineView} onGranularityChange={setTimelineGranularity} />}
-      {vizTab === "ribbon" && <RibbonTrendChart transactions={baseTxns} tags={tags} grouping={ribbonGrouping} granularity={ribbonGranularity} onGroupingChange={setRibbonGrouping} onGranularityChange={setRibbonGranularity} />}
+      {vizTab === "timeline" && <TimelineTrendChart transactions={baseTxns} allTransactions={transactions} tags={tags} view={timelineView} granularity={timelineGranularity} onViewChange={setTimelineView} onGranularityChange={setTimelineGranularity} />}
+      {vizTab === "ribbon" && <RibbonTrendChart transactions={baseTxns} allTransactions={transactions} tags={tags} grouping={ribbonGrouping} granularity={ribbonGranularity} onGroupingChange={setRibbonGrouping} onGranularityChange={setRibbonGranularity} />}
       {vizTab === "trendline" && (
         <TrendlineScatterChart
           transactions={baseTxns}
@@ -177,7 +181,7 @@ export default function VisualizeTrendsTool({ transactions, token }: Props) {
                 <h4>{selection.side === "spending" ? "Spending" : "Income"} — {selection.slice.label} <span className="muted small">(${selection.slice.amount.toFixed(2)})</span></h4>
                 <button className="btn ghost btn-sm" onClick={() => setSelection(null)}>Clear</button>
               </div>
-              <TransactionTable transactions={selection.slice.transactions} tags={tags} keyPrefix="viz-trend" />
+              <TransactionTable transactions={selectionTxns} tags={tags} keyPrefix="viz-trend" nettingMode />
             </div>
           )}
         </>
@@ -202,7 +206,7 @@ export default function VisualizeTrendsTool({ transactions, token }: Props) {
                 <h4>{flowDetail.label}</h4>
                 <button className="btn ghost btn-sm" onClick={() => setFlowNodeId(null)}>Clear</button>
               </div>
-              <TransactionTable transactions={flowDetail.transactions} tags={tags} keyPrefix="viz-flow" />
+              <TransactionTable transactions={flowDetailTxns} tags={tags} keyPrefix="viz-flow" nettingMode />
             </div>
           )}
         </>

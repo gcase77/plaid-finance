@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import type { Tag, Txn } from "../types";
 import { buildAuthHeaders } from "../../lib/auth";
 import { getTxnDateOnly } from "../../utils/transactionUtils";
-import { collapseNettingGroups } from "../../utils/nettingUtils";
+import { collapseNettingGroups, expandNettingGroupsForDisplay } from "../../utils/nettingUtils";
 import TransactionTable from "../shared/TransactionTable";
 import { TrendPiePanel } from "../shared/TrendPieChart";
 import { Popover, Segmented } from "../shared/ui";
@@ -67,7 +67,7 @@ function hasIncomeTag(t: Txn, tagId: number) {
 }
 
 function monthBreakdown(txns: Txn[], month: string, incomeTagId: number | null) {
-  const nt = collapseNettingGroups(txns.filter((t) => !t.account_transfer_group && getTxnDateOnly(t).startsWith(month)));
+  const nt = collapseNettingGroups(txns.filter((t) => !t.account_transfer_group)).filter((t) => getTxnDateOnly(t).startsWith(month));
   const incomeTxns: Txn[] = [];
   const spendingTxns: Txn[] = [];
   let income = 0;
@@ -151,7 +151,8 @@ export default function DashboardTool({ transactions, token }: Props) {
   );
   const pieColors = useMemo(() => sliceColors(pieSlices), [pieSlices]);
   const pieSlice = pieSlices.find((s) => s.key === pieSliceKey) ?? null;
-  const tableTxns = pieSlice?.transactions ?? drillTxns;
+  const tableTxnsBase = pieSlice?.transactions ?? drillTxns;
+  const tableTxns = useMemo(() => expandNettingGroupsForDisplay(tableTxnsBase, transactions), [tableTxnsBase, transactions]);
   const onPieSlice = (sl: { key: string }) => setPieSliceKey((k) => k === sl.key ? null : sl.key);
 
   return (
