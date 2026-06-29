@@ -42,8 +42,14 @@ async function initDb() {
     access_token TEXT NOT NULL,
     institution_id TEXT,
     institution_name TEXT,
+    consented_products TEXT,
     created_at TEXT DEFAULT CURRENT_TIMESTAMP
   )`);
+  try {
+    await run(`ALTER TABLE items ADD COLUMN consented_products TEXT`);
+  } catch {
+    // column already exists
+  }
   await run(`CREATE TABLE IF NOT EXISTS accounts (
     account_id TEXT PRIMARY KEY,
     item_id TEXT NOT NULL,
@@ -82,18 +88,89 @@ const app = express();
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
 
+function buildLinkTokenRequest(overrides = {}) {
+  const linkTokenRequest = {
+    user: { client_user_id: USER_ID },
+    client_name: "Investments Model",
+    language: "en",
+    country_codes: ["US"],
+    ...overrides
+  };
+  if (process.env.PLAID_REDIRECT_URI) linkTokenRequest.redirect_uri = process.env.PLAID_REDIRECT_URI;
+  return linkTokenRequest;
+}
+
+async function refreshItemFromPlaid(itemId, accessToken) {
+  const itemData = (await plaid.itemGet({ access_token: accessToken })).data.item;
+  const consentedProducts = itemData.consented_products ?? [];
+  await run(
+    `UPDATE items SET
+       institution_id = ?,
+       institution_name = ?,
+       consented_products = ?
+     WHERE item_id = ?`,
+    [
+      itemData.institution_id ?? null,
+      itemData.institution_name ?? null,
+      JSON.stringify(consentedProducts),
+      itemId
+    ]
+  );
+  return { item: itemData, consented_products: consentedProducts };
+}
+
 app.post("/api/link/token", async (_req, res) => {
   try {
-    const linkTokenRequest = {
-      user: { client_user_id: USER_ID },
-      products: ["investments"],
-      client_name: "Investments Model",
-      language: "en",
-      country_codes: ["US"]
-    };
-    if (process.env.PLAID_REDIRECT_URI) linkTokenRequest.redirect_uri = process.env.PLAID_REDIRECT_URI;
+    const linkTokenRequest = buildLinkTokenRequest({
+      products: ["transactions"],
+      transactions: { days_requested: 90 }
+    });
     const { data } = await plaid.linkTokenCreate(linkTokenRequest);
-    res.json(data);
+    res.json({ ...data, mode: "create" });
+  } catch (error) {
+    res.status(500).json({ error: error?.response?.data?.error_message || error.message });
+  }
+});
+
+app.post("/api/link/token/update", async (req, res) => {
+  try {
+    const itemId = String(req.body?.itemId || "");
+    if (!itemId) return res.status(400).json({ error: "itemId required" });
+
+    const item = await get(`SELECT access_token, consented_products FROM items WHERE item_id = ?`, [itemId]);
+    if (!item?.access_token) return res.status(404).json({ error: "Item not found" });
+
+    const consented = item.consented_products ? JSON.parse(item.consented_products) : [];
+    if (consented.includes("investments")) {
+      return res.status(400).json({ error: "Investments product already enabled for this item" });
+    }
+
+    const linkTokenRequest = buildLinkTokenRequest({
+      access_token: item.access_token,
+      additional_consented_products: ["investments"]
+    });
+    const { data } = await plaid.linkTokenCreate(linkTokenRequest);
+    res.json({ ...data, mode: "update", item_id: itemId });
+  } catch (error) {
+    res.status(500).json({ error: error?.response?.data?.error_message || error.message });
+  }
+});
+
+app.post("/api/link/update/complete", async (req, res) => {
+  try {
+    const itemId = String(req.body?.itemId || "");
+    if (!itemId) return res.status(400).json({ error: "itemId required" });
+
+    const item = await get(`SELECT access_token FROM items WHERE item_id = ?`, [itemId]);
+    if (!item?.access_token) return res.status(404).json({ error: "Item not found" });
+
+    const refreshed = await refreshItemFromPlaid(itemId, item.access_token);
+    res.json({
+      success: true,
+      item_id: itemId,
+      consented_products: refreshed.consented_products,
+      investments_enabled: refreshed.consented_products.includes("investments")
+    });
   } catch (error) {
     res.status(500).json({ error: error?.response?.data?.error_message || error.message });
   }
@@ -108,14 +185,23 @@ app.post("/api/link/exchange", async (req, res) => {
     const itemData = (await plaid.itemGet({ access_token: exchange.data.access_token })).data.item;
     const accounts = (await plaid.accountsGet({ access_token: exchange.data.access_token })).data.accounts;
 
+    const consentedProducts = itemData.consented_products ?? [];
     await run(
-      `INSERT INTO items (item_id, user_id, access_token, institution_id, institution_name)
-       VALUES (?, ?, ?, ?, ?)
+      `INSERT INTO items (item_id, user_id, access_token, institution_id, institution_name, consented_products)
+       VALUES (?, ?, ?, ?, ?, ?)
        ON CONFLICT(item_id) DO UPDATE SET
          access_token=excluded.access_token,
          institution_id=excluded.institution_id,
-         institution_name=excluded.institution_name`,
-      [exchange.data.item_id, USER_ID, exchange.data.access_token, itemData.institution_id, itemData.institution_name]
+         institution_name=excluded.institution_name,
+         consented_products=excluded.consented_products`,
+      [
+        exchange.data.item_id,
+        USER_ID,
+        exchange.data.access_token,
+        itemData.institution_id,
+        itemData.institution_name,
+        JSON.stringify(consentedProducts)
+      ]
     );
 
     for (const account of accounts) {
@@ -150,8 +236,16 @@ app.post("/api/link/exchange", async (req, res) => {
 });
 
 app.get("/api/items", async (_req, res) => {
-  const rows = await all(`SELECT item_id, institution_name, created_at FROM items WHERE user_id = ? ORDER BY created_at DESC`, [USER_ID]);
-  res.json(rows);
+  const rows = await all(
+    `SELECT item_id, institution_name, consented_products, created_at FROM items WHERE user_id = ? ORDER BY created_at DESC`,
+    [USER_ID]
+  );
+  res.json(
+    rows.map((row) => ({
+      ...row,
+      consented_products: row.consented_products ? JSON.parse(row.consented_products) : []
+    }))
+  );
 });
 
 app.post("/api/items/:itemId/remove", async (req, res) => {
