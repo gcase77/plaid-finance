@@ -98,6 +98,14 @@
     .bank-info { min-width: 0; flex: 1; }
     .bank-name { font-size: 13px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .bank-id { font-size: 10px; color: var(--muted); }
+    .bank-badges { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+    .product-badge {
+      font-size: 9px; font-weight: 700; letter-spacing: 0.4px;
+      padding: 2px 6px; border-radius: 20px; text-transform: uppercase;
+    }
+    .product-badge.on { background: var(--green-dim); color: var(--green); }
+    .product-badge.off { background: var(--surface); color: var(--muted); border: 1px solid var(--border); }
+    .product-badge.pending { background: rgba(245,158,11,0.12); color: var(--gold); }
     .bank-remove { font-size: 14px; opacity: 0.4; cursor: pointer; padding: 2px 4px; border-radius: 4px; }
     .bank-remove:hover { opacity: 1; color: var(--red); background: var(--red-dim); }
     
@@ -275,6 +283,29 @@
     .modal-title { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
     .modal-body { font-size: 13px; color: var(--muted2); line-height: 1.6; margin-bottom: 20px; }
     .modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
+
+    /* Enable investments banner */
+    .enable-investments {
+      background: linear-gradient(135deg, rgba(78,134,245,0.08), rgba(167,139,250,0.08));
+      border: 1px solid rgba(78,134,245,0.25);
+      border-radius: 14px;
+      padding: 22px 24px;
+      margin-bottom: 22px;
+      display: flex; align-items: center; justify-content: space-between; gap: 20px;
+    }
+    .enable-investments-copy { flex: 1; min-width: 0; }
+    .enable-investments-title { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+    .enable-investments-desc { font-size: 13px; color: var(--muted2); line-height: 1.55; max-width: 560px; }
+    .enable-investments-steps {
+      display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap;
+    }
+    .step-chip {
+      font-size: 11px; color: var(--muted2); background: var(--surface2);
+      border: 1px solid var(--border); border-radius: 20px; padding: 4px 10px;
+    }
+    .step-chip strong { color: var(--text); }
+    .products-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .products-label { font-size: 11px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px; }
     
     /* Spinner */
     @keyframes spin { to { transform: rotate(360deg); } }
@@ -306,9 +337,12 @@
       </div>
 
       <div class="sidebar-section">
-        <button class="btn btn-primary btn-full" id="linkBtn" title="Link account">
-          <span>+</span><span class="link-btn-label"> Link Account</span>
+        <button class="btn btn-primary btn-full" id="linkBtn" title="Link bank (transactions only)">
+          <span>+</span><span class="link-btn-label"> Link Bank</span>
         </button>
+        <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:8px;line-height:1.4" class="link-btn-label">
+          Initial link requests <strong style="color:var(--muted2)">Transactions</strong> only
+        </div>
       </div>
     </div>
 
@@ -325,7 +359,7 @@
         <button class="topbar-expand-btn" id="sidebarExpand" type="button" title="Expand sidebar" aria-label="Expand sidebar">☰</button>
         <div>
           <div class="topbar-title" id="topbarTitle">Select an account</div>
-          <div class="topbar-sub" id="topbarSub">Link a brokerage account to view your portfolio</div>
+          <div class="topbar-sub" id="topbarSub">Link a bank to get started — transactions first, investments later</div>
         </div>
       </div>
       <div class="topbar-actions">
@@ -338,7 +372,7 @@
       <div class="no-data">
         <div class="no-data-icon">💼</div>
         <strong>No portfolio data</strong>
-        <p>Link a brokerage account using the sidebar, then sync your holdings to see your portfolio.</p>
+        <p>Link a bank using the sidebar (transactions only), then enable investments via update mode to sync holdings.</p>
       </div>
     </div>
   </div>
@@ -358,6 +392,8 @@
 
 <script>
 const LINK_TOKEN_KEY = "plaid_link_token";
+const UPDATE_LINK_TOKEN_KEY = "plaid_update_link_token";
+const UPDATE_ITEM_ID_KEY = "plaid_update_item_id";
 const SIDEBAR_COLLAPSED_KEY = "portfolio_sidebar_collapsed";
 const sidebar = document.getElementById("sidebar");
 const sidebarToggle = document.getElementById("sidebarToggle");
@@ -402,6 +438,51 @@ const fmt = (n) => n == null ? "—" : new Intl.NumberFormat("en-US", { style: "
 const fmtPct = (n) => n == null ? "—" : (n >= 0 ? "+" : "") + n.toFixed(2) + "%";
 const fmtNum = (n) => n == null ? "—" : (+n).toLocaleString("en-US", { maximumFractionDigits: 4 });
 
+function hasInvestments(item) {
+  return (item?.consented_products || []).includes("investments");
+}
+
+function productBadges(item) {
+  const products = item?.consented_products || [];
+  const tx = products.includes("transactions");
+  const inv = products.includes("investments");
+  return `
+    <div class="bank-badges">
+      <span class="product-badge ${tx ? "on" : "off"}">Txns</span>
+      <span class="product-badge ${inv ? "on" : "pending"}">${inv ? "Invest" : "No Invest"}</span>
+    </div>`;
+}
+
+function renderEnableInvestmentsBanner(item) {
+  if (!item || hasInvestments(item)) return "";
+  return `
+    <div class="enable-investments" id="enableInvestmentsBanner">
+      <div class="enable-investments-copy">
+        <div class="enable-investments-title">Enable Investments for ${item.institution_name || "this bank"}</div>
+        <div class="enable-investments-desc">
+          This item was linked with <strong>Transactions</strong> only. Use Plaid Link update mode to add the
+          <strong>Investments</strong> product scope without re-linking from scratch.
+        </div>
+        <div class="enable-investments-steps">
+          <span class="step-chip"><strong>1.</strong> Click Enable Investments</span>
+          <span class="step-chip"><strong>2.</strong> Confirm consent in Plaid Link</span>
+          <span class="step-chip"><strong>3.</strong> Sync holdings</span>
+        </div>
+      </div>
+      <button class="btn btn-primary" id="enableInvestmentsBtn">Enable Investments</button>
+    </div>`;
+}
+
+function renderProductsRow(item) {
+  const products = item?.consented_products || [];
+  return `
+    <div class="products-row" style="margin-bottom:18px">
+      <span class="products-label">Products</span>
+      <span class="product-badge ${products.includes("transactions") ? "on" : "off"}">Transactions</span>
+      <span class="product-badge ${products.includes("investments") ? "on" : "pending"}">Investments</span>
+    </div>`;
+}
+
 // Bank list
 let items = [];
 async function loadItems() {
@@ -418,6 +499,7 @@ function renderBankList() {
       <div class="bank-info">
         <div class="bank-name">${item.institution_name || "Unknown"}</div>
         <div class="bank-id">${item.item_id.slice(0,8)}…</div>
+        ${productBadges(item)}
       </div>
       <div class="bank-remove" data-remove="${item.item_id}" title="Remove">✕</div>
     </div>
@@ -441,37 +523,60 @@ async function selectItem(itemId) {
   renderBankList();
   const item = items.find(i => i.item_id === itemId);
   document.getElementById("topbarTitle").textContent = item?.institution_name || "Portfolio";
-  document.getElementById("topbarSub").textContent = `Item ${itemId.slice(0,8)}… · Last synced: checking...`;
-  document.getElementById("syncBtn").disabled = false;
-  await loadPortfolio(itemId);
+  const invEnabled = hasInvestments(item);
+  document.getElementById("topbarSub").textContent = invEnabled
+    ? `Item ${itemId.slice(0,8)}… · Investments enabled`
+    : `Item ${itemId.slice(0,8)}… · Transactions only — enable investments to sync`;
+  document.getElementById("syncBtn").disabled = !invEnabled;
+  await loadPortfolio(itemId, item);
 }
 
-async function loadPortfolio(itemId) {
+async function loadPortfolio(itemId, item = items.find(i => i.item_id === itemId)) {
   setStatus("Loading portfolio...", "loading");
   try {
+    if (!hasInvestments(item)) {
+      renderInvestmentsDisabled(item);
+      setStatus("Investments not enabled for this item.", "idle");
+      return;
+    }
     const data = await api(`/api/investments?itemId=${encodeURIComponent(itemId)}`);
     if (!data.holdings?.length) {
-      renderEmpty();
+      renderEmpty(item);
       setStatus("No holdings. Try syncing.", "idle");
       return;
     }
-    renderPortfolio(data.holdings, data.securities);
+    renderPortfolio(data.holdings, data.securities, item);
     setStatus(`${data.holdings.length} holdings loaded`, "idle");
   } catch(e) {
     setStatus(e.message, "error");
   }
 }
 
-function renderEmpty() {
+function renderInvestmentsDisabled(item) {
   document.getElementById("mainContent").innerHTML = `
-    <div class="no-data">
+    ${renderEnableInvestmentsBanner(item)}
+    ${renderProductsRow(item)}
+    <div class="no-data" style="padding-top:24px">
+      <div class="no-data-icon">🔒</div>
+      <strong>Investments product not enabled</strong>
+      <p>This bank is linked for transactions. Add the investments scope via update mode to view and sync holdings.</p>
+    </div>`;
+  document.getElementById("enableInvestmentsBtn")?.addEventListener("click", () => startInvestmentsUpdate(item.item_id));
+}
+
+function renderEmpty(item) {
+  document.getElementById("mainContent").innerHTML = `
+    ${renderEnableInvestmentsBanner(item)}
+    ${renderProductsRow(item)}
+    <div class="no-data" style="padding-top:24px">
       <div class="no-data-icon">📊</div>
       <strong>No holdings synced yet</strong>
       <p>Click "Sync Holdings" to pull the latest investment data from Plaid.</p>
     </div>`;
+  document.getElementById("enableInvestmentsBtn")?.addEventListener("click", () => startInvestmentsUpdate(item.item_id));
 }
 
-function renderPortfolio(holdings, securities) {
+function renderPortfolio(holdings, securities, item) {
   const secMap = {};
   for (const s of securities || []) secMap[s.security_id] = s;
 
@@ -500,6 +605,8 @@ function renderPortfolio(holdings, securities) {
 
   const content = document.getElementById("mainContent");
   content.innerHTML = `
+    ${renderEnableInvestmentsBanner(item)}
+    ${renderProductsRow(item)}
     <div class="stats-grid">
       <div class="stat-card">
         <div class="stat-label">Total Value</div>
@@ -681,31 +788,73 @@ function renderTable() {
 }
 
 // Plaid Link
-function openPlaid(token, receivedRedirectUri) {
-  sessionStorage.setItem(LINK_TOKEN_KEY, token);
+function openPlaid(token, options = {}) {
+  const { receivedRedirectUri, mode = "create", itemId = null } = options;
+  const tokenKey = mode === "update" ? UPDATE_LINK_TOKEN_KEY : LINK_TOKEN_KEY;
+  sessionStorage.setItem(tokenKey, token);
+  if (mode === "update" && itemId) sessionStorage.setItem(UPDATE_ITEM_ID_KEY, itemId);
+
   window.Plaid.create({
     token, receivedRedirectUri,
-    onSuccess: async (publicToken) => {
+    onSuccess: async (_publicToken, metadata) => {
+      sessionStorage.removeItem(tokenKey);
+      if (mode === "update") {
+        const updateItemId = itemId || sessionStorage.getItem(UPDATE_ITEM_ID_KEY);
+        sessionStorage.removeItem(UPDATE_ITEM_ID_KEY);
+        setStatus("Investments consent saved...", "loading");
+        const result = await api("/api/link/update/complete", {
+          method: "POST",
+          headers: {"Content-Type":"application/json"},
+          body: JSON.stringify({ itemId: updateItemId })
+        });
+        await loadItems();
+        if (updateItemId) await selectItem(updateItemId);
+        setStatus(result.investments_enabled ? "Investments enabled!" : "Update complete.", "idle");
+        return;
+      }
       setStatus("Linking account...", "loading");
-      await api("/api/link/exchange", { method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify({ publicToken }) });
+      await api("/api/link/exchange", { method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify({ publicToken: _publicToken }) });
       sessionStorage.removeItem(LINK_TOKEN_KEY);
       await loadItems();
-      setStatus("Account linked!", "idle");
+      setStatus("Bank linked (transactions only)!", "idle");
     },
-    onExit: () => { sessionStorage.removeItem(LINK_TOKEN_KEY); setStatus("Link cancelled.", "idle"); }
+    onExit: () => {
+      sessionStorage.removeItem(tokenKey);
+      sessionStorage.removeItem(UPDATE_ITEM_ID_KEY);
+      setStatus("Link cancelled.", "idle");
+    }
   }).open();
+}
+
+async function startInvestmentsUpdate(itemId) {
+  try {
+    setStatus("Opening update mode...", "loading");
+    const data = await api("/api/link/token/update", {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({ itemId })
+    });
+    openPlaid(data.link_token, { mode: "update", itemId });
+  } catch (e) {
+    setStatus(e.message, "error");
+  }
 }
 
 document.getElementById("linkBtn").addEventListener("click", async () => {
   try {
-    setStatus("Opening Plaid Link...", "loading");
+    setStatus("Opening Plaid Link (transactions)...", "loading");
     const data = await api("/api/link/token", { method: "POST" });
-    openPlaid(data.link_token);
+    openPlaid(data.link_token, { mode: "create" });
   } catch(e) { setStatus(e.message, "error"); }
 });
 
 document.getElementById("syncBtn").addEventListener("click", async () => {
   if (!currentItemId) return;
+  const item = items.find(i => i.item_id === currentItemId);
+  if (!hasInvestments(item)) {
+    setStatus("Enable investments first.", "error");
+    return;
+  }
   document.getElementById("syncBtn").textContent = "⟳ Syncing...";
   document.getElementById("syncBtn").disabled = true;
   setStatus("Syncing holdings...", "loading");
@@ -746,8 +895,8 @@ document.getElementById("confirmOk").addEventListener("click", async () => {
       currentItemId = null;
       document.getElementById("syncBtn").disabled = true;
       document.getElementById("topbarTitle").textContent = "Select an account";
-      document.getElementById("topbarSub").textContent = "Link a brokerage account to view your portfolio";
-      document.getElementById("mainContent").innerHTML = `<div class="no-data"><div class="no-data-icon">💼</div><strong>No portfolio data</strong><p>Link a brokerage account to get started.</p></div>`;
+      document.getElementById("topbarSub").textContent = "Link a bank to get started — transactions first, investments later";
+      document.getElementById("mainContent").innerHTML = `<div class="no-data"><div class="no-data-icon">💼</div><strong>No portfolio data</strong><p>Link a bank (transactions only), then enable investments via update mode.</p></div>`;
     }
     await loadItems();
     setStatus("Account removed.", "idle");
@@ -760,10 +909,17 @@ document.getElementById("confirmOk").addEventListener("click", async () => {
   try {
     await loadItems();
     const isOauth = new URLSearchParams(window.location.search).has("oauth_state_id");
-    const saved = sessionStorage.getItem(LINK_TOKEN_KEY);
-    if (isOauth && saved && window.Plaid) {
-      setStatus("Resuming OAuth...", "loading");
-      openPlaid(saved, window.location.href);
+    const updateSaved = sessionStorage.getItem(UPDATE_LINK_TOKEN_KEY);
+    const createSaved = sessionStorage.getItem(LINK_TOKEN_KEY);
+    const updateItemId = sessionStorage.getItem(UPDATE_ITEM_ID_KEY);
+    if (isOauth && window.Plaid) {
+      if (updateSaved) {
+        setStatus("Resuming OAuth (update mode)...", "loading");
+        openPlaid(updateSaved, { receivedRedirectUri: window.location.href, mode: "update", itemId: updateItemId });
+      } else if (createSaved) {
+        setStatus("Resuming OAuth...", "loading");
+        openPlaid(createSaved, { receivedRedirectUri: window.location.href, mode: "create" });
+      }
       window.history.replaceState({}, "", window.location.pathname);
     }
   } catch(e) { setStatus(e.message, "error"); }
