@@ -1,0 +1,773 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Portfolio Dashboard</title>
+  <script src="https://cdn.plaid.com/link/v2/stable/link-initialize.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #090b0e;
+      --surface: #0f1117;
+      --surface2: #161a23;
+      --border: #1e2330;
+      --border2: #252c3a;
+      --text: #e8eaf0;
+      --muted: #5a6175;
+      --muted2: #8891a8;
+      --green: #0ecb81;
+      --green-dim: rgba(14,203,129,0.12);
+      --red: #f6465d;
+      --red-dim: rgba(246,70,93,0.12);
+      --blue: #4e86f5;
+      --blue-dim: rgba(78,134,245,0.12);
+      --purple: #a78bfa;
+      --gold: #f59e0b;
+      --sidebar: 260px;
+      --sidebar-collapsed: 64px;
+    }
+    html, body { height: 100%; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; }
+    
+    /* Layout */
+    .app { display: flex; height: 100vh; overflow: hidden; }
+    
+    /* Sidebar */
+    .sidebar {
+      width: var(--sidebar); min-width: var(--sidebar);
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex; flex-direction: column;
+      overflow: hidden;
+      transition: width 0.2s ease, min-width 0.2s ease;
+    }
+    .sidebar.collapsed { width: var(--sidebar-collapsed); min-width: var(--sidebar-collapsed); }
+    .sidebar-header {
+      padding: 16px 14px 12px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      flex-shrink: 0;
+    }
+    .sidebar-logo { display: flex; align-items: center; gap: 10px; min-width: 0; }
+    .sidebar-collapse-btn {
+      width: 28px; height: 28px; flex-shrink: 0;
+      border: 1px solid var(--border); border-radius: 7px;
+      background: var(--surface2); color: var(--muted2);
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      font-size: 14px; transition: all 0.15s;
+    }
+    .sidebar-collapse-btn:hover { color: var(--text); border-color: var(--border2); background: var(--border); }
+    .sidebar.collapsed .sidebar-collapse-btn { display: none; }
+    .sidebar.collapsed .logo-copy,
+    .sidebar.collapsed .sidebar-label,
+    .sidebar.collapsed .bank-info,
+    .sidebar.collapsed .bank-remove,
+    .sidebar.collapsed .empty-state,
+    .sidebar.collapsed .status-text,
+    .sidebar.collapsed .link-btn-label { display: none; }
+    .sidebar.collapsed .sidebar-header { justify-content: center; padding: 14px 8px 10px; }
+    .sidebar.collapsed .sidebar-logo { justify-content: center; }
+    .sidebar.collapsed .sidebar-section { padding: 10px 8px; }
+    .sidebar.collapsed .bank-item { justify-content: center; padding: 9px; }
+    .sidebar.collapsed .btn-full { width: auto; padding: 8px 10px; }
+    .sidebar.collapsed .status-bar { padding: 12px 8px; text-align: center; }
+    .sidebar-body { flex: 1; overflow-y: auto; overflow-x: hidden; }
+    .logo-icon {
+      width: 32px; height: 32px; border-radius: 8px;
+      background: linear-gradient(135deg, #4e86f5, #a78bfa);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+    }
+    .logo-text { font-size: 16px; font-weight: 700; color: var(--text); letter-spacing: -0.3px; }
+    .logo-sub { font-size: 11px; color: var(--muted); letter-spacing: 0.5px; }
+    
+    .sidebar-section { padding: 14px 18px; }
+    .sidebar-label { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+    
+    .bank-list { display: flex; flex-direction: column; gap: 6px; }
+    .bank-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 11px; border-radius: 8px;
+      background: var(--surface2); border: 1px solid var(--border);
+      cursor: pointer; transition: all 0.15s;
+    }
+    .bank-item:hover { border-color: var(--border2); background: #1a2030; }
+    .bank-item.active { border-color: var(--blue); background: var(--blue-dim); }
+    .bank-icon { width: 28px; height: 28px; border-radius: 6px; background: var(--surface); display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; }
+    .bank-info { min-width: 0; flex: 1; }
+    .bank-name { font-size: 13px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .bank-id { font-size: 10px; color: var(--muted); }
+    .bank-remove { font-size: 14px; opacity: 0.4; cursor: pointer; padding: 2px 4px; border-radius: 4px; }
+    .bank-remove:hover { opacity: 1; color: var(--red); background: var(--red-dim); }
+    
+    .empty-state { padding: 14px 0; text-align: center; color: var(--muted); font-size: 12px; }
+    
+    .btn {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 8px 14px; border-radius: 8px; border: none; cursor: pointer;
+      font-size: 13px; font-weight: 600; transition: all 0.15s; text-decoration: none;
+    }
+    .btn-primary { background: var(--blue); color: #fff; }
+    .btn-primary:hover { background: #5a92f7; }
+    .btn-ghost { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+    .btn-ghost:hover { background: var(--border); }
+    .btn-sm { padding: 6px 11px; font-size: 12px; }
+    .btn-full { width: 100%; justify-content: center; }
+    .btn-danger { background: var(--red-dim); color: var(--red); border: 1px solid rgba(246,70,93,0.25); }
+    .btn-danger:hover { background: rgba(246,70,93,0.2); }
+    
+    .status-bar {
+      margin-top: auto; padding: 12px 18px;
+      border-top: 1px solid var(--border);
+      font-size: 11px; color: var(--muted);
+    }
+    .status-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--green); margin-right: 5px; }
+    .status-dot.loading { background: var(--gold); animation: pulse 1s ease-in-out infinite; }
+    .status-dot.error { background: var(--red); }
+
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+    
+    /* Main */
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    
+    .topbar {
+      padding: 14px 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      background: var(--surface);
+      flex-shrink: 0;
+    }
+    .topbar-title { font-size: 18px; font-weight: 700; letter-spacing: -0.4px; }
+    .topbar-sub { font-size: 12px; color: var(--muted); margin-top: 1px; }
+    .topbar-left { display: flex; align-items: center; gap: 12px; min-width: 0; }
+    .topbar-expand-btn {
+      display: none; width: 32px; height: 32px; flex-shrink: 0;
+      border: 1px solid var(--border); border-radius: 8px;
+      background: var(--surface2); color: var(--muted2);
+      cursor: pointer; align-items: center; justify-content: center; font-size: 16px;
+    }
+    .topbar-expand-btn:hover { color: var(--text); border-color: var(--border2); }
+    .sidebar.collapsed ~ .main .topbar-expand-btn { display: inline-flex; }
+    .topbar-actions { display: flex; gap: 8px; align-items: center; }
+    
+    .content { flex: 1; overflow-y: auto; padding: 22px 24px; }
+    
+    /* Stats cards */
+    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 22px; }
+    .stat-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 16px 18px;
+    }
+    .stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; font-weight: 600; margin-bottom: 8px; }
+    .stat-value { font-size: 24px; font-weight: 700; letter-spacing: -0.5px; }
+    .stat-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+    .stat-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 20px; margin-top: 6px;
+    }
+    .gain { color: var(--green); }
+    .loss { color: var(--red); }
+    .badge-gain { background: var(--green-dim); color: var(--green); }
+    .badge-loss { background: var(--red-dim); color: var(--red); }
+    
+    /* Mid row */
+    .mid-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 22px; }
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 18px;
+    }
+    .card-title { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; }
+    .card-title span { color: var(--muted); font-weight: 400; font-size: 12px; }
+    
+    /* Chart */
+    .chart-wrap { position: relative; width: 180px; height: 180px; margin: 0 auto 16px; }
+    .chart-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); text-align: center; }
+    .chart-center-value { font-size: 20px; font-weight: 700; }
+    .chart-center-label { font-size: 11px; color: var(--muted); }
+    
+    .legend { display: flex; flex-direction: column; gap: 8px; }
+    .legend-item { display: flex; align-items: center; justify-content: space-between; }
+    .legend-left { display: flex; align-items: center; gap: 8px; }
+    .legend-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+    .legend-name { font-size: 13px; color: var(--text); }
+    .legend-pct { font-size: 12px; color: var(--muted); }
+    .legend-val { font-size: 13px; font-weight: 600; }
+    
+    /* Top holdings */
+    .holding-mini { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+    .holding-mini:last-child { border-bottom: none; }
+    .holding-ticker {
+      font-size: 12px; font-weight: 700; padding: 4px 7px; border-radius: 6px;
+      background: var(--surface2); color: var(--blue); letter-spacing: 0.3px; min-width: 48px; text-align: center;
+    }
+    .holding-info { flex: 1; min-width: 0; }
+    .holding-name { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .holding-qty { font-size: 11px; color: var(--muted); }
+    .holding-right { text-align: right; flex-shrink: 0; }
+    .holding-val { font-size: 13px; font-weight: 700; }
+    .holding-pnl { font-size: 11px; font-weight: 600; }
+    
+    /* Holdings table */
+    .table-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; overflow: hidden; margin-bottom: 22px;
+    }
+    .table-header {
+      padding: 14px 18px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .table-title { font-size: 13px; font-weight: 700; }
+    .table-count { font-size: 11px; color: var(--muted); background: var(--surface2); padding: 2px 8px; border-radius: 20px; }
+    
+    table { width: 100%; border-collapse: collapse; }
+    th {
+      font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px;
+      padding: 10px 18px; text-align: left; border-bottom: 1px solid var(--border);
+      cursor: pointer; user-select: none; white-space: nowrap;
+    }
+    th:hover { color: var(--text); }
+    th.sorted { color: var(--blue); }
+    th.num, td.num { text-align: right; }
+    td {
+      padding: 11px 18px; border-bottom: 1px solid var(--border);
+      font-size: 13px; vertical-align: middle;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(255,255,255,0.02); }
+    
+    .ticker-badge {
+      display: inline-block; font-size: 11px; font-weight: 700;
+      padding: 3px 7px; border-radius: 5px;
+      background: var(--blue-dim); color: var(--blue); letter-spacing: 0.4px;
+    }
+    .type-badge {
+      display: inline-block; font-size: 10px; font-weight: 600;
+      padding: 2px 7px; border-radius: 20px;
+      background: var(--surface2); color: var(--muted2); letter-spacing: 0.3px;
+    }
+    .sort-icon { opacity: 0.4; margin-left: 4px; }
+    .th-sorted .sort-icon { opacity: 1; }
+    
+    /* No data */
+    .no-data {
+      text-align: center; padding: 60px 20px;
+      color: var(--muted); display: flex; flex-direction: column; align-items: center; gap: 12px;
+    }
+    .no-data-icon { font-size: 40px; opacity: 0.3; }
+    .no-data p { max-width: 280px; line-height: 1.5; }
+    
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+    
+    /* Modal */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+      z-index: 100; align-items: center; justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; padding: 24px; width: 340px;
+    }
+    .modal-title { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+    .modal-body { font-size: 13px; color: var(--muted2); line-height: 1.6; margin-bottom: 20px; }
+    .modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
+    
+    /* Spinner */
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spin { animation: spin 0.8s linear infinite; display: inline-block; }
+  </style>
+</head>
+<body>
+
+<div class="app">
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">
+        <div class="logo-icon">📈</div>
+        <div class="logo-copy">
+          <div class="logo-text">Portfolio</div>
+          <div class="logo-sub">INVESTMENT TRACKER</div>
+        </div>
+      </div>
+      <button class="sidebar-collapse-btn" id="sidebarToggle" type="button" title="Collapse sidebar" aria-label="Collapse sidebar">‹</button>
+    </div>
+
+    <div class="sidebar-body">
+      <div class="sidebar-section">
+        <div class="sidebar-label">Linked Accounts</div>
+        <div class="bank-list" id="bankList">
+          <div class="empty-state">No accounts linked</div>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <button class="btn btn-primary btn-full" id="linkBtn" title="Link account">
+          <span>+</span><span class="link-btn-label"> Link Account</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="status-bar">
+      <span class="status-dot" id="statusDot"></span>
+      <span class="status-text" id="statusText">Ready</span>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <button class="topbar-expand-btn" id="sidebarExpand" type="button" title="Expand sidebar" aria-label="Expand sidebar">☰</button>
+        <div>
+          <div class="topbar-title" id="topbarTitle">Select an account</div>
+          <div class="topbar-sub" id="topbarSub">Link a brokerage account to view your portfolio</div>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <button class="btn btn-ghost btn-sm" id="refreshBtn">↺ Refresh</button>
+        <button class="btn btn-primary btn-sm" id="syncBtn" disabled>⟳ Sync Holdings</button>
+      </div>
+    </div>
+
+    <div class="content" id="mainContent">
+      <div class="no-data">
+        <div class="no-data-icon">💼</div>
+        <strong>No portfolio data</strong>
+        <p>Link a brokerage account using the sidebar, then sync your holdings to see your portfolio.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm modal -->
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal">
+    <div class="modal-title">Remove Account?</div>
+    <div class="modal-body" id="confirmModalBody"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="confirmCancel">Cancel</button>
+      <button class="btn btn-danger" id="confirmOk">Remove</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const LINK_TOKEN_KEY = "plaid_link_token";
+const SIDEBAR_COLLAPSED_KEY = "portfolio_sidebar_collapsed";
+const sidebar = document.getElementById("sidebar");
+const sidebarToggle = document.getElementById("sidebarToggle");
+const sidebarExpand = document.getElementById("sidebarExpand");
+const statusDot = document.getElementById("statusDot");
+const statusText = document.getElementById("statusText");
+
+function setSidebarCollapsed(collapsed) {
+  sidebar.classList.toggle("collapsed", collapsed);
+  sidebarToggle.textContent = collapsed ? "›" : "‹";
+  sidebarToggle.title = collapsed ? "Expand sidebar" : "Collapse sidebar";
+  sidebarToggle.setAttribute("aria-label", sidebarToggle.title);
+  localStorage.setItem(SIDEBAR_COLLAPSED_KEY, collapsed ? "1" : "0");
+}
+
+function toggleSidebar() {
+  setSidebarCollapsed(!sidebar.classList.contains("collapsed"));
+}
+
+sidebarToggle.addEventListener("click", toggleSidebar);
+sidebarExpand.addEventListener("click", toggleSidebar);
+setSidebarCollapsed(localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === "1");
+
+let currentItemId = null;
+let chartInstance = null;
+let sortCol = "value"; let sortDir = -1;
+let allHoldings = [];
+
+function setStatus(msg, type = "idle") {
+  statusText.textContent = msg;
+  statusDot.className = "status-dot" + (type === "loading" ? " loading" : type === "error" ? " error" : "");
+}
+
+async function api(path, init) {
+  const res = await fetch(path, init);
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || `Error ${res.status}`);
+  return data;
+}
+
+const fmt = (n) => n == null ? "—" : new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(n);
+const fmtPct = (n) => n == null ? "—" : (n >= 0 ? "+" : "") + n.toFixed(2) + "%";
+const fmtNum = (n) => n == null ? "—" : (+n).toLocaleString("en-US", { maximumFractionDigits: 4 });
+
+// Bank list
+let items = [];
+async function loadItems() {
+  items = await api("/api/items");
+  renderBankList();
+}
+
+function renderBankList() {
+  const list = document.getElementById("bankList");
+  if (!items.length) { list.innerHTML = '<div class="empty-state">No accounts linked</div>'; return; }
+  list.innerHTML = items.map(item => `
+    <div class="bank-item ${item.item_id === currentItemId ? "active" : ""}" data-id="${item.item_id}" title="${item.institution_name || "Unknown"}">
+      <div class="bank-icon">🏦</div>
+      <div class="bank-info">
+        <div class="bank-name">${item.institution_name || "Unknown"}</div>
+        <div class="bank-id">${item.item_id.slice(0,8)}…</div>
+      </div>
+      <div class="bank-remove" data-remove="${item.item_id}" title="Remove">✕</div>
+    </div>
+  `).join("");
+
+  list.querySelectorAll(".bank-item").forEach(el => {
+    el.addEventListener("click", (e) => {
+      if (e.target.dataset.remove) return;
+      selectItem(el.dataset.id);
+    });
+  });
+  list.querySelectorAll(".bank-remove").forEach(el => {
+    el.addEventListener("click", () => confirmRemove(el.dataset.remove));
+  });
+
+  if (!currentItemId && items.length) selectItem(items[0].item_id);
+}
+
+async function selectItem(itemId) {
+  currentItemId = itemId;
+  renderBankList();
+  const item = items.find(i => i.item_id === itemId);
+  document.getElementById("topbarTitle").textContent = item?.institution_name || "Portfolio";
+  document.getElementById("topbarSub").textContent = `Item ${itemId.slice(0,8)}… · Last synced: checking...`;
+  document.getElementById("syncBtn").disabled = false;
+  await loadPortfolio(itemId);
+}
+
+async function loadPortfolio(itemId) {
+  setStatus("Loading portfolio...", "loading");
+  try {
+    const data = await api(`/api/investments?itemId=${encodeURIComponent(itemId)}`);
+    if (!data.holdings?.length) {
+      renderEmpty();
+      setStatus("No holdings. Try syncing.", "idle");
+      return;
+    }
+    renderPortfolio(data.holdings, data.securities);
+    setStatus(`${data.holdings.length} holdings loaded`, "idle");
+  } catch(e) {
+    setStatus(e.message, "error");
+  }
+}
+
+function renderEmpty() {
+  document.getElementById("mainContent").innerHTML = `
+    <div class="no-data">
+      <div class="no-data-icon">📊</div>
+      <strong>No holdings synced yet</strong>
+      <p>Click "Sync Holdings" to pull the latest investment data from Plaid.</p>
+    </div>`;
+}
+
+function renderPortfolio(holdings, securities) {
+  const secMap = {};
+  for (const s of securities || []) secMap[s.security_id] = s;
+
+  const enriched = holdings.map(h => {
+    const sec = secMap[h.security_id] || {};
+    const gainLoss = (h.institution_value != null && h.cost_basis != null) ? h.institution_value - h.cost_basis : null;
+    const gainLossPct = (gainLoss != null && h.cost_basis) ? (gainLoss / h.cost_basis) * 100 : null;
+    return { ...h, sec, gainLoss, gainLossPct };
+  });
+  allHoldings = enriched;
+
+  const totalValue = enriched.reduce((s, h) => s + (h.institution_value || 0), 0);
+  const totalCost = enriched.reduce((s, h) => s + (h.cost_basis || 0), 0);
+  const totalGain = totalValue - totalCost;
+  const totalGainPct = totalCost ? (totalGain / totalCost) * 100 : null;
+
+  // Asset type allocation
+  const byType = {};
+  for (const h of enriched) {
+    const type = h.sec.type || "other";
+    byType[type] = (byType[type] || 0) + (h.institution_value || 0);
+  }
+
+  // Top 5 by value
+  const top5 = [...enriched].sort((a,b) => (b.institution_value||0) - (a.institution_value||0)).slice(0,5);
+
+  const content = document.getElementById("mainContent");
+  content.innerHTML = `
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Total Value</div>
+        <div class="stat-value">${fmt(totalValue)}</div>
+        <div class="stat-sub">${enriched.length} positions</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Total Gain / Loss</div>
+        <div class="stat-value ${totalGain >= 0 ? "gain" : "loss"}">${fmt(totalGain)}</div>
+        <div>
+          <span class="stat-badge ${totalGain >= 0 ? "badge-gain" : "badge-loss"}">
+            ${totalGain >= 0 ? "▲" : "▼"} ${totalGainPct != null ? Math.abs(totalGainPct).toFixed(2) + "%" : "—"}
+          </span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Cost Basis</div>
+        <div class="stat-value">${fmt(totalCost)}</div>
+        <div class="stat-sub">Total invested</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Positions</div>
+        <div class="stat-value">${enriched.length}</div>
+        <div class="stat-sub">${Object.keys(byType).length} asset types</div>
+      </div>
+    </div>
+
+    <div class="mid-row">
+      <div class="card">
+        <div class="card-title">Asset Allocation <span>${fmt(totalValue)}</span></div>
+        <div class="chart-wrap">
+          <canvas id="allocationChart"></canvas>
+          <div class="chart-center">
+            <div class="chart-center-value">${Object.keys(byType).length}</div>
+            <div class="chart-center-label">types</div>
+          </div>
+        </div>
+        <div class="legend" id="allocationLegend"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Top Holdings <span>by value</span></div>
+        <div id="topHoldings"></div>
+      </div>
+    </div>
+
+    <div class="table-card">
+      <div class="table-header">
+        <div class="table-title">All Holdings</div>
+        <div class="table-count" id="holdingCount">${enriched.length} positions</div>
+      </div>
+      <div style="overflow-x:auto">
+        <table id="holdingsTable">
+          <thead>
+            <tr>
+              <th data-col="ticker">Ticker</th>
+              <th data-col="name">Name</th>
+              <th data-col="type">Type</th>
+              <th class="num" data-col="qty">Qty</th>
+              <th class="num" data-col="price">Price</th>
+              <th class="num" data-col="cost">Cost Basis</th>
+              <th class="num" data-col="value">Value</th>
+              <th class="num" data-col="gl">Gain / Loss</th>
+            </tr>
+          </thead>
+          <tbody id="holdingsTbody"></tbody>
+        </table>
+      </div>
+    </div>
+  `;
+
+  // Chart
+  const COLORS = ["#4e86f5","#a78bfa","#0ecb81","#f59e0b","#f6465d","#06b6d4","#ec4899","#84cc16"];
+  const typeKeys = Object.keys(byType);
+  const typeVals = typeKeys.map(k => byType[k]);
+
+  if (chartInstance) chartInstance.destroy();
+  chartInstance = new Chart(document.getElementById("allocationChart"), {
+    type: "doughnut",
+    data: {
+      labels: typeKeys,
+      datasets: [{ data: typeVals, backgroundColor: COLORS, borderWidth: 0, hoverOffset: 4 }]
+    },
+    options: {
+      cutout: "72%",
+      plugins: { legend: { display: false }, tooltip: {
+        callbacks: { label: ctx => ` ${fmt(ctx.raw)} (${((ctx.raw/totalValue)*100).toFixed(1)}%)` }
+      }},
+      animation: { duration: 500 }
+    }
+  });
+
+  // Legend
+  const legendEl = document.getElementById("allocationLegend");
+  legendEl.innerHTML = typeKeys.map((k, i) => `
+    <div class="legend-item">
+      <div class="legend-left">
+        <div class="legend-dot" style="background:${COLORS[i % COLORS.length]}"></div>
+        <div class="legend-name">${k}</div>
+      </div>
+      <div style="display:flex;gap:12px;align-items:center">
+        <div class="legend-pct">${((byType[k]/totalValue)*100).toFixed(1)}%</div>
+        <div class="legend-val">${fmt(byType[k])}</div>
+      </div>
+    </div>
+  `).join("");
+
+  // Top holdings
+  document.getElementById("topHoldings").innerHTML = top5.map(h => {
+    const ticker = h.sec.ticker_symbol;
+    const name = h.sec.name || "Unknown";
+    const gl = h.gainLoss;
+    const glPct = h.gainLossPct;
+    return `
+      <div class="holding-mini">
+        <div class="holding-ticker">${ticker || "—"}</div>
+        <div class="holding-info">
+          <div class="holding-name">${name}</div>
+          <div class="holding-qty">${fmtNum(h.quantity)} shares @ ${fmt(h.institution_price)}</div>
+        </div>
+        <div class="holding-right">
+          <div class="holding-val">${fmt(h.institution_value)}</div>
+          <div class="holding-pnl ${gl == null ? "" : gl >= 0 ? "gain" : "loss"}">
+            ${gl != null ? (gl >= 0 ? "+" : "") + fmt(gl) + " (" + fmtPct(glPct) + ")" : "—"}
+          </div>
+        </div>
+      </div>`;
+  }).join("");
+
+  renderTable();
+
+  // Table sort
+  document.querySelectorAll("#holdingsTable th").forEach(th => {
+    th.addEventListener("click", () => {
+      const col = th.dataset.col;
+      if (sortCol === col) sortDir *= -1; else { sortCol = col; sortDir = -1; }
+      renderTable();
+    });
+  });
+}
+
+function renderTable() {
+  const colMap = {
+    ticker: h => h.sec.ticker_symbol || "",
+    name: h => h.sec.name || "",
+    type: h => h.sec.type || "",
+    qty: h => h.quantity || 0,
+    price: h => h.institution_price || 0,
+    cost: h => h.cost_basis || 0,
+    value: h => h.institution_value || 0,
+    gl: h => h.gainLoss || 0
+  };
+  const sorted = [...allHoldings].sort((a,b) => {
+    const av = colMap[sortCol]?.(a) ?? 0;
+    const bv = colMap[sortCol]?.(b) ?? 0;
+    return av < bv ? sortDir : av > bv ? -sortDir : 0;
+  });
+
+  document.querySelectorAll("#holdingsTable th").forEach(th => {
+    th.classList.toggle("sorted", th.dataset.col === sortCol);
+  });
+
+  document.getElementById("holdingsTbody").innerHTML = sorted.map(h => {
+    const gl = h.gainLoss; const glPct = h.gainLossPct;
+    const glClass = gl == null ? "" : gl >= 0 ? "gain" : "loss";
+    return `<tr>
+      <td>${h.sec.ticker_symbol ? `<span class="ticker-badge">${h.sec.ticker_symbol}</span>` : "<span style='color:var(--muted)'>—</span>"}</td>
+      <td>${h.sec.name || "<span style='color:var(--muted)'>Unknown</span>"}</td>
+      <td>${h.sec.type ? `<span class="type-badge">${h.sec.type}</span>` : "—"}</td>
+      <td class="num">${fmtNum(h.quantity)}</td>
+      <td class="num">${fmt(h.institution_price)}</td>
+      <td class="num">${fmt(h.cost_basis)}</td>
+      <td class="num" style="font-weight:700">${fmt(h.institution_value)}</td>
+      <td class="num ${glClass}" style="font-weight:600">
+        ${gl != null ? `${gl >= 0 ? "+" : ""}${fmt(gl)}<br><span style="font-size:11px;opacity:0.8">${fmtPct(glPct)}</span>` : "—"}
+      </td>
+    </tr>`;
+  }).join("");
+}
+
+// Plaid Link
+function openPlaid(token, receivedRedirectUri) {
+  sessionStorage.setItem(LINK_TOKEN_KEY, token);
+  window.Plaid.create({
+    token, receivedRedirectUri,
+    onSuccess: async (publicToken) => {
+      setStatus("Linking account...", "loading");
+      await api("/api/link/exchange", { method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify({ publicToken }) });
+      sessionStorage.removeItem(LINK_TOKEN_KEY);
+      await loadItems();
+      setStatus("Account linked!", "idle");
+    },
+    onExit: () => { sessionStorage.removeItem(LINK_TOKEN_KEY); setStatus("Link cancelled.", "idle"); }
+  }).open();
+}
+
+document.getElementById("linkBtn").addEventListener("click", async () => {
+  try {
+    setStatus("Opening Plaid Link...", "loading");
+    const data = await api("/api/link/token", { method: "POST" });
+    openPlaid(data.link_token);
+  } catch(e) { setStatus(e.message, "error"); }
+});
+
+document.getElementById("syncBtn").addEventListener("click", async () => {
+  if (!currentItemId) return;
+  document.getElementById("syncBtn").textContent = "⟳ Syncing...";
+  document.getElementById("syncBtn").disabled = true;
+  setStatus("Syncing holdings...", "loading");
+  try {
+    const sync = await api("/api/investments/sync", { method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify({ itemId: currentItemId }) });
+    setStatus(`Synced: ${sync.counts.holdings} holdings`, "idle");
+    document.getElementById("topbarSub").textContent = `Synced just now · ${sync.counts.holdings} holdings, ${sync.counts.securities} securities`;
+    await loadPortfolio(currentItemId);
+  } catch(e) { setStatus(e.message, "error"); }
+  document.getElementById("syncBtn").textContent = "⟳ Sync Holdings";
+  document.getElementById("syncBtn").disabled = false;
+});
+
+document.getElementById("refreshBtn").addEventListener("click", async () => {
+  await loadItems();
+  if (currentItemId) await loadPortfolio(currentItemId);
+});
+
+// Remove
+let removeTargetId = null;
+function confirmRemove(itemId) {
+  removeTargetId = itemId;
+  const item = items.find(i => i.item_id === itemId);
+  document.getElementById("confirmModalBody").textContent =
+    `Remove "${item?.institution_name || "this account"}"? All linked holdings, securities, and accounts will be permanently deleted from this database.`;
+  document.getElementById("confirmModal").classList.add("open");
+}
+document.getElementById("confirmCancel").addEventListener("click", () => {
+  document.getElementById("confirmModal").classList.remove("open");
+});
+document.getElementById("confirmOk").addEventListener("click", async () => {
+  document.getElementById("confirmModal").classList.remove("open");
+  if (!removeTargetId) return;
+  setStatus("Removing...", "loading");
+  try {
+    await api(`/api/items/${encodeURIComponent(removeTargetId)}/remove`, { method: "POST" });
+    if (currentItemId === removeTargetId) {
+      currentItemId = null;
+      document.getElementById("syncBtn").disabled = true;
+      document.getElementById("topbarTitle").textContent = "Select an account";
+      document.getElementById("topbarSub").textContent = "Link a brokerage account to view your portfolio";
+      document.getElementById("mainContent").innerHTML = `<div class="no-data"><div class="no-data-icon">💼</div><strong>No portfolio data</strong><p>Link a brokerage account to get started.</p></div>`;
+    }
+    await loadItems();
+    setStatus("Account removed.", "idle");
+  } catch(e) { setStatus(e.message, "error"); }
+  removeTargetId = null;
+});
+
+// Init
+(async () => {
+  try {
+    await loadItems();
+    const isOauth = new URLSearchParams(window.location.search).has("oauth_state_id");
+    const saved = sessionStorage.getItem(LINK_TOKEN_KEY);
+    if (isOauth && saved && window.Plaid) {
+      setStatus("Resuming OAuth...", "loading");
+      openPlaid(saved, window.location.href);
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+  } catch(e) { setStatus(e.message, "error"); }
+})();
+</script>
+</body>
+</html>

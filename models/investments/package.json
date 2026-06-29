@@ -1,0 +1,15 @@
+{
+  "name": "investments-model",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server.mjs",
+    "dev": "node --watch server.mjs"
+  },
+  "dependencies": {
+    "dotenv": "^16.5.0",
+    "express": "^4.21.2",
+    "plaid": "^30.0.0",
+    "sqlite3": "^5.1.7"
+  }
+}
