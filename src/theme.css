@@ -449,6 +449,13 @@ hr { border: 0; border-top: 1px solid var(--line); margin: var(--s4) 0; }
 .auth-card { width: 100%; max-width: 400px; }
 .auth-card h1 { font-size: 1.4rem; margin-bottom: var(--s4); }
 .auth-links { display: flex; flex-wrap: wrap; gap: var(--s3); margin-top: var(--s4); font-size: 0.88rem; }
+.auth-divider {
+  display: flex; align-items: center; gap: var(--s3);
+  margin: var(--s4) 0; color: var(--ink-muted); font-size: 0.85rem;
+}
+.auth-divider::before, .auth-divider::after { content: ""; flex: 1; border-top: 1px solid var(--line); }
+.auth-google-hint { margin: var(--s2) 0 0; font-size: 0.78rem; text-align: center; line-height: 1.35; }
+.auth-google-hint span { font-family: ui-monospace, monospace; }
 
 .landing {
   min-height: 100vh; color: var(--ink);
