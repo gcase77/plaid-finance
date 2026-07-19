@@ -7,7 +7,6 @@ import AuthPage from "./components/auth/AuthPage";
 import RequireAuth from "./components/auth/RequireAuth";
 import SecurityPage from "./components/auth/SecurityPage";
 import { PrivacyPolicyPage, TermsPage } from "./components/legal/LegalDocumentPage";
-import { LandingPage } from "./components/landing/LandingPage";
 import MainPage from "./components/main/MainPage";
 import NotFoundPage from "./components/NotFoundPage";
 import ToolsPage from "./components/tools/ToolsPage";
@@ -29,8 +28,6 @@ createRoot(document.getElementById("root")!).render(
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <Routes>
-          <Route path="/l" element={<LandingPage />} />
-          <Route path="/l/privacy" element={<PrivacyPolicyPage />} />
           <Route path="/privacy" element={<PrivacyPolicyPage />} />
           <Route path="/terms" element={<TermsPage />} />
           <Route path="/auth" element={<AuthPage mode="signIn" />} />

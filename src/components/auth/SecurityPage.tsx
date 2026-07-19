@@ -1,4 +1,5 @@
 import { FormEvent, useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { applyStoredTheme, persistTheme, readStoredTheme, APP_THEME_KEY, type AppThemeMode } from "../../lib/appTheme";
 import { supabase } from "../../lib/supabase";
 import { Alert } from "../shared/ui";
@@ -104,7 +105,7 @@ export default function SecurityPage() {
   const canStart = !enrollment && !loading && !has;
 
   return (
-    <>
+    <div className="account-page">
       <header className="page-header">
         <div>
           <h1>Account</h1>
@@ -193,6 +194,11 @@ export default function SecurityPage() {
       )}
 
       {!enrollment && unverified.length > 0 && <p className="muted small">You have an incomplete MFA setup. Start setup again to generate a new QR code.</p>}
-    </>
+
+      <nav className="account-legal" aria-label="Legal">
+        <Link to="/privacy">Privacy Policy</Link>
+        <Link to="/terms">Terms of Service</Link>
+      </nav>
+    </div>
   );
 }

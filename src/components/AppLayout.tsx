@@ -70,7 +70,7 @@ export default function AppLayout() {
         </button>
 
         <div className="sidebar-brand-stack">
-          <Link className="brand" to="/l" aria-label="Funds Up landing page">
+          <Link className="brand" to="/" aria-label="Funds Up home">
             <img src={layoutCollapsed ? "/funds-up-mark.svg" : "/funds-up-logo.svg"} alt="" />
           </Link>
           {narrow && email ? (

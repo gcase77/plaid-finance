@@ -4,7 +4,7 @@ export default function NotFoundPage() {
   return (
     <div className="landing">
       <nav className="landing-nav">
-        <Link to="/l" className="landing-logo" aria-label="Funds Up"><img src="/funds-up-logo.svg" alt="Funds Up" /></Link>
+        <Link to="/" className="landing-logo" aria-label="Funds Up"><img src="/funds-up-logo.svg" alt="Funds Up" /></Link>
         <Link className="btn primary btn-sm" to="/auth">Sign in</Link>
       </nav>
       <main className="landing-main">
@@ -12,10 +12,9 @@ export default function NotFoundPage() {
           <div>
             <span className="chip chip-soft">404</span>
             <h1 style={{ marginTop: 16 }}>Page doesn't exist</h1>
-            <p>This route is not part of Funds Up. Head back to the dashboard or visit the landing page.</p>
+            <p>This route is not part of Funds Up. Head back home to continue.</p>
             <div className="row-flex gap-3 mt-4">
-              <Link className="btn primary" to="/">Go to dashboard</Link>
-              <Link className="btn ghost" to="/l">View landing page</Link>
+              <Link className="btn primary" to="/">Go home</Link>
             </div>
           </div>
           <div className="card">

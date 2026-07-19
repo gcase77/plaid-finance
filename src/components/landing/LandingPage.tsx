@@ -92,11 +92,11 @@ export function LandingPage() {
   return (
     <div className="landing">
       <nav className="landing-nav">
-        <Link to="/l" className="landing-logo" aria-label="Funds Up"><img src="/funds-up-logo.svg" alt="Funds Up" /></Link>
+        <Link to="/" className="landing-logo" aria-label="Funds Up"><img src="/funds-up-logo.svg" alt="Funds Up" /></Link>
         <div className="row-flex gap-3">
           <Link to="/privacy">Privacy</Link>
           <Link to="/terms">Terms</Link>
-          <Link className="btn primary btn-sm" to="/">Sign in</Link>
+          <Link className="btn primary btn-sm" to="/auth">Sign in</Link>
         </div>
       </nav>
       <main className="landing-main">
@@ -104,7 +104,7 @@ export function LandingPage() {
           <div>
             <h1>How wealth accumulators keep track of their finances</h1>
             <p>Link your accounts, tag your transactions, set budgets, and see the patterns in your money.</p>
-            <div className="row-flex gap-3 mt-4"><Link className="btn primary" to="/">Sign in</Link></div>
+            <div className="row-flex gap-3 mt-4"><Link className="btn primary" to="/auth">Sign in</Link></div>
             <div className="landing-security"><strong>Bank-level security.</strong> Your data is encrypted at rest, protected in transit, and locked behind your MFA-secured account.</div>
           </div>
           <TransactionsPreview />

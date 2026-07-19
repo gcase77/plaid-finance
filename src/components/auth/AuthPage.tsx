@@ -115,7 +115,7 @@ export default function AuthPage({ mode }: { mode: AuthMode }) {
     <div className="centered-pane">
       <div className="card auth-card">
         <div className="row-flex gap-2 mb-4" style={{ justifyContent: "center" }}>
-          <Link to="/l" aria-label="Funds Up landing page"><img src="/funds-up-logo.svg" alt="Funds Up" style={{ height: 32 }} /></Link>
+          <Link to="/" aria-label="Funds Up home"><img src="/funds-up-logo.svg" alt="Funds Up" style={{ height: 32 }} /></Link>
         </div>
         <h1>{COPY[mode].title}</h1>
         {error && <div className="mb-3"><Alert tone="danger">{error}</Alert></div>}
