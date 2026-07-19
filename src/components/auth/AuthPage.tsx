@@ -169,6 +169,7 @@ export default function AuthPage({ mode }: { mode: AuthMode }) {
               </svg>
               Continue with Google
             </button>
+            <p className="auth-google-hint muted">Google will say <span>“continue to ….supabase.co”</span></p>
           </>
         )}
 
