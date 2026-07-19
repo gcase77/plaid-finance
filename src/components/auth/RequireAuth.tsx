@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from "react";
-import { Navigate, Outlet } from "react-router-dom";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { supabase } from "../../lib/supabase";
+import { LandingPage } from "../landing/LandingPage";
 import MfaChallenge from "./MfaChallenge";
 
 type MfaState = "checking" | "not-required" | "required";
 
 export default function RequireAuth() {
+  const { pathname } = useLocation();
   const [claims, setClaims] = useState<object | null | undefined>(undefined);
   const [mfaState, setMfaState] = useState<MfaState>("checking");
   const refreshIdRef = useRef(0);
@@ -55,7 +57,7 @@ export default function RequireAuth() {
   }, []);
 
   if (claims === undefined || mfaState === "checking") return null;
-  if (!claims) return <Navigate to="/auth" replace />;
+  if (!claims) return pathname === "/" ? <LandingPage /> : <Navigate to="/auth" replace />;
   if (mfaState === "required") return <MfaChallenge onVerified={() => setMfaState("not-required")} />;
   return <Outlet />;
 }
