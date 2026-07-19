@@ -11,12 +11,22 @@ model users {
   id           String         @id @db.Uuid
   email        String?
   
-  items        items[]
-  accounts     accounts[]
-  transactions transactions[]
-  tags         tags[]
-  system_logs  system_logs[]
-  budget_rules budget_rules[]
+  items         items[]
+  accounts      accounts[]
+  transactions  transactions[]
+  tags          tags[]
+  system_logs   system_logs[]
+  budget_rules  budget_rules[]
+  subscriptions subscriptions?
+}
+
+model subscriptions {
+  user_id                String  @id @db.Uuid
+  stripe_customer_id     String? @unique
+  stripe_subscription_id String? @unique
+  status                 String  @default("none")
+
+  users users @relation(fields: [user_id], references: [id], onDelete: Cascade)
 }
 
 model items {
