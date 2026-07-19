@@ -15,7 +15,7 @@ CREATE UNIQUE INDEX "subscriptions_stripe_customer_id_key" ON "subscriptions"("s
 CREATE UNIQUE INDEX "subscriptions_stripe_subscription_id_key" ON "subscriptions"("stripe_subscription_id");
 
 -- AddForeignKey
-ALTER TABLE "subscriptions" ADD CONSTRAINT "subscriptions_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "subscriptions" ADD CONSTRAINT "subscriptions_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE CASCADE;
 
 -- RLS: enabled with no write policies → clients cannot insert/update/delete
 ALTER TABLE "subscriptions" ENABLE ROW LEVEL SECURITY;

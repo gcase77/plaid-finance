@@ -26,7 +26,7 @@ model subscriptions {
   stripe_subscription_id String? @unique
   status                 String  @default("none")
 
-  users users @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  users users @relation(fields: [user_id], references: [id], onDelete: NoAction)
 }
 
 model items {
