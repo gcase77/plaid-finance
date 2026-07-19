@@ -113,7 +113,11 @@ hr { border: 0; border-top: 1px solid var(--line); margin: var(--s4) 0; }
   font-size: 11px; z-index: 5;
 }
 .sidebar-toggle:hover { background: var(--surface-alt); color: var(--ink); }
-.app-main { padding: var(--s6) clamp(var(--s5), 4vw, var(--s7)); min-width: 0; }
+.app-main { padding: var(--s6) clamp(var(--s5), 4vw, var(--s7)); min-width: 0; display: flex; flex-direction: column; }
+.account-page { flex: 1; display: flex; flex-direction: column; }
+.account-legal { margin-top: auto; padding-top: var(--s6); display: flex; justify-content: center; gap: var(--s4); font-size: 0.85rem; }
+.account-legal a { color: var(--ink-muted); }
+.account-legal a:hover { color: var(--ink); }
 .page-header { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--s4); margin-bottom: var(--s5); flex-wrap: wrap; }
 .page-header h1 { font-size: 1.7rem; }
 .page-header .desc { color: var(--ink-muted); margin-top: var(--s1); font-size: 0.95rem; }
