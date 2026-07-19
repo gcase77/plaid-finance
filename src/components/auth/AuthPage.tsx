@@ -69,7 +69,10 @@ export default function AuthPage({ mode }: { mode: AuthMode }) {
     setSubmitting(true);
     const { error: e } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: `${redirectBase}/` },
+      options: {
+        redirectTo: `${redirectBase}/`,
+        queryParams: { prompt: "select_account" },
+      },
     });
     if (e) { setError(e.message || "Unable to sign in with Google."); setSubmitting(false); }
   };
