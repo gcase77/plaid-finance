@@ -2,6 +2,7 @@ import express from "express";
 import { plaid } from "../lib/plaid";
 import { logger } from "../logger";
 import { clearTransactionsCache, clearTransactionMetaCache } from "../lib/caches";
+import { resetFreeSyncIfNoItems } from "../lib/entitlements";
 import type { ServerRequest } from "../middleware/auth";
 
 const router = express.Router();
@@ -31,6 +32,8 @@ router.post("/items/:itemId/delete_all", async (req, res) => {
       await tx.accounts.deleteMany({ where: { item_id: itemId } });
       await tx.items.delete({ where: { id: itemId } });
     });
+
+    await resetFreeSyncIfNoItems(prisma, user.id);
 
     clearTransactionsCache(user.id);
     clearTransactionMetaCache(user.id);
