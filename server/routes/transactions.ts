@@ -4,6 +4,12 @@ import { Prisma } from "../../generated/prisma/client";
 import { plaid } from "../lib/plaid";
 import { logger } from "../logger";
 import { transactionsCache, transactionsCacheKey, clearTransactionsCache } from "../lib/caches";
+import {
+  canSync,
+  ensureSubscription,
+  markFreeSyncUsed,
+  paymentRequiredPayload
+} from "../lib/entitlements";
 import type { ServerRequest } from "../middleware/auth";
 
 const PAGE_SIZE = 500;
@@ -263,7 +269,14 @@ const scheduleSyncForUser = async (prisma: ServerRequest["prisma"], userId: stri
 router.post("/transactions/sync", async (req, res) => {
   try {
     const { user, prisma } = req as unknown as ServerRequest;
+    const sub = await ensureSubscription(prisma, user.id);
+    if (!canSync(sub.access_level, sub.free_sync_used)) {
+      return res.status(403).json(paymentRequiredPayload("sync"));
+    }
     const result = await scheduleSyncForUser(prisma, user.id);
+    if (result.items_processed > 0) {
+      await markFreeSyncUsed(prisma, user.id);
+    }
     clearTransactionsCache(user.id);
     res.json({ success: true, ...result });
   } catch (e: any) {

@@ -127,14 +127,15 @@ class
 
 | Method | Path                                                                 | Request Data                        | Response                                                       |
 | ------ | -------------------------------------------------------------------- | ----------------------------------- | -------------------------------------------------------------- |
-| POST   | [api/link/token](server/routes/link.ts#L8)                           | query: — body: `{ daysRequested? }` | `{ link_token, ... }`                                          |
-| POST   | [api/link/exchange](server/routes/link.ts#L33)                        | query: — body: `{ publicToken }`    | `{ success: true }`                                            |
+| GET    | [api/entitlements](server/routes/entitlements.ts)                    | query: — body: —                    | `{ access_level, free_sync_used, items_connected, can_add_bank, can_sync }` |
+| POST   | [api/link/token](server/routes/link.ts)                              | query: — body: `{ daysRequested? }` | `{ link_token, ... }` or `403` `{ code: "PAYMENT_REQUIRED", reason: "add_bank" }` |
+| POST   | [api/link/exchange](server/routes/link.ts)                           | query: — body: `{ publicToken }`    | `{ success: true }` or `403` `{ code: "PAYMENT_REQUIRED", reason: "add_bank" }` |
 | GET    | [api/items](server/routes/items.ts#L9)                               | query: — body: —                    | `Item[]` (`id`, `institution_name` only; no Plaid access token) |
 | GET    | [api/:itemId/accounts](server/routes/accounts.ts#L6)                   | query: — body: —                    | `Account[]`                                                    |
 | POST   | [api/:itemId/accounts/refresh](server/routes/accounts.ts#L12)          | query: — body: —                    | `{ success: true, item_id, updated_accounts }` (calls Plaid `accounts/get`; updates only `name`, `official_name`, `balances`; returns `409` if DB/Plaid account counts mismatch) |
 | POST   | [api/items/:itemId/delete_all](server/routes/items.ts#L16)               | query: — body: —                    | `200` / `207`: `{ success: true, deleted: { item, accounts }, plaid_removed, plaid_error? }` (deletes item, its accounts, transactions; then Plaid `item/remove`; `207` if Plaid unlink fails) |
 | GET    | [api/transactions](server/routes/transactions.ts#L282)                 | query: `includeRemoved?` body: —    | transaction array                                              |
-| POST   | [api/transactions/sync](server/routes/transactions.ts#L270)            | query: — body: —                    | `{ success: true, items_processed, added, modified, removed }`  |
+| POST   | [api/transactions/sync](server/routes/transactions.ts#L270)            | query: — body: —                    | `{ success: true, items_processed, added, modified, removed }` or `403` `{ code: "PAYMENT_REQUIRED", reason: "sync" }` |
 | GET    | [api/transaction_meta](server/routes/transaction_meta.ts#L19)         | query: — body: —                    | `{ transaction_id, account_transfer_group, bucket_1_tag_id, bucket_2_tag_id, meta_tag_ids }[]` |
 | POST   | [api/transaction_meta/transfer_group](server/routes/transaction_meta.ts#L51) | query: — body: `{ transaction_ids: [id1, id2] }` | `{ account_transfer_group: uuid }` |
 | DELETE | [api/transaction_meta/transfer_group](server/routes/transaction_meta.ts#L82) | query: — body: `{ transaction_ids: [id1, id2] }` or `{ transaction_ids: [id] }` (clears whole group for that transfer) | `{ success: true }` |

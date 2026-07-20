@@ -22,7 +22,7 @@ if (process.env.NODE_ENV !== "production") {
   globalForPrisma.prisma = prisma;
 }
 
-const userIdModels = new Set(["items", "accounts", "transactions", "system_logs", "tags", "budget_rules"]);
+const userIdModels = new Set(["items", "accounts", "transactions", "system_logs", "tags", "budget_rules", "subscriptions"]);
 const nonUniqueWhereOps = new Set([
   "findMany",
   "findFirst",

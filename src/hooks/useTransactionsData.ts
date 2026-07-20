@@ -2,13 +2,19 @@ import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { TransactionBaseRow, TransactionMerged, TransactionMetaRow } from "../components/types";
 import { buildAuthHeaders } from "../lib/auth";
+import { ENTITLEMENTS_QUERY_KEY, isPaymentRequiredPayload, type PaymentRequiredReason } from "../lib/entitlements";
+
+export type SyncTransactionsResult =
+  | { ok: true; added?: number; modified?: number; removed?: number }
+  | { ok: false; paymentRequired: true; reason: PaymentRequiredReason }
+  | { ok: false; paymentRequired?: false; error: string };
 
 type UseTransactionsDataReturn = {
   transactions: TransactionMerged[];
   loadingTxns: boolean;
   syncStatus: string;
   errorMessage: string | null;
-  syncTransactions: () => Promise<void>;
+  syncTransactions: () => Promise<SyncTransactionsResult>;
   invalidateTransactionMeta: () => Promise<void>;
 };
 
@@ -31,14 +37,22 @@ const fetchTransactionMeta = async (token: string | null): Promise<TransactionMe
   return Array.isArray(data) ? data : [];
 };
 
-const syncTransactionsRequest = async (token: string | null): Promise<{ added?: number; modified?: number; removed?: number; error?: string }> => {
+const syncTransactionsRequest = async (token: string | null): Promise<SyncTransactionsResult> => {
   const res = await fetch("/api/transactions/sync", {
     method: "POST",
     headers: buildAuthHeaders(token)
   });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data?.error || `Sync failed (${res.status})`);
-  return data;
+  const data = await res.json().catch(() => ({}));
+  if (res.status === 403 && isPaymentRequiredPayload(data)) {
+    return { ok: false, paymentRequired: true, reason: data.reason === "add_bank" ? "add_bank" : "sync" };
+  }
+  if (!res.ok) return { ok: false, error: (data as { error?: string })?.error || `Sync failed (${res.status})` };
+  return {
+    ok: true,
+    added: (data as { added?: number }).added,
+    modified: (data as { modified?: number }).modified,
+    removed: (data as { removed?: number }).removed
+  };
 };
 
 export function useTransactionsData(token: string | null): UseTransactionsDataReturn {
@@ -60,8 +74,12 @@ export function useTransactionsData(token: string | null): UseTransactionsDataRe
   const syncMutation = useMutation({
     mutationFn: () => syncTransactionsRequest(token),
     onSuccess: async (result) => {
+      if (!result.ok) return;
       setSyncStatus(`${result.modified || 0} modified, ${result.added || 0} added, ${result.removed || 0} removed`);
-      await queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["transactions"] }),
+        queryClient.invalidateQueries({ queryKey: ENTITLEMENTS_QUERY_KEY })
+      ]);
     }
   });
 
@@ -82,9 +100,13 @@ export function useTransactionsData(token: string | null): UseTransactionsDataRe
     });
   }, [txQuery.data, metaQuery.data]);
 
+  const lastSyncError = syncMutation.data && !syncMutation.data.ok && !syncMutation.data.paymentRequired
+    ? syncMutation.data.error
+    : null;
+
   const errorMessage = (txQuery.error as Error | null)?.message
     || (metaQuery.error as Error | null)?.message
-    || (syncMutation.error as Error | null)?.message
+    || lastSyncError
     || null;
 
   return {
@@ -92,7 +114,7 @@ export function useTransactionsData(token: string | null): UseTransactionsDataRe
     loadingTxns: txQuery.isLoading || metaQuery.isLoading || syncMutation.isPending,
     syncStatus,
     errorMessage,
-    syncTransactions: async () => { await syncMutation.mutateAsync(); },
+    syncTransactions: async () => syncMutation.mutateAsync(),
     invalidateTransactionMeta: async () => { await queryClient.invalidateQueries({ queryKey: TRANSACTION_META_QUERY_KEY }); }
   };
 }
