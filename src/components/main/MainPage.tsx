@@ -188,7 +188,7 @@ export default function MainPage() {
           ) : (
             <button className="btn primary" onClick={startLinkFlow}>
               {!canAddBank && <LockIcon />}
-              + Link bank
+              {canAddBank ? "+ Link bank" : "Link bank"}
             </button>
           )}
           <button
