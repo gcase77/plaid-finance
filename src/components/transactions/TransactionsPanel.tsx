@@ -7,7 +7,7 @@ import type { PaymentRequiredReason } from "../../lib/entitlements";
 import { getDefaultTagColor, getDisplayTagColor, TAG_COLOR_PALETTE } from "../../utils/transactionUtils";
 import type { Tag, TagType, Txn } from "../types";
 import LoadingSpinner from "../shared/LoadingSpinner";
-import PaywallModal from "../shared/PaywallModal";
+import PaywallModal, { LockIcon } from "../shared/PaywallModal";
 import { TagBadge } from "../shared/TagBadge";
 import AppliedFiltersBar from "../shared/AppliedFiltersBar";
 import TransactionsFilterSection from "../shared/FilterSection";
@@ -322,6 +322,7 @@ export default function TransactionsPanel({
         </div>
         <div className="page-actions">
           <button className="btn primary" onClick={() => { void handleSync(); }} disabled={loadingTxns}>
+            {!canSync && !loadingTxns && <LockIcon />}
             {loadingTxns ? "Syncing…" : "Sync transactions"}
           </button>
           <InfoTip text={SYNC_HELP} />

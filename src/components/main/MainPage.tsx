@@ -7,7 +7,7 @@ import { supabase } from "../../lib/supabase";
 import type { PaymentRequiredReason } from "../../lib/entitlements";
 import type { Account, AccountBalances, Item } from "../types";
 import LoadingSpinner from "../shared/LoadingSpinner";
-import PaywallModal from "../shared/PaywallModal";
+import PaywallModal, { LockIcon } from "../shared/PaywallModal";
 import { Alert, ClickEditNumber, Modal, Tooltip } from "../shared/ui";
 
 const BANKS_COLLAPSE_KEY = "funds-up-home-banks-all-collapsed";
@@ -178,12 +178,18 @@ export default function MainPage() {
               <div className="small fw-semi mb-2">Pull transactions up to <ClickEditNumber value={historyDays} onCommit={setHistoryDays} min={1} max={730} step={1} decimals={0} format={(n) => String(n)} ariaLabel="days of transaction history" /> days ago</div>
               <input className="mb-2" type="range" min={1} max={730} value={historyDays} onChange={(e) => setHistoryDays(Number(e.target.value))} />
               <div className="row-flex gap-2">
-                <button className="btn primary btn-sm" onClick={() => { void confirmLink(); }}>Link via Plaid</button>
+                <button className="btn primary btn-sm" onClick={() => { void confirmLink(); }}>
+                  {!canAddBank && <LockIcon size={12} />}
+                  Link via Plaid
+                </button>
                 <button className="btn ghost btn-sm" onClick={() => setShowHistoryPicker(false)}>Cancel</button>
               </div>
             </div>
           ) : (
-            <button className="btn primary" onClick={startLinkFlow}>+ Link bank</button>
+            <button className="btn primary" onClick={startLinkFlow}>
+              {!canAddBank && <LockIcon />}
+              + Link bank
+            </button>
           )}
           <button
             className={`btn ${deleteMode ? "danger" : "ghost"}`}

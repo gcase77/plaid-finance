@@ -3,27 +3,19 @@ import { logger } from "../logger";
 import { plaid } from "../lib/plaid";
 import { getInstitutionMetadata } from "../lib/institutions";
 import {
-  canAddBank,
-  ensureSubscription,
+  getEntitlements,
   paymentRequiredPayload
 } from "../lib/entitlements";
 import type { ServerRequest } from "../middleware/auth";
 
 const router = express.Router();
 
-async function assertCanAddBank(prisma: ServerRequest["prisma"], userId: string) {
-  const [sub, itemsConnected] = await Promise.all([
-    ensureSubscription(prisma, userId),
-    prisma.items.count()
-  ]);
-  return canAddBank(sub.access_level, itemsConnected);
-}
-
 router.post("/link/token", async (req, res) => {
   try {
     const { user, prisma } = req as unknown as ServerRequest;
     const userId = user.id;
-    if (!(await assertCanAddBank(prisma, userId))) {
+    const entitlements = await getEntitlements(prisma, userId);
+    if (!entitlements.can_add_bank) {
       return res.status(403).json(paymentRequiredPayload("add_bank"));
     }
     const requestedDays = Number(req.body?.daysRequested);
@@ -55,7 +47,7 @@ router.post("/link/exchange", async (req, res) => {
     const { publicToken } = req.body;
     if (!publicToken) return res.status(400).json({ error: "publicToken required" });
 
-    if (!(await assertCanAddBank(prisma, userId))) {
+    if (!(await getEntitlements(prisma, userId)).can_add_bank) {
       return res.status(403).json(paymentRequiredPayload("add_bank"));
     }
 
@@ -64,7 +56,7 @@ router.post("/link/exchange", async (req, res) => {
     logger.log("info", "plaid itemPublicTokenExchange", { meta: { userId }, input: exchangeReq, output: data });
 
     // Re-check after Plaid exchange in case of concurrent link attempts
-    if (!(await assertCanAddBank(prisma, userId))) {
+    if (!(await getEntitlements(prisma, userId)).can_add_bank) {
       try {
         await plaid.itemRemove({ access_token: data.access_token });
       } catch (removeErr: any) {

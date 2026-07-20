@@ -5,8 +5,7 @@ import { plaid } from "../lib/plaid";
 import { logger } from "../logger";
 import { transactionsCache, transactionsCacheKey, clearTransactionsCache } from "../lib/caches";
 import {
-  canSync,
-  ensureSubscription,
+  getEntitlements,
   markFreeSyncUsed,
   paymentRequiredPayload
 } from "../lib/entitlements";
@@ -269,8 +268,8 @@ const scheduleSyncForUser = async (prisma: ServerRequest["prisma"], userId: stri
 router.post("/transactions/sync", async (req, res) => {
   try {
     const { user, prisma } = req as unknown as ServerRequest;
-    const sub = await ensureSubscription(prisma, user.id);
-    if (!canSync(sub.access_level, sub.free_sync_used)) {
+    const entitlements = await getEntitlements(prisma, user.id);
+    if (!entitlements.can_sync) {
       return res.status(403).json(paymentRequiredPayload("sync"));
     }
     const result = await scheduleSyncForUser(prisma, user.id);
