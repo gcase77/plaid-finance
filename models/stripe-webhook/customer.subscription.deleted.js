@@ -1,11 +1,12 @@
-{
-  "id": "evt_1Tv603B3OSi6oy0uM3K6wQot",
+window.WEBHOOK_EVENTS = window.WEBHOOK_EVENTS || {};
+window.WEBHOOK_EVENTS["customer.subscription.deleted"] = {
+  "id": "evt_1Tv60NB3OSi6oy0u7bsoYKAJ",
   "object": "event",
   "api_version": "2025-03-31.basil",
-  "created": 1784510887,
+  "created": 1784510907,
   "data": {
     "object": {
-      "id": "sub_1Tv601B3OSi6oy0uIZu3xRrz",
+      "id": "sub_1Tv60JB3OSi6oy0ug6qTWv10",
       "object": "subscription",
       "application": null,
       "application_fee_percent": null,
@@ -14,7 +15,7 @@
         "enabled": false,
         "liability": null
       },
-      "billing_cycle_anchor": 1784510884,
+      "billing_cycle_anchor": 1784510903,
       "billing_cycle_anchor_config": null,
       "billing_mode": {
         "flexible": null,
@@ -23,16 +24,16 @@
       "billing_thresholds": null,
       "cancel_at": null,
       "cancel_at_period_end": false,
-      "canceled_at": null,
+      "canceled_at": 1784510906,
       "cancellation_details": {
         "comment": null,
         "feedback": null,
-        "reason": null
+        "reason": "cancellation_requested"
       },
       "collection_method": "charge_automatically",
-      "created": 1784510884,
+      "created": 1784510903,
       "currency": "usd",
-      "customer": "cus_UuvrStcsW5E4Aq",
+      "customer": "cus_UuvsDEaN2nSBaa",
       "customer_account": null,
       "days_until_due": null,
       "default_payment_method": null,
@@ -40,7 +41,7 @@
       "default_tax_rates": [],
       "description": null,
       "discounts": [],
-      "ended_at": null,
+      "ended_at": 1784510906,
       "invoice_settings": {
         "account_tax_ids": null,
         "custom_fields": null,
@@ -54,22 +55,22 @@
         "object": "list",
         "data": [
           {
-            "id": "si_UuvrUR6KWF9SyS",
+            "id": "si_UuvsDoaoaTNjKX",
             "object": "subscription_item",
             "billing_thresholds": null,
-            "created": 1784510885,
-            "current_period_end": 1787189284,
-            "current_period_start": 1784510884,
+            "created": 1784510904,
+            "current_period_end": 1787189303,
+            "current_period_start": 1784510903,
             "discounts": [],
             "metadata": {},
             "plan": {
-              "id": "price_1Tv600B3OSi6oy0uWNYUhjGp",
+              "id": "price_1Tv60JB3OSi6oy0ur9rjJVDf",
               "object": "plan",
               "active": true,
               "amount": 1500,
               "amount_decimal": "1500",
               "billing_scheme": "per_unit",
-              "created": 1784510884,
+              "created": 1784510903,
               "currency": "usd",
               "interval": "month",
               "interval_count": 1,
@@ -77,25 +78,25 @@
               "metadata": {},
               "meter": null,
               "nickname": null,
-              "product": "prod_Uuvrr3kCoihGVr",
+              "product": "prod_Uuvs97ClcX81oc",
               "tiers_mode": null,
               "transform_usage": null,
               "trial_period_days": null,
               "usage_type": "licensed"
             },
             "price": {
-              "id": "price_1Tv600B3OSi6oy0uWNYUhjGp",
+              "id": "price_1Tv60JB3OSi6oy0ur9rjJVDf",
               "object": "price",
               "active": true,
               "billing_scheme": "per_unit",
-              "created": 1784510884,
+              "created": 1784510903,
               "currency": "usd",
               "custom_unit_amount": null,
               "livemode": false,
               "lookup_key": null,
               "metadata": {},
               "nickname": null,
-              "product": "prod_Uuvrr3kCoihGVr",
+              "product": "prod_Uuvs97ClcX81oc",
               "recurring": {
                 "interval": "month",
                 "interval_count": 1,
@@ -111,15 +112,15 @@
               "unit_amount_decimal": "1500"
             },
             "quantity": 1,
-            "subscription": "sub_1Tv601B3OSi6oy0uIZu3xRrz",
+            "subscription": "sub_1Tv60JB3OSi6oy0ug6qTWv10",
             "tax_rates": []
           }
         ],
         "has_more": false,
         "total_count": 1,
-        "url": "/v1/subscription_items?subscription=sub_1Tv601B3OSi6oy0uIZu3xRrz"
+        "url": "/v1/subscription_items?subscription=sub_1Tv60JB3OSi6oy0ug6qTWv10"
       },
-      "latest_invoice": "in_1Tv601B3OSi6oy0uQTgUjoNo",
+      "latest_invoice": "in_1Tv60JB3OSi6oy0uIaVoSmRd",
       "livemode": false,
       "managed_payments": {
         "enabled": false
@@ -137,13 +138,13 @@
       "pending_setup_intent": null,
       "pending_update": null,
       "plan": {
-        "id": "price_1Tv600B3OSi6oy0uWNYUhjGp",
+        "id": "price_1Tv60JB3OSi6oy0ur9rjJVDf",
         "object": "plan",
         "active": true,
         "amount": 1500,
         "amount_decimal": "1500",
         "billing_scheme": "per_unit",
-        "created": 1784510884,
+        "created": 1784510903,
         "currency": "usd",
         "interval": "month",
         "interval_count": 1,
@@ -151,7 +152,7 @@
         "metadata": {},
         "meter": null,
         "nickname": null,
-        "product": "prod_Uuvrr3kCoihGVr",
+        "product": "prod_Uuvs97ClcX81oc",
         "tiers_mode": null,
         "transform_usage": null,
         "trial_period_days": null,
@@ -159,8 +160,8 @@
       },
       "quantity": 1,
       "schedule": null,
-      "start_date": 1784510884,
-      "status": "active",
+      "start_date": 1784510903,
+      "status": "canceled",
       "test_clock": null,
       "transfer_data": null,
       "trial_end": null,
@@ -175,8 +176,8 @@
   "livemode": false,
   "pending_webhooks": 2,
   "request": {
-    "id": "req_wb3JNSxJFaQSjv",
-    "idempotency_key": "91689a01-5bcb-48ac-9a0f-d2e9417243a9"
+    "id": "req_jhnFQLkawAbeb6",
+    "idempotency_key": null
   },
-  "type": "customer.subscription.created"
-}
+  "type": "customer.subscription.deleted"
+};
