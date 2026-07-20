@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react";
 import { getTextColorForBackground } from "../../utils/transactionUtils";
 import type { Session } from "@supabase/supabase-js";
+import { useEntitlements } from "../../hooks/useEntitlements";
 import { usePlaidData } from "../../hooks/usePlaidData";
 import { supabase } from "../../lib/supabase";
+import type { PaymentRequiredReason } from "../../lib/entitlements";
 import type { Account, AccountBalances, Item } from "../types";
 import LoadingSpinner from "../shared/LoadingSpinner";
+import PaywallModal, { LockIcon } from "../shared/PaywallModal";
 import { Alert, ClickEditNumber, Modal, Tooltip } from "../shared/ui";
 
 const BANKS_COLLAPSE_KEY = "funds-up-home-banks-all-collapsed";
@@ -100,6 +103,7 @@ export default function MainPage() {
   const userId = session?.user?.id ?? null;
   const token = session?.access_token ?? null;
   const { items, accountsByItem, loadingItems, loadItems, linkBank, deleteItem, refreshItemAccounts } = usePlaidData(userId, token);
+  const { canAddBank } = useEntitlements(token);
 
   const [showHistoryPicker, setShowHistoryPicker] = useState(false);
   const [historyDays, setHistoryDays] = useState(730);
@@ -109,6 +113,32 @@ export default function MainPage() {
   const [confirmDelete, setConfirmDelete] = useState<{ itemId: string; label: string; nAcc: number } | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [flash, setFlash] = useState<{ tone: "info" | "warning"; text: string } | null>(null);
+  const [paywallReason, setPaywallReason] = useState<PaymentRequiredReason | null>(null);
+
+  const startLinkFlow = () => {
+    if (!canAddBank) {
+      setPaywallReason("add_bank");
+      return;
+    }
+    setShowHistoryPicker(true);
+  };
+
+  const confirmLink = async () => {
+    if (!canAddBank) {
+      setPaywallReason("add_bank");
+      setShowHistoryPicker(false);
+      return;
+    }
+    setShowHistoryPicker(false);
+    const result = await linkBank(historyDays);
+    if (!result.ok && result.paymentRequired) {
+      setPaywallReason(result.reason);
+      return;
+    }
+    if (!result.ok) {
+      setFlash({ tone: "warning", text: result.error });
+    }
+  };
 
   useEffect(() => { supabase.auth.getSession().then(({ data }) => setSession(data.session)); }, []);
   useEffect(() => {
@@ -148,12 +178,18 @@ export default function MainPage() {
               <div className="small fw-semi mb-2">Pull transactions up to <ClickEditNumber value={historyDays} onCommit={setHistoryDays} min={1} max={730} step={1} decimals={0} format={(n) => String(n)} ariaLabel="days of transaction history" /> days ago</div>
               <input className="mb-2" type="range" min={1} max={730} value={historyDays} onChange={(e) => setHistoryDays(Number(e.target.value))} />
               <div className="row-flex gap-2">
-                <button className="btn primary btn-sm" onClick={() => { linkBank(historyDays); setShowHistoryPicker(false); }}>Link via Plaid</button>
+                <button className="btn primary btn-sm" onClick={() => { void confirmLink(); }}>
+                  {!canAddBank && <LockIcon size={12} />}
+                  Link via Plaid
+                </button>
                 <button className="btn ghost btn-sm" onClick={() => setShowHistoryPicker(false)}>Cancel</button>
               </div>
             </div>
           ) : (
-            <button className="btn primary" onClick={() => setShowHistoryPicker(true)}>+ Link bank</button>
+            <button className="btn primary" onClick={startLinkFlow}>
+              {!canAddBank && <LockIcon />}
+              + Link bank
+            </button>
           )}
           <button
             className={`btn ${deleteMode ? "danger" : "ghost"}`}
@@ -284,6 +320,8 @@ export default function MainPage() {
         <p>Are you sure you want to delete <strong>{confirmDelete?.label}</strong>?</p>
         <p className="small muted">This removes {confirmDelete?.nAcc} linked account{confirmDelete && confirmDelete.nAcc !== 1 ? "s" : ""} and all transactions for this bank.</p>
       </Modal>
+
+      <PaywallModal open={!!paywallReason} reason={paywallReason} onClose={() => setPaywallReason(null)} />
     </>
   );
 }

@@ -1,10 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { UseTransactionFiltersReturn } from "../../hooks/useTransactionFilters";
+import type { SyncTransactionsResult } from "../../hooks/useTransactionsData";
 import { buildAuthHeaders } from "../../lib/auth";
+import type { PaymentRequiredReason } from "../../lib/entitlements";
 import { getDefaultTagColor, getDisplayTagColor, TAG_COLOR_PALETTE } from "../../utils/transactionUtils";
 import type { Tag, TagType, Txn } from "../types";
 import LoadingSpinner from "../shared/LoadingSpinner";
+import PaywallModal, { LockIcon } from "../shared/PaywallModal";
 import { TagBadge } from "../shared/TagBadge";
 import AppliedFiltersBar from "../shared/AppliedFiltersBar";
 import TransactionsFilterSection from "../shared/FilterSection";
@@ -12,7 +15,7 @@ import TransactionTable from "../shared/TransactionTable";
 import { Alert, InfoTip, Popover } from "../shared/ui";
 
 type Props = {
-  syncTransactions: () => Promise<void>;
+  syncTransactions: () => Promise<SyncTransactionsResult>;
   syncStatus: string;
   loadingTxns: boolean;
   filters: UseTransactionFiltersReturn;
@@ -21,6 +24,8 @@ type Props = {
   tagsError: Error | null;
   token: string | null;
   invalidateTransactionMeta: () => Promise<void>;
+  canSync: boolean;
+  onPaymentRequired?: () => void | Promise<void>;
 };
 
 type TagChange = { transaction_id: string; bucket_1_tag_id?: number | null; bucket_2_tag_id?: number | null; meta_tag_ids?: number[] | null };
@@ -82,13 +87,39 @@ function ColorPicker({ value, onChange, size = 24 }: { value: string; onChange: 
   );
 }
 
-export default function TransactionsPanel({ syncTransactions, syncStatus, loadingTxns, filters, tags, tagsLoading, tagsError, token, invalidateTransactionMeta }: Props) {
+export default function TransactionsPanel({
+  syncTransactions,
+  syncStatus,
+  loadingTxns,
+  filters,
+  tags,
+  tagsLoading,
+  tagsError,
+  token,
+  invalidateTransactionMeta,
+  canSync,
+  onPaymentRequired
+}: Props) {
   const queryClient = useQueryClient();
   const [tab, setTab] = useState<"tag-transactions" | "my-tags">("tag-transactions");
   const [mode, setMode] = useState<TableMode>("none");
   const taggingMode = mode === "tagging";
   const selectionActive = mode !== "none";
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [paywallReason, setPaywallReason] = useState<PaymentRequiredReason | null>(null);
+
+  const handleSync = async () => {
+    if (!canSync) {
+      setPaywallReason("sync");
+      return;
+    }
+    const result = await syncTransactions();
+    if (!result.ok && result.paymentRequired) {
+      setPaywallReason(result.reason);
+      await onPaymentRequired?.();
+      return;
+    }
+  };
 
   const [creating, setCreating] = useState(false);
   const [createName, setCreateName] = useState("");
@@ -290,7 +321,8 @@ export default function TransactionsPanel({ syncTransactions, syncStatus, loadin
           <p className="desc">View, filter, and tag your transactions.</p>
         </div>
         <div className="page-actions">
-          <button className="btn primary" onClick={syncTransactions} disabled={loadingTxns}>
+          <button className="btn primary" onClick={() => { void handleSync(); }} disabled={loadingTxns}>
+            {!canSync && !loadingTxns && <LockIcon />}
             {loadingTxns ? "Syncing…" : "Sync transactions"}
           </button>
           <InfoTip text={SYNC_HELP} />
@@ -491,6 +523,8 @@ export default function TransactionsPanel({ syncTransactions, syncStatus, loadin
           </div>
         </div>
       )}
+
+      <PaywallModal open={!!paywallReason} reason={paywallReason} onClose={() => setPaywallReason(null)} />
     </>
   );
 }

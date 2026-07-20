@@ -2,13 +2,22 @@ import express from "express";
 import { logger } from "../logger";
 import { plaid } from "../lib/plaid";
 import { getInstitutionMetadata } from "../lib/institutions";
+import {
+  getEntitlements,
+  paymentRequiredPayload
+} from "../lib/entitlements";
 import type { ServerRequest } from "../middleware/auth";
 
 const router = express.Router();
 
 router.post("/link/token", async (req, res) => {
   try {
-    const userId = (req as unknown as ServerRequest).user.id;
+    const { user, prisma } = req as unknown as ServerRequest;
+    const userId = user.id;
+    const entitlements = await getEntitlements(prisma, userId);
+    if (!entitlements.can_add_bank) {
+      return res.status(403).json(paymentRequiredPayload("add_bank"));
+    }
     const requestedDays = Number(req.body?.daysRequested);
     const daysRequested = Number.isFinite(requestedDays)
       ? Math.min(730, Math.max(1, Math.floor(requestedDays)))
@@ -37,9 +46,28 @@ router.post("/link/exchange", async (req, res) => {
     const userId = user.id;
     const { publicToken } = req.body;
     if (!publicToken) return res.status(400).json({ error: "publicToken required" });
+
+    if (!(await getEntitlements(prisma, userId)).can_add_bank) {
+      return res.status(403).json(paymentRequiredPayload("add_bank"));
+    }
+
     const exchangeReq = { public_token: publicToken };
     const { data } = await plaid.itemPublicTokenExchange(exchangeReq);
     logger.log("info", "plaid itemPublicTokenExchange", { meta: { userId }, input: exchangeReq, output: data });
+
+    // Re-check after Plaid exchange in case of concurrent link attempts
+    if (!(await getEntitlements(prisma, userId)).can_add_bank) {
+      try {
+        await plaid.itemRemove({ access_token: data.access_token });
+      } catch (removeErr: any) {
+        logger.log("error", "plaid itemRemove after gated exchange", {
+          userId,
+          itemId: data.item_id,
+          err: removeErr?.response?.data?.error_message || removeErr?.message
+        });
+      }
+      return res.status(403).json(paymentRequiredPayload("add_bank"));
+    }
 
     const itemReq = { access_token: data.access_token };
     const item = await plaid.itemGet(itemReq);
