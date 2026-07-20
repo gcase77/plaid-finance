@@ -151,7 +151,7 @@ class
 | POST   | [api/budget_rules](server/routes/budget_rules.ts#L240)                 | query: — body: `{ tag_id, name, start_date, type, flat_amount?, percent?, calendar_window, rollover_options }` | created budget rule object |
 | PATCH  | [api/budget_rules/:id](server/routes/budget_rules.ts#L301)              | query: — body: partial budget rule object | updated budget rule object                    |
 | DELETE | [api/budget_rules/:id](server/routes/budget_rules.ts#L379)             | query: — body: —                    | `{ success: true }`                                            |
-| POST   | [webhooks/stripe](server/routes/webhooks.ts)                           | Stripe webhook (raw JSON body; no auth) | `{ received: true }` (appends payload to `stripe-webhook-events.md`) |
+| POST   | [webhooks/stripe](server/routes/webhooks.ts)                           | Stripe webhook (raw JSON body; signature via `STRIPE_WEBHOOK_SECRET`; handles `customer.subscription.created` / `updated` / `deleted`) | `{ received: true }` — re-fetches subscription, ignores non-`STRIPE_PRO_PRICE_ID` items, sets `stripe_subscription_status` + `access_level` (`2` if `active`/`trialing`/`past_due`, else free) |
 
 ### Budget Calculation
 
