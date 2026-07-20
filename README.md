@@ -150,6 +150,7 @@ class
 | POST   | [api/budget_rules](server/routes/budget_rules.ts#L240)                 | query: — body: `{ tag_id, name, start_date, type, flat_amount?, percent?, calendar_window, rollover_options }` | created budget rule object |
 | PATCH  | [api/budget_rules/:id](server/routes/budget_rules.ts#L301)              | query: — body: partial budget rule object | updated budget rule object                    |
 | DELETE | [api/budget_rules/:id](server/routes/budget_rules.ts#L379)             | query: — body: —                    | `{ success: true }`                                            |
+| POST   | [webhooks/stripe](server/routes/webhooks.ts)                           | Stripe webhook (raw JSON body; no auth) | `{ received: true }` (appends payload to `stripe-webhook-events.md`) |
 
 ### Budget Calculation
 

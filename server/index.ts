@@ -9,9 +9,11 @@ import transactionsRouter from "./routes/transactions";
 import transactionMetaRouter from "./routes/transaction_meta";
 import tagsRouter from "./routes/tags";
 import budgetRulesRouter from "./routes/budget_rules";
+import { stripeWebhook } from "./routes/webhooks";
 import { requireAuth } from "./middleware/auth";
 
 const app = express();
+app.post("/webhooks/stripe", express.raw({ type: "application/json" }), stripeWebhook);
 app.use(express.json());
 
 const distPath = path.join(__dirname, "..", "dist");
