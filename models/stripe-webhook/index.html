@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Stripe webhook samples</title>
+  <style>
+    body { font: 14px/1.45 ui-monospace, Menlo, Consolas, monospace; margin: 1.25rem; background: #0f1115; color: #e6e8ee; }
+    h1 { font: 600 1.2rem system-ui, sans-serif; }
+    .err { color: #fca5a5; font: 13px system-ui, sans-serif; }
+    .event { border: 1px solid #2a3140; border-radius: 8px; margin: 1rem 0; }
+    .event > summary { cursor: pointer; padding: .75rem 1rem; background: #171b24; font: 600 13px system-ui, sans-serif; list-style: none; }
+    .event > summary::before { content: "▸ "; color: #8b95a8; }
+    .event[open] > summary::before { content: "▾ "; }
+    .body { padding: .75rem 1rem 1rem; }
+    .key { color: #c4b5fd; }
+    .str { color: #86efac; }
+    .num { color: #fcd34d; }
+    .bool { color: #f9a8d4; }
+    .null { color: #94a3b8; }
+    .preview { color: #6b7280; }
+    .coll { margin-left: 1rem; }
+    details.json > summary { cursor: pointer; list-style: none; }
+    details.json > summary::before { content: "▸ "; color: #8b95a8; }
+    details.json[open] > summary::before { content: "▾ "; }
+  </style>
+</head>
+<body>
+  <h1>Stripe webhook samples</h1>
+  <div id="root"></div>
+  <script>
+    const files = [
+      "customer.subscription.created.json",
+      "customer.subscription.updated.json",
+      "customer.subscription.deleted.json",
+    ];
+
+    const esc = (s) => String(s)
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+
+    const leaf = (v) => {
+      if (v === null) return '<span class="null">null</span>';
+      if (typeof v === "boolean") return `<span class="bool">${v}</span>`;
+      if (typeof v === "number") return `<span class="num">${v}</span>`;
+      if (typeof v === "string") return `<span class="str">"${esc(v)}"</span>`;
+      return esc(v);
+    };
+
+    const preview = (v) => Array.isArray(v)
+      ? `${v.length} items`
+      : `${Object.keys(v).length} keys`;
+
+    const render = (value, open = false) => {
+      if (value === null || typeof value !== "object") return leaf(value);
+      const isArr = Array.isArray(value);
+      const entries = isArr ? value.map((v, i) => [i, v]) : Object.entries(value);
+      if (!entries.length) return isArr ? "[]" : "{}";
+      let html = `<details class="json"${open ? " open" : ""}><summary>${isArr ? "[" : "{"} <span class="preview">${preview(value)}</span> ${isArr ? "]" : "}"}</summary><div class="coll">`;
+      for (const [k, v] of entries) {
+        const key = isArr ? `<span class="num">${k}</span>` : `<span class="key">${esc(k)}</span>`;
+        html += `<div>${key}: ${v !== null && typeof v === "object" ? render(v) : leaf(v)}</div>`;
+      }
+      return html + "</div></details>";
+    };
+
+    const root = document.getElementById("root");
+    Promise.all(files.map(async (file) => {
+      const data = await fetch(file).then((r) => {
+        if (!r.ok) throw new Error(`${file}: ${r.status}`);
+        return r.json();
+      });
+      return { file, data };
+    })).then((events) => {
+      for (const { file, data } of events) {
+        const el = document.createElement("details");
+        el.className = "event";
+        el.open = true;
+        el.innerHTML = `<summary>${esc(file)} <span class="preview">${esc(data.type || "")}</span></summary><div class="body">${render(data, true)}</div>`;
+        root.appendChild(el);
+      }
+    }).catch((e) => {
+      root.innerHTML = `<p class="err">Could not load JSON (browsers block fetch from file://). Open this folder over http, e.g. from the repo root:<br><code>npx --yes serve models/stripe-webhook</code><br>${esc(e.message)}</p>`;
+    });
+  </script>
+</body>
+</html>
