@@ -128,6 +128,8 @@ class
 | Method | Path                                                                 | Request Data                        | Response                                                       |
 | ------ | -------------------------------------------------------------------- | ----------------------------------- | -------------------------------------------------------------- |
 | GET    | [api/entitlements](server/routes/entitlements.ts)                    | query: — body: —                    | `{ access_level, free_sync_used, items_connected, can_add_bank, can_sync }` |
+| POST   | [api/billing/checkout](server/routes/billing.ts)                     | query: — body: —                    | `{ url }` — creates/reuses Stripe customer, Checkout Session (`mode: subscription`, `STRIPE_PRO_PRICE_ID`); redirect to hosted Checkout |
+| POST   | [api/billing/portal](server/routes/billing.ts)                       | query: — body: —                    | `{ url }` — creates/reuses Stripe customer, Billing Portal session; redirect to manage/cancel subscription |
 | POST   | [api/link/token](server/routes/link.ts)                              | query: — body: `{ daysRequested? }` | `{ link_token, ... }` or `403` `{ code: "PAYMENT_REQUIRED", reason: "add_bank" }` |
 | POST   | [api/link/exchange](server/routes/link.ts)                           | query: — body: `{ publicToken }`    | `{ success: true }` or `403` `{ code: "PAYMENT_REQUIRED", reason: "add_bank" }` |
 | GET    | [api/items](server/routes/items.ts#L9)                               | query: — body: —                    | `Item[]` (`id`, `institution_name` only; no Plaid access token) |

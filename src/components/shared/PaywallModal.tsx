@@ -1,3 +1,6 @@
+import { useEffect, useRef, useState } from "react";
+import { buildAuthHeaders } from "../../lib/auth";
+import { supabase } from "../../lib/supabase";
 import { Modal } from "./ui";
 
 type Props = {
@@ -6,15 +9,9 @@ type Props = {
   onClose: () => void;
 };
 
-const COPY: Record<"add_bank" | "sync", { title: string; body: string }> = {
-  add_bank: {
-    title: "Upgrade to link another bank",
-    body: "Free accounts can connect one bank. Upgrade to link more institutions."
-  },
-  sync: {
-    title: "Upgrade to sync again",
-    body: "Free accounts get one transaction sync. Upgrade for unlimited syncs."
-  }
+const TITLE: Record<"add_bank" | "sync", string> = {
+  add_bank: "Upgrade to link unlimited banks",
+  sync: "Upgrade for unlimited syncs"
 };
 
 export function LockIcon({ size = 14 }: { size?: number }) {
@@ -36,24 +33,80 @@ export function LockIcon({ size = 14 }: { size?: number }) {
   );
 }
 
-/** Placeholder paywall — checkout wiring comes later. */
+function ArrowIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden>
+      <path
+        d="M3.5 9h11M10 4.5 14.5 9 10 13.5"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export default function PaywallModal({ open, reason = "add_bank", onClose }: Props) {
-  const copy = COPY[reason === "sync" ? "sync" : "add_bank"];
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [arrow, setArrow] = useState<"in" | "out" | "reset">("reset");
+  const leaveTimer = useRef<number | null>(null);
+
+  useEffect(() => () => { if (leaveTimer.current) window.clearTimeout(leaveTimer.current); }, []);
+  useEffect(() => {
+    if (!open) {
+      if (leaveTimer.current) window.clearTimeout(leaveTimer.current);
+      setArrow("reset");
+      setBusy(false);
+      setError(null);
+    }
+  }, [open]);
+
+  const onCheckout = async () => {
+    setBusy(true); setError(null);
+    try {
+      const { data } = await supabase.auth.getSession();
+      const token = data.session?.access_token;
+      if (!token) throw new Error("Not signed in");
+      const res = await fetch("/api/billing/checkout", { method: "POST", headers: buildAuthHeaders(token) });
+      const body = await res.json().catch(() => ({})) as { url?: string; error?: string };
+      if (!res.ok || !body.url) throw new Error(body.error || `Checkout failed (${res.status})`);
+      window.location.href = body.url;
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Unable to start checkout.");
+      setBusy(false);
+    }
+  };
+
   return (
     <Modal
       open={open}
-      title={copy.title}
+      title={TITLE[reason === "sync" ? "sync" : "add_bank"]}
       onClose={onClose}
-      footer={
-        <>
-          <button type="button" className="btn ghost" onClick={onClose}>Not now</button>
-          <button type="button" className="btn primary" disabled title="Coming soon">
-            Upgrade (coming soon)
-          </button>
-        </>
-      }
+      showClose={false}
     >
-      <p className="muted" style={{ margin: 0 }}>{copy.body}</p>
+      <div className="paywall-cta">
+        <button
+          type="button"
+          className={`btn primary btn-pricing${arrow === "in" ? " is-hot" : ""}`}
+          disabled={busy}
+          onClick={() => void onCheckout()}
+          onMouseEnter={() => {
+            if (leaveTimer.current) window.clearTimeout(leaveTimer.current);
+            setArrow("in");
+          }}
+          onMouseLeave={() => {
+            setArrow("out");
+            leaveTimer.current = window.setTimeout(() => setArrow("reset"), 280);
+          }}
+        >
+          <span className={`btn-pricing-arrow ${arrow}`}><ArrowIcon /></span>
+          <span className="btn-pricing-label">{busy ? "Redirecting…" : "Check Pricing"}</span>
+        </button>
+        <button type="button" className="btn ghost" onClick={onClose}>Not now</button>
+        {error && <p className="danger-text mt-3" style={{ marginBottom: 0, width: "100%", textAlign: "center" }}>{error}</p>}
+      </div>
     </Modal>
   );
 }

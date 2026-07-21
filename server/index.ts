@@ -10,6 +10,7 @@ import transactionMetaRouter from "./routes/transaction_meta";
 import tagsRouter from "./routes/tags";
 import budgetRulesRouter from "./routes/budget_rules";
 import entitlementsRouter from "./routes/entitlements";
+import billingRouter from "./routes/billing";
 import { stripeWebhook } from "./routes/webhooks";
 import { requireAuth } from "./middleware/auth";
 
@@ -31,6 +32,7 @@ app.use("/api", transactionMetaRouter);
 app.use("/api", tagsRouter);
 app.use("/api", budgetRulesRouter);
 app.use("/api", entitlementsRouter);
+app.use("/api", billingRouter);
 
 if (fs.existsSync(distPath)) {
   app.get("*", (req, res, next) => {

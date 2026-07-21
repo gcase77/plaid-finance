@@ -124,7 +124,7 @@ export function Switch({ checked, onChange, label, id }: { checked: boolean; onC
   );
 }
 
-export function Modal({ open, title, onClose, footer, children }: { open: boolean; title?: ReactNode; onClose: () => void; footer?: ReactNode; children: ReactNode }) {
+export function Modal({ open, title, onClose, footer, children, showClose = true }: { open: boolean; title?: ReactNode; onClose: () => void; footer?: ReactNode; children: ReactNode; showClose?: boolean }) {
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
@@ -136,13 +136,13 @@ export function Modal({ open, title, onClose, footer, children }: { open: boolea
     <div className="modal-backdrop" onClick={onClose} role="dialog" aria-modal="true">
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         {title && (
-          <div className="modal-header">
+          <div className={`modal-header${showClose ? "" : " centered"}`}>
             <h3>{title}</h3>
-            <button className="btn ghost btn-icon btn-sm" onClick={onClose} aria-label="Close">✕</button>
+            {showClose && <button className="btn ghost btn-icon btn-sm" onClick={onClose} aria-label="Close">✕</button>}
           </div>
         )}
         <div className="modal-body">{children}</div>
-        {footer && <div className="modal-footer">{footer}</div>}
+        {footer && <div className={`modal-footer${showClose ? "" : " centered"}`}>{footer}</div>}
       </div>
     </div>
   );
