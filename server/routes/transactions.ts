@@ -279,7 +279,7 @@ router.post("/transactions/sync", async (req, res) => {
     clearTransactionsCache(user.id);
     res.json({ success: true, ...result });
   } catch (e: any) {
-    logger.log("error", "sync transactions", { err: e, userId: (req as any).user?.id });
+    logger.log("error", `transaction sync failed: ${e.message}`);
     res.status(500).json({ error: e.message });
   }
 });

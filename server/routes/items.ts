@@ -46,7 +46,7 @@ router.post("/items/:itemId/delete_all", async (req, res) => {
       } catch (e: any) {
         plaidRemoved = false;
         plaidError = e.response?.data?.error_message || e.message;
-        logger.log("error", "plaid itemRemove failed", { itemId, userId: user.id, err: plaidError });
+        logger.log("error", `plaid item removal failed: ${plaidError}`);
       }
     }
 
@@ -58,7 +58,7 @@ router.post("/items/:itemId/delete_all", async (req, res) => {
       ...(plaidError && { plaid_error: plaidError })
     });
   } catch (e: any) {
-    logger.log("error", "delete_all failed", { itemId, userId: user.id, err: e.message });
+    logger.log("error", `item delete_all failed: ${e.message}`);
     res.status(500).json({ error: e.message });
   }
 });
