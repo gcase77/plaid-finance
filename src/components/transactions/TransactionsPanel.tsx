@@ -9,7 +9,7 @@ import { TagBadge } from "../shared/TagBadge";
 import AppliedFiltersBar from "../shared/AppliedFiltersBar";
 import TransactionsFilterSection from "../shared/FilterSection";
 import TransactionTable from "../shared/TransactionTable";
-import { Alert, InfoTip, Popover } from "../shared/ui";
+import { Alert, InfoTip, Modal, Popover } from "../shared/ui";
 
 type Props = {
   syncTransactions: () => Promise<void>;
@@ -98,6 +98,7 @@ export default function TransactionsPanel({ syncTransactions, syncStatus, loadin
   const [editName, setEditName] = useState("");
   const [editColor, setEditColor] = useState(TAG_COLOR_PALETTE[0]);
   const [deleting, setDeleting] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState<{ id: number; name: string; kind: TagKind } | null>(null);
 
   const [applyOpen, setApplyOpen] = useState(false);
   const [removeOpen, setRemoveOpen] = useState(false);
@@ -372,7 +373,10 @@ export default function TransactionsPanel({ syncTransactions, syncStatus, loadin
                                   <button className="btn ghost btn-sm" onClick={() => { setEditingId(tag.id); setEditName(tag.name); setEditColor(getDisplayTagColor(tag.type, tag.color)); }}>Edit</button>
                                 )}
                                 {deleting && (
-                                  <button className="btn danger-ghost btn-sm" disabled={deleteMut.isPending} onClick={() => deleteMut.mutate(tag.id)}>Delete</button>
+                                  <button className="btn danger-ghost btn-sm" disabled={deleteMut.isPending} onClick={() => {
+                                    const kind: TagKind = tag.type === "meta" ? "meta" : tag.type.startsWith("income") ? "income" : "spending";
+                                    setConfirmDelete({ id: tag.id, name: tag.name, kind });
+                                  }}>Delete</button>
                                 )}
                               </div>
                             </>
@@ -491,6 +495,23 @@ export default function TransactionsPanel({ syncTransactions, syncStatus, loadin
           </div>
         </div>
       )}
+
+      <Modal
+        open={!!confirmDelete}
+        title="Delete tag?"
+        onClose={() => setConfirmDelete(null)}
+        footer={<>
+          <button className="btn ghost btn-sm" onClick={() => setConfirmDelete(null)}>Cancel</button>
+          <button className="btn danger btn-sm" disabled={deleteMut.isPending} onClick={() => {
+            if (!confirmDelete) return;
+            deleteMut.mutate(confirmDelete.id, { onSettled: () => setConfirmDelete(null) });
+          }}>
+            {deleteMut.isPending ? "Deleting…" : "Delete"}
+          </button>
+        </>}
+      >
+        <p>Are you sure you want to delete '{confirmDelete?.name}' {confirmDelete?.kind} tag?</p>
+      </Modal>
     </>
   );
 }
