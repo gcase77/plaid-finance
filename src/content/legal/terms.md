@@ -44,7 +44,7 @@ You agree not to:
 
 ## Payments and subscriptions
 
-Funds Up does not currently collect billing details or charge for paid features. If we offer paid features in the future, pricing, billing terms, renewal terms, cancellation steps, and refund rules will be shown before you are charged. Payment processing may be handled by a third-party processor such as Stripe.
+Funds Up offers paid features. Pricing, billing terms, renewal terms, cancellation steps, and refund rules are shown before you are charged. Payment processing is handled by a third-party processor such as Stripe.
 
 ## Privacy
 
@@ -58,7 +58,7 @@ We try to keep the Service reliable, but we do not promise that it will always b
 
 ## Third-party services
 
-The Service depends on third-party services such as Plaid, Supabase, hosting providers, and possibly payment processors. We are not responsible for third-party services, websites, terms, policies, outages, data errors, or security incidents outside our control.
+The Service depends on third-party services such as Plaid, Supabase, hosting providers, and payment processors. We are not responsible for third-party services, websites, terms, policies, outages, data errors, or security incidents outside our control.
 
 ## Intellectual property
 
