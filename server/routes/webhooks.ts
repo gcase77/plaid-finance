@@ -16,6 +16,8 @@ const PAID_STATUSES = new Set(["active", "trialing", "past_due"]);
 const customerIdOf = (sub: Stripe.Subscription) =>
   typeof sub.customer === "string" ? sub.customer : sub.customer.id;
 
+const redactCustomerId = (id: string) => id.slice(0, Math.ceil(id.length / 2)) + "...";
+
 export async function stripeWebhook(req: Request, res: Response) {
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
   if (!webhookSecret) {
@@ -84,11 +86,11 @@ export async function stripeWebhook(req: Request, res: Response) {
     let result = await prisma.subscriptions.updateMany({ where, data });
 
     if (result.count === 0) {
-      logger.log("warn", `stripe webhook primary lookup missed for customer ${customerId}`);
+      logger.log("warn", `stripe webhook primary lookup missed for customer ${redactCustomerId(customerId)}`);
       const customer = await stripe.customers.retrieve(customerId);
       const userId = !customer.deleted ? customer.metadata?.user_id : undefined;
       if (!userId) {
-        logger.log("error", `stripe webhook unmatched customer ${customerId}`);
+        logger.log("error", `stripe webhook unmatched customer ${redactCustomerId(customerId)}`);
         res.status(500).json({ error: "No matching subscription row" });
         return;
       }
