@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import type { Item, Account } from "../components/types";
 import { buildAuthHeaders } from "../lib/auth";
@@ -16,13 +16,14 @@ export type LinkBankResult =
   | { ok: true }
   | { ok: false; paymentRequired: true; reason: PaymentRequiredReason }
   | { ok: false; paymentRequired?: false; error: string };
+export type LinkBankFailureCallback = (error: string) => void;
 
 type UsePlaidDataReturn = {
   items: Item[];
   accountsByItem: Record<string, Account[]>;
   loadingItems: boolean;
   loadItems: (userId?: string | null, token?: string | null) => Promise<void>;
-  linkBank: (daysRequested?: number) => Promise<LinkBankResult>;
+  linkBank: (daysRequested?: number, onExchangeFailure?: LinkBankFailureCallback) => Promise<LinkBankResult>;
   deleteItem: (itemId: string) => Promise<DeleteItemResult>;
   refreshItemAccounts: (itemId: string) => Promise<RefreshAccountsResult>;
 };
@@ -32,6 +33,7 @@ export function usePlaidData(userId: string | null, token: string | null): UsePl
   const [items, setItems] = useState<Item[]>([]);
   const [accountsByItem, setAccountsByItem] = useState<Record<string, Account[]>>({});
   const [loadingItems, setLoadingItems] = useState(false);
+  const exchangeFailureRef = useRef<LinkBankFailureCallback | undefined>(undefined);
 
   const invalidateEntitlements = () =>
     queryClient.invalidateQueries({ queryKey: ENTITLEMENTS_QUERY_KEY });
@@ -64,6 +66,11 @@ export function usePlaidData(userId: string | null, token: string | null): UsePl
     }
   };
 
+  const reportExchangeFailure = async (exchangeRes: Response, onFailure?: LinkBankFailureCallback) => {
+    const data = await exchangeRes.json().catch(() => ({})) as { error?: string };
+    (onFailure ?? exchangeFailureRef.current)?.(data.error || `Token exchange failed (${exchangeRes.status})`);
+  };
+
   useEffect(() => {
     if (!userId || !token || !window.Plaid) return;
     if (!new URLSearchParams(window.location.search).get("oauth_state_id")) return;
@@ -82,6 +89,8 @@ export function usePlaidData(userId: string | null, token: string | null): UsePl
         if (exchangeRes.ok) {
           await loadItems(userId, token);
           await invalidateEntitlements();
+        } else {
+          await reportExchangeFailure(exchangeRes);
         }
         window.history.replaceState({}, "", window.location.pathname);
       },
@@ -95,7 +104,7 @@ export function usePlaidData(userId: string | null, token: string | null): UsePl
     // eslint-disable-next-line react-hooks/exhaustive-deps -- OAuth return after session restore; omit loadItems/fetchWithAuth
   }, [userId, token]);
 
-  const linkBank = async (daysRequested = 730): Promise<LinkBankResult> => {
+  const linkBank = async (daysRequested = 730, onExchangeFailure?: LinkBankFailureCallback): Promise<LinkBankResult> => {
     if (!userId) return { ok: false, error: "Not signed in" };
     const sanitizedDaysRequested = Math.min(730, Math.max(1, Number.isFinite(daysRequested) ? Math.floor(daysRequested) : 730));
     const linkTokenRes = await fetchWithAuth("/api/link/token", {
@@ -113,6 +122,7 @@ export function usePlaidData(userId: string | null, token: string | null): UsePl
     if (!(data as { link_token?: string })?.link_token || !window.Plaid) {
       return { ok: false, error: "Plaid Link is unavailable" };
     }
+    exchangeFailureRef.current = onExchangeFailure;
     sessionStorage.setItem(PLAID_LINK_TOKEN_KEY, (data as { link_token: string }).link_token);
     window.Plaid.create({
       token: (data as { link_token: string }).link_token,
@@ -126,6 +136,8 @@ export function usePlaidData(userId: string | null, token: string | null): UsePl
         if (exchangeRes.ok) {
           await loadItems();
           await invalidateEntitlements();
+        } else {
+          await reportExchangeFailure(exchangeRes, onExchangeFailure);
         }
       },
       onExit: () => sessionStorage.removeItem(PLAID_LINK_TOKEN_KEY)

@@ -38,21 +38,25 @@ const fetchTransactionMeta = async (token: string | null): Promise<TransactionMe
 };
 
 const syncTransactionsRequest = async (token: string | null): Promise<SyncTransactionsResult> => {
-  const res = await fetch("/api/transactions/sync", {
-    method: "POST",
-    headers: buildAuthHeaders(token)
-  });
-  const data = await res.json().catch(() => ({}));
-  if (res.status === 403 && isPaymentRequiredPayload(data)) {
-    return { ok: false, paymentRequired: true, reason: data.reason === "add_bank" ? "add_bank" : "sync" };
+  try {
+    const res = await fetch("/api/transactions/sync", {
+      method: "POST",
+      headers: buildAuthHeaders(token)
+    });
+    const data = await res.json().catch(() => ({}));
+    if (res.status === 403 && isPaymentRequiredPayload(data)) {
+      return { ok: false, paymentRequired: true, reason: data.reason === "add_bank" ? "add_bank" : "sync" };
+    }
+    if (!res.ok) return { ok: false, error: (data as { error?: string })?.error || `Sync failed (${res.status})` };
+    return {
+      ok: true,
+      added: (data as { added?: number }).added,
+      modified: (data as { modified?: number }).modified,
+      removed: (data as { removed?: number }).removed
+    };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "Sync failed" };
   }
-  if (!res.ok) return { ok: false, error: (data as { error?: string })?.error || `Sync failed (${res.status})` };
-  return {
-    ok: true,
-    added: (data as { added?: number }).added,
-    modified: (data as { modified?: number }).modified,
-    removed: (data as { removed?: number }).removed
-  };
 };
 
 export function useTransactionsData(token: string | null): UseTransactionsDataReturn {

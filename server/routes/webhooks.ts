@@ -106,7 +106,7 @@ export async function stripeWebhook(req: Request, res: Response) {
       rows = [{ user_id: userId }];
     }
 
-    await Promise.all(
+    await Promise.allSettled(
       rows.map((row) =>
         logger.to_db(
           "INFO",

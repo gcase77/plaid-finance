@@ -2,6 +2,7 @@ import express from "express";
 import { ensureSubscription, isPaidAccess } from "../lib/entitlements";
 import { stripe } from "../lib/stripe";
 import type { ServerRequest } from "../middleware/auth";
+import { logger } from "../logger";
 
 const router = express.Router();
 
@@ -73,8 +74,9 @@ router.post("/billing/checkout", async (req, res) => {
     });
     if (!session.url) return res.status(500).json({ error: "Checkout session missing URL" });
     res.json({ url: session.url });
-  } catch (e: any) {
-    res.status(500).json({ error: e.message });
+  } catch (e: unknown) {
+    logger.log("error", `billing checkout failed: ${e instanceof Error ? e.message : e}`);
+    res.status(500).json({ error: "Checkout failed" });
   }
 });
 
@@ -82,8 +84,9 @@ router.post("/billing/portal", async (req, res) => {
   try {
     const url = await portalUrl(req as unknown as ServerRequest);
     res.json({ url });
-  } catch (e: any) {
-    res.status(500).json({ error: e.message });
+  } catch (e: unknown) {
+    logger.log("error", `billing portal failed: ${e instanceof Error ? e.message : e}`);
+    res.status(500).json({ error: "Portal session failed" });
   }
 });
 
