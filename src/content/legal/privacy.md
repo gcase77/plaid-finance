@@ -15,7 +15,7 @@ We collect only the information needed to provide and operate the service:
 - Product data you create in Funds Up, such as tags, budget rules, transfer groupings, filters, settings, and other organization choices.
 - Support information you send to us, such as emails, requests, bug reports, and related contact details.
 - Technical and security information, such as logs, device or browser information, IP address, authentication status, and events needed to keep the service reliable and secure.
-- Billing information if we offer paid features in the future. Payment details may include payment method and billing details, and would be processed by a payment provider such as Stripe rather than stored directly by us.
+- Billing information for paid features. Payment details may include payment method and billing details, and are processed by a payment provider such as Stripe rather than stored directly by us.
 
 We do not intentionally collect Social Security numbers, government IDs, health information, biometric identifiers, precise location, or information about children.
 
@@ -43,7 +43,7 @@ We do not sell your personal information. We do not use your connected financial
 
 We share information only when needed to operate the service, comply with law, or protect rights:
 
-- Service providers. We use providers such as Supabase for authentication and database services, Plaid for financial account connections, hosting and infrastructure providers, and, if paid features are added, payment processors such as Stripe.
+- Service providers. We use providers such as Supabase for authentication and database services, Plaid for financial account connections, hosting and infrastructure providers, and payment processors such as Stripe.
 - Legal and safety reasons. We may disclose information if required by law, legal process, or a good-faith belief that disclosure is needed to protect users, the service, or others.
 - Business transfers. If Funds Up is involved in a merger, acquisition, financing, reorganization, or sale of assets, information may be transferred as part of that transaction.
 - With your direction. We may share information when you ask us to or when a feature clearly requires it.
