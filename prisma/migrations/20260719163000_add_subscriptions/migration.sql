@@ -29,7 +29,7 @@ CREATE OR REPLACE FUNCTION public.create_subscription_for_user()
 RETURNS TRIGGER
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public
+SET search_path = ''
 AS $$
 BEGIN
   INSERT INTO public.subscriptions (user_id, stripe_subscription_status, access_level, free_sync_used)
@@ -47,10 +47,3 @@ CREATE TRIGGER on_user_created_subscription
 
 -- RLS: enabled with no write policies → clients cannot insert/update/delete
 ALTER TABLE "subscriptions" ENABLE ROW LEVEL SECURITY;
-
--- Apply in Supabase SQL editor (Prisma shadow DB has no auth schema):
--- CREATE POLICY "subscriptions_select_own"
---   ON public.subscriptions
---   FOR SELECT
---   TO authenticated
---   USING (auth.uid() = user_id);

@@ -6,7 +6,9 @@ import type { ServerRequest } from "../middleware/auth";
 const router = express.Router();
 
 function appBaseUrl() {
-  return (process.env.APP_BASE_URL || "http://localhost:5173").replace(/\/$/, "");
+  const base = process.env.APP_BASE_URL?.replace(/\/$/, "");
+  if (!base) throw new Error("APP_BASE_URL is not configured");
+  return base;
 }
 
 async function getOrCreateCustomer(req: ServerRequest) {
@@ -22,10 +24,18 @@ async function getOrCreateCustomer(req: ServerRequest) {
     email: user.email ?? undefined,
     metadata: { user_id: user.id }
   });
-  await prisma.subscriptions.update({
-    where: { user_id: user.id },
+  const claimed = await prisma.subscriptions.updateMany({
+    where: { user_id: user.id, stripe_customer_id: null },
     data: { stripe_customer_id: customer.id }
   });
+  if (claimed.count === 0) {
+    const winner = await prisma.subscriptions.findUnique({
+      where: { user_id: user.id },
+      select: { stripe_customer_id: true }
+    });
+    if (!winner?.stripe_customer_id) throw new Error("Failed to resolve Stripe customer");
+    return winner.stripe_customer_id;
+  }
   return customer.id;
 }
 
