@@ -43,6 +43,7 @@ export async function stripeWebhook(req: Request, res: Response) {
   try {
     const priceId = process.env.STRIPE_PRO_PRICE_ID;
     if (!priceId) {
+      logger.log("error", "stripe webhook failed: STRIPE_PRO_PRICE_ID is not configured");
       res.status(500).json({ error: "STRIPE_PRO_PRICE_ID is not configured" });
       return;
     }
@@ -83,6 +84,7 @@ export async function stripeWebhook(req: Request, res: Response) {
     let result = await prisma.subscriptions.updateMany({ where, data });
 
     if (result.count === 0) {
+      logger.log("warn", `stripe webhook primary lookup missed for customer ${customerId}`);
       const customer = await stripe.customers.retrieve(customerId);
       const userId = !customer.deleted ? customer.metadata?.user_id : undefined;
       if (!userId) {

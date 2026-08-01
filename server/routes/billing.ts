@@ -1,5 +1,5 @@
 import express from "express";
-import { ensureSubscription } from "../lib/entitlements";
+import { ensureSubscription, isPaidAccess } from "../lib/entitlements";
 import { stripe } from "../lib/stripe";
 import type { ServerRequest } from "../middleware/auth";
 
@@ -39,11 +39,26 @@ async function getOrCreateCustomer(req: ServerRequest) {
   return customer.id;
 }
 
+async function portalUrl(req: ServerRequest) {
+  const customerId = await getOrCreateCustomer(req);
+  const session = await stripe.billingPortal.sessions.create({
+    customer: customerId,
+    return_url: `${appBaseUrl()}/account`
+  });
+  return session.url;
+}
+
 router.post("/billing/checkout", async (req, res) => {
   try {
     const serverReq = req as unknown as ServerRequest;
     const priceId = process.env.STRIPE_PRO_PRICE_ID;
     if (!priceId) return res.status(500).json({ error: "STRIPE_PRO_PRICE_ID is not configured" });
+
+    const sub = await ensureSubscription(serverReq.prisma, serverReq.user.id);
+    if (isPaidAccess(sub.access_level)) {
+      const url = await portalUrl(serverReq);
+      return res.json({ url });
+    }
 
     const customerId = await getOrCreateCustomer(serverReq);
     const base = appBaseUrl();
@@ -65,13 +80,8 @@ router.post("/billing/checkout", async (req, res) => {
 
 router.post("/billing/portal", async (req, res) => {
   try {
-    const serverReq = req as unknown as ServerRequest;
-    const customerId = await getOrCreateCustomer(serverReq);
-    const session = await stripe.billingPortal.sessions.create({
-      customer: customerId,
-      return_url: `${appBaseUrl()}/account`
-    });
-    res.json({ url: session.url });
+    const url = await portalUrl(req as unknown as ServerRequest);
+    res.json({ url });
   } catch (e: any) {
     res.status(500).json({ error: e.message });
   }
