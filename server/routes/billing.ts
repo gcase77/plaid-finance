@@ -67,6 +67,7 @@ router.post("/billing/checkout", async (req, res) => {
       mode: "subscription",
       customer: customerId,
       line_items: [{ price: priceId, quantity: 1 }],
+      allow_promotion_codes: true,
       success_url: `${base}/account?checkout=success`,
       cancel_url: `${base}/account?checkout=canceled`,
       client_reference_id: serverReq.user.id,
