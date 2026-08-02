@@ -2,6 +2,26 @@ import pino from "pino";
 import type { PrismaClient } from "../generated/prisma/client";
 import { prisma } from "./lib/prisma";
 
+// Keys whose values are secrets, and string patterns that look like tokens
+// (Plaid access/public/link tokens, Stripe keys, JWTs, bearer values).
+const TOKEN_KEY_RE = /token|secret|api[-_]?key|authorization|password/i;
+const TOKEN_VALUE_RE =
+  /\b(access|public|link)-(sandbox|development|production)-[\w-]+\b|\b(sk|rk|pk|whsec)_[A-Za-z0-9]{8,}\b|\beyJ[\w-]+\.[\w-]+\.[\w-]+\b|\bBearer\s+\S+/g;
+
+export function redactTokens<T>(value: T): T {
+  if (typeof value === "string") return value.replace(TOKEN_VALUE_RE, "[REDACTED]") as T;
+  if (Array.isArray(value)) return value.map(redactTokens) as T;
+  if (value && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value as Record<string, any>).map(([k, v]) => [
+        k,
+        TOKEN_KEY_RE.test(k) && v != null ? "[REDACTED]" : redactTokens(v)
+      ])
+    ) as T;
+  }
+  return value;
+}
+
 const levelMap: Record<string, number> = {
   TRACE: 5,
   DEBUG: 10,
@@ -49,8 +69,8 @@ export class Logger {
         user_id,
         type,
         level: levelValue,
-        metadata: metadata ?? undefined,
-        raw_payload: raw_payload ?? undefined
+        metadata: metadata ? redactTokens(metadata) : undefined,
+        raw_payload: raw_payload ? redactTokens(raw_payload) : undefined
       }
     });
   }

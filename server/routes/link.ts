@@ -2,13 +2,22 @@ import express from "express";
 import { logger } from "../logger";
 import { plaid } from "../lib/plaid";
 import { getInstitutionMetadata } from "../lib/institutions";
+import {
+  getEntitlements,
+  paymentRequiredPayload
+} from "../lib/entitlements";
 import type { ServerRequest } from "../middleware/auth";
 
 const router = express.Router();
 
 router.post("/link/token", async (req, res) => {
   try {
-    const userId = (req as unknown as ServerRequest).user.id;
+    const { user, prisma } = req as unknown as ServerRequest;
+    const userId = user.id;
+    const entitlements = await getEntitlements(prisma, userId);
+    if (!entitlements.can_add_bank) {
+      return res.status(403).json(paymentRequiredPayload("add_bank"));
+    }
     const requestedDays = Number(req.body?.daysRequested);
     const daysRequested = Number.isFinite(requestedDays)
       ? Math.min(730, Math.max(1, Math.floor(requestedDays)))
@@ -23,10 +32,10 @@ router.post("/link/token", async (req, res) => {
     };
     if (process.env.PLAID_REDIRECT_URI) linkTokenRequest.redirect_uri = process.env.PLAID_REDIRECT_URI;
     const { data } = await plaid.linkTokenCreate(linkTokenRequest);
-    logger.log("info", "plaid linkTokenCreate", { input: linkTokenRequest, output: data });
+    logger.log("info", `link token created (${daysRequested} days requested)`);
     res.json(data);
   } catch (e: any) {
-    logger.log("error", "link-token", { err: e, plaid: e?.response?.data, message: e?.message, request: e?.request });
+    logger.log("error", `link token creation failed: ${e?.response?.data?.error_code || e?.message}`);
     res.status(500).json({ error: e.response?.data?.error_message || e.message });
   }
 });
@@ -37,13 +46,28 @@ router.post("/link/exchange", async (req, res) => {
     const userId = user.id;
     const { publicToken } = req.body;
     if (!publicToken) return res.status(400).json({ error: "publicToken required" });
+
+    if (!(await getEntitlements(prisma, userId)).can_add_bank) {
+      return res.status(403).json(paymentRequiredPayload("add_bank"));
+    }
+
     const exchangeReq = { public_token: publicToken };
     const { data } = await plaid.itemPublicTokenExchange(exchangeReq);
-    logger.log("info", "plaid itemPublicTokenExchange", { meta: { userId }, input: exchangeReq, output: data });
+    logger.log("info", "public token exchanged for new item");
+
+    // Re-check after Plaid exchange in case of concurrent link attempts
+    if (!(await getEntitlements(prisma, userId)).can_add_bank) {
+      try {
+        await plaid.itemRemove({ access_token: data.access_token });
+      } catch (removeErr: any) {
+        logger.log("error", `item removal after gated exchange failed: ${removeErr?.response?.data?.error_code || removeErr?.message}`);
+      }
+      return res.status(403).json(paymentRequiredPayload("add_bank"));
+    }
 
     const itemReq = { access_token: data.access_token };
     const item = await plaid.itemGet(itemReq);
-    logger.log("info", "plaid itemGet", { input: itemReq, output: item.data });
+    logger.log("info", "item details fetched");
 
     const itemData = item.data.item;
     const institution = await getInstitutionMetadata(itemData.institution_id);
@@ -70,7 +94,7 @@ router.post("/link/exchange", async (req, res) => {
 
     const accountsReq = { access_token: data.access_token };
     const accounts = await plaid.accountsGet(accountsReq);
-    logger.log("info", "plaid accountsGet", { input: accountsReq, output: accounts.data });
+    logger.log("info", `accounts fetched for new item (${accounts.data.accounts.length} accounts)`);
 
     await prisma.accounts.createMany({
       data: accounts.data.accounts.map((account) => ({
@@ -89,7 +113,7 @@ router.post("/link/exchange", async (req, res) => {
 
     res.json({ success: true });
   } catch (e: any) {
-    logger.log("error", "exchange", { err: e, plaid: e?.response?.data, meta: { userId: req.body?.userId } });
+    logger.log("error", `link exchange failed: ${e?.response?.data?.error_code || e?.message}`);
     res.status(500).json({ error: e.response?.data?.error_message || e.message });
   }
 });

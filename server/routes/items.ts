@@ -2,6 +2,7 @@ import express from "express";
 import { plaid } from "../lib/plaid";
 import { logger } from "../logger";
 import { clearTransactionsCache, clearTransactionMetaCache } from "../lib/caches";
+import { resetFreeSyncIfNoItems } from "../lib/entitlements";
 import type { ServerRequest } from "../middleware/auth";
 
 const router = express.Router();
@@ -32,6 +33,8 @@ router.post("/items/:itemId/delete_all", async (req, res) => {
       await tx.items.delete({ where: { id: itemId } });
     });
 
+    await resetFreeSyncIfNoItems(prisma, user.id);
+
     clearTransactionsCache(user.id);
     clearTransactionMetaCache(user.id);
 
@@ -43,7 +46,7 @@ router.post("/items/:itemId/delete_all", async (req, res) => {
       } catch (e: any) {
         plaidRemoved = false;
         plaidError = e.response?.data?.error_message || e.message;
-        logger.log("error", "plaid itemRemove failed", { itemId, userId: user.id, err: plaidError });
+        logger.log("error", `plaid item removal failed: ${plaidError}`);
       }
     }
 
@@ -55,7 +58,7 @@ router.post("/items/:itemId/delete_all", async (req, res) => {
       ...(plaidError && { plaid_error: plaidError })
     });
   } catch (e: any) {
-    logger.log("error", "delete_all failed", { itemId, userId: user.id, err: e.message });
+    logger.log("error", `item delete_all failed: ${e.message}`);
     res.status(500).json({ error: e.message });
   }
 });

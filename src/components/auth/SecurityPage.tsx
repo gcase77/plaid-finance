@@ -1,6 +1,9 @@
 import { FormEvent, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import type { Session } from "@supabase/supabase-js";
+import { useEntitlements } from "../../hooks/useEntitlements";
 import { applyStoredTheme, persistTheme, readStoredTheme, APP_THEME_KEY, type AppThemeMode } from "../../lib/appTheme";
+import { buildAuthHeaders } from "../../lib/auth";
 import { supabase } from "../../lib/supabase";
 import { Alert } from "../shared/ui";
 
@@ -10,6 +13,10 @@ type Enrollment = { factorId: string; qrCode: string; secret: string | null };
 const FACTOR_NAME = "Funds Up authenticator app";
 
 export default function SecurityPage() {
+  const [session, setSession] = useState<Session | null>(null);
+  const token = session?.access_token ?? null;
+  const entitlements = useEntitlements(token);
+  const isPro = (entitlements.entitlements?.access_level ?? 1) >= 2;
   const [verified, setVerified] = useState<Factor[]>([]);
   const [unverified, setUnverified] = useState<Factor[]>([]);
   const [enrollment, setEnrollment] = useState<Enrollment | null>(null);
@@ -17,10 +24,14 @@ export default function SecurityPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [busy, setBusy] = useState<"start" | "verify" | string | null>(null);
+  const [busy, setBusy] = useState<"start" | "verify" | "checkout" | "portal" | string | null>(null);
   const [signOutErr, setSignOutErr] = useState<string | null>(null);
   const [signingOut, setSigningOut] = useState(false);
   const [themeMode, setThemeMode] = useState<AppThemeMode>(() => readStoredTheme());
+
+  useEffect(() => {
+    void supabase.auth.getSession().then(({ data }) => setSession(data.session));
+  }, []);
 
   const load = async () => {
     setLoading(true); setError(null);
@@ -104,12 +115,27 @@ export default function SecurityPage() {
   const has = verified.length > 0;
   const canStart = !enrollment && !loading && !has;
 
+  const runBilling = async (action: "checkout" | "portal") => {
+    if (!token) { setError("Not signed in."); return; }
+    setBusy(action); setError(null);
+    try {
+      const path = action === "checkout" ? "/api/billing/checkout" : "/api/billing/portal";
+      const res = await fetch(path, { method: "POST", headers: buildAuthHeaders(token) });
+      const body = await res.json().catch(() => ({})) as { url?: string; error?: string };
+      if (!res.ok || !body.url) throw new Error(body.error || `Billing request failed (${res.status})`);
+      window.location.href = body.url;
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Billing request failed.");
+      setBusy(null);
+    }
+  };
+
   return (
     <div className="account-page">
       <header className="page-header">
         <div>
           <h1>Account</h1>
-          <p className="desc">Manage multi-factor authentication for your account.</p>
+          <p className="desc">Manage billing, appearance, and multi-factor authentication.</p>
         </div>
         <div className="page-actions">
           <button
@@ -133,6 +159,26 @@ export default function SecurityPage() {
       {signOutErr && <div className="mb-3"><Alert tone="danger" onClose={() => setSignOutErr(null)}>{signOutErr}</Alert></div>}
       {error && <div className="mb-3"><Alert tone="danger" onClose={() => setError(null)}>{error}</Alert></div>}
       {success && <div className="mb-3"><Alert tone="success" onClose={() => setSuccess(null)}>{success}</Alert></div>}
+
+      <div className="card mb-4">
+        <div className="between mb-3">
+          <div>
+            <h3>Billing</h3>
+            <p className="small muted mt-2">{isPro ? "You’re on the Pro plan." : "Upgrade for unlimited banks and syncs."}</p>
+          </div>
+          <span className={`chip ${isPro ? "chip-success" : ""}`}>{isPro ? "Pro" : "Free"}</span>
+        </div>
+        <div className={`row-flex gap-2 ${isPro ? "justify-center" : ""}`}>
+          {!isPro && (
+            <button type="button" className="btn primary" disabled={busy === "checkout" || !token} onClick={() => void runBilling("checkout")}>
+              {busy === "checkout" ? "Redirecting…" : "Upgrade Plan"}
+            </button>
+          )}
+          <button type="button" className="btn ghost" disabled={busy === "portal" || !token} onClick={() => void runBilling("portal")}>
+            {busy === "portal" ? "Redirecting…" : "Billing Portal"}
+          </button>
+        </div>
+      </div>
 
       <div className="card mb-4">
         <div className="between mb-3">

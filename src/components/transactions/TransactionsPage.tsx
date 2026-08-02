@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { useQuery } from "@tanstack/react-query";
+import { useEntitlements } from "../../hooks/useEntitlements";
 import { useTransactionFilters } from "../../hooks/useTransactionFilters";
 import { useTransactionsData } from "../../hooks/useTransactionsData";
 import type { Tag } from "../types";
@@ -12,6 +13,7 @@ export default function TransactionsPage() {
   const [session, setSession] = useState<Session | null>(null);
   const token = session?.access_token ?? null;
   const transactionData = useTransactionsData(token);
+  const entitlements = useEntitlements(token);
   const filters = useTransactionFilters(transactionData.transactions);
   const tagsQuery = useQuery({
     queryKey: ["tags"],
@@ -39,6 +41,8 @@ export default function TransactionsPage() {
       tagsError={tagsQuery.error}
       token={token}
       invalidateTransactionMeta={transactionData.invalidateTransactionMeta}
+      canSync={entitlements.canSync}
+      onPaymentRequired={() => entitlements.invalidateEntitlements()}
     />
   );
 }
