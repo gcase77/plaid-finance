@@ -1,0 +1,2860 @@
+{
+  "tags": [
+    {
+      "id": 2,
+      "name": "interest",
+      "type": "income_bucket_1",
+      "user_id": "demo",
+      "color": "#198754"
+    },
+    {
+      "id": 3,
+      "name": "salary",
+      "type": "income_bucket_1",
+      "user_id": "demo",
+      "color": "#198754"
+    },
+    {
+      "id": 4,
+      "name": "restaurant",
+      "type": "spending_bucket_1",
+      "user_id": "demo",
+      "color": "#e63946"
+    },
+    {
+      "id": 5,
+      "name": "groceries",
+      "type": "spending_bucket_1",
+      "user_id": "demo",
+      "color": "#e63946"
+    },
+    {
+      "id": 6,
+      "name": "travel",
+      "type": "spending_bucket_1",
+      "user_id": "demo",
+      "color": "#e63946"
+    },
+    {
+      "id": 7,
+      "name": "hotel",
+      "type": "spending_bucket_1",
+      "user_id": "demo",
+      "color": "#e63946"
+    },
+    {
+      "id": 8,
+      "name": "hardware",
+      "type": "spending_bucket_1",
+      "user_id": "demo",
+      "color": "#e63946"
+    },
+    {
+      "id": 9,
+      "name": "remodel project",
+      "type": "meta",
+      "user_id": "demo",
+      "color": "#7209b7"
+    },
+    {
+      "id": 10,
+      "name": "utilities",
+      "type": "spending_bucket_1",
+      "user_id": "demo",
+      "color": "#e63946"
+    },
+    {
+      "id": 11,
+      "name": "car gas",
+      "type": "spending_bucket_1",
+      "user_id": "demo",
+      "color": "#e63946"
+    },
+    {
+      "id": 12,
+      "name": "entertainment",
+      "type": "spending_bucket_1",
+      "user_id": "demo",
+      "color": "#e63946"
+    }
+  ],
+  "items": [
+    {
+      "id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "institution_name": "First Platypus Bank",
+      "inst_url": "https://www.platypus.com",
+      "inst_logo": "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",
+      "inst_color": "#0075a3"
+    }
+  ],
+  "accounts": [
+    {
+      "id": "bGJnwQxLKRIlZzx4PZbncwXGkLGk7WcRE1m4m",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "name": "Chase Freedom Credit Card",
+      "official_name": "Chase Freedom Visa",
+      "type": "credit",
+      "subtype": "credit card",
+      "mask": "8841",
+      "balances": {
+        "limit": 8000,
+        "current": 1420.63,
+        "available": 6579.37,
+        "iso_currency_code": "USD",
+        "unofficial_currency_code": null
+      },
+      "holder_category": "personal"
+    },
+    {
+      "id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "name": "Chase Total Checking",
+      "official_name": "Chase Total Checking",
+      "type": "depository",
+      "subtype": "checking",
+      "mask": "1024",
+      "balances": {
+        "limit": null,
+        "current": 4825.14,
+        "available": 4512.79,
+        "iso_currency_code": "USD",
+        "unofficial_currency_code": null
+      },
+      "holder_category": "personal"
+    },
+    {
+      "id": "mGkxaZ5mj6INZ7QqzZXdCPkygqygE8iG9ngv4",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "name": "SoFi High Yield Savings",
+      "official_name": "SoFi Bank High Yield Savings",
+      "type": "depository",
+      "subtype": "savings",
+      "mask": "7719",
+      "balances": {
+        "limit": null,
+        "current": 12350.42,
+        "available": 12350.42,
+        "iso_currency_code": "USD",
+        "unofficial_currency_code": null
+      },
+      "holder_category": "personal"
+    }
+  ],
+  "transactions": [
+    {
+      "transaction_id": "9aAX5N8PmoHkeDjalewVTKxBldq73jI7RaM8d",
+      "name": "SOFI INTEREST PAYMENT",
+      "original_description": "SOFI INTEREST PAYMENT",
+      "merchant_name": "SoFi",
+      "amount": -12.73,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "SoFi",
+          "type": "financial_institution",
+          "website": "sofi.com",
+          "logo_url": "https://plaid-counterparty-logos.plaid.com/sofi_44.png",
+          "entity_id": "Jwmzr8p2YvO541zgm66Bm339mWgm56gYLJ4Ak",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "datetime": "2026-07-31T05:00:00.000Z",
+      "authorized_datetime": null,
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "INCOME",
+        "version": "v2",
+        "detailed": "INCOME_INTEREST_EARNED",
+        "confidence_level": "HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_INCOME.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "mGkxaZ5mj6INZ7QqzZXdCPkygqygE8iG9ngv4",
+      "account_name": "SoFi High Yield Savings",
+      "account_official_name": "SoFi Bank High Yield Savings",
+      "institution_name": "First Platypus Bank",
+      "account_transfer_group": null,
+      "netting_group": null,
+      "bucket_1_tag_id": 2,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": []
+    },
+    {
+      "transaction_id": "AZRX4bnLzouy5bqZd546TpexBEg5krCb1E3wM",
+      "name": "REFUND MARKET",
+      "original_description": "PAYPAL *REFUND MARKET",
+      "merchant_name": null,
+      "amount": -63.75,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "PayPal",
+          "type": "payment_app",
+          "website": "paypal.com",
+          "logo_url": "https://plaid-counterparty-logos.plaid.com/paypal_76.png",
+          "entity_id": "zwkjrQbbDQqZJRk3egOAo0XB7jnygNDJk9Vjz",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "datetime": "2026-07-29T05:00:00.000Z",
+      "authorized_datetime": null,
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "GENERAL_MERCHANDISE",
+        "version": "v2",
+        "detailed": "GENERAL_MERCHANDISE_OTHER_GENERAL_MERCHANDISE",
+        "confidence_level": "LOW"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_GENERAL_MERCHANDISE.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
+      "account_name": "Chase Total Checking",
+      "account_official_name": "Chase Total Checking",
+      "institution_name": "First Platypus Bank",
+      "account_transfer_group": null,
+      "netting_group": null,
+      "bucket_1_tag_id": null,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": []
+    },
+    {
+      "transaction_id": "mGkxaZ5mj6INZ7QqzZXdCPkw9V8BQEiGLz8jG",
+      "name": "Walgreens",
+      "original_description": "WALGREENS #06312",
+      "merchant_name": "Walgreens",
+      "amount": 58.56,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "Walgreens",
+          "type": "merchant",
+          "website": "walgreens.com",
+          "logo_url": "https://plaid-merchant-logos.plaid.com/walgreens_1099.png",
+          "entity_id": "1dOLXDKNJJMY67wMwVgo5K32Z7E9QRnqYV2Ba",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "datetime": "2026-07-27T05:00:00.000Z",
+      "authorized_datetime": null,
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": "06312"
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "MEDICAL",
+        "version": "v2",
+        "detailed": "MEDICAL_PHARMACIES_AND_SUPPLEMENTS",
+        "confidence_level": "VERY_HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_MEDICAL.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "bGJnwQxLKRIlZzx4PZbncwXGkLGk7WcRE1m4m",
+      "account_name": "Chase Freedom Credit Card",
+      "account_official_name": "Chase Freedom Visa",
+      "institution_name": "First Platypus Bank",
+      "account_transfer_group": null,
+      "netting_group": null,
+      "bucket_1_tag_id": 5,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": []
+    },
+    {
+      "transaction_id": "W75npgRaWBIB87r5L8vRsq7JEdXgQnCdlKqMB",
+      "name": "Nordstrom",
+      "original_description": "NORDSTROM 0342",
+      "merchant_name": "Nordstrom",
+      "amount": 89.14,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "Nordstrom",
+          "type": "merchant",
+          "website": "nordstrom.com",
+          "logo_url": "https://plaid-merchant-logos.plaid.com/nordstrom_684.png",
+          "entity_id": "bN0wJ6wvppDz375EzNJNQv9bBODam4qWOrE3k",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "datetime": "2026-07-24T05:00:00.000Z",
+      "authorized_datetime": null,
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": "Torrance",
+        "region": "CA",
+        "address": "21500 Hawthorne Blvd",
+        "country": null,
+        "postal_code": "90503",
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "GENERAL_MERCHANDISE",
+        "version": "v2",
+        "detailed": "GENERAL_MERCHANDISE_DEPARTMENT_STORES",
+        "confidence_level": "HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_GENERAL_MERCHANDISE.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
+      "account_name": "Chase Total Checking",
+      "account_official_name": "Chase Total Checking",
+      "institution_name": "First Platypus Bank",
+      "account_transfer_group": null,
+      "netting_group": null,
+      "bucket_1_tag_id": null,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": []
+    },
+    {
+      "transaction_id": "bGJnwQxLKRIlZzx4PZbncwXmnVWgv7IRVQrLy",
+      "name": "ONLINE PAYMENT THANK YOU",
+      "original_description": "ONLINE PAYMENT THANK YOU",
+      "merchant_name": null,
+      "amount": -329.57,
+      "iso_currency_code": "USD",
+      "counterparties": [],
+      "datetime": "2026-07-21T05:00:00.000Z",
+      "authorized_datetime": null,
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "LOAN_PAYMENTS",
+        "version": "v2",
+        "detailed": "LOAN_PAYMENTS_CREDIT_CARD_PAYMENT",
+        "confidence_level": "VERY_HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_LOAN_PAYMENTS.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "bGJnwQxLKRIlZzx4PZbncwXGkLGk7WcRE1m4m",
+      "account_name": "Chase Freedom Credit Card",
+      "account_official_name": "Chase Freedom Visa",
+      "institution_name": "First Platypus Bank",
+      "account_transfer_group": "5c887c47-9018-4007-a5b3-10a67cb4efd6",
+      "netting_group": null,
+      "bucket_1_tag_id": null,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": []
+    },
+    {
+      "transaction_id": "Ep5XnE98dLub7vz5P7VyHz14Jwj9MktaXJ3Qr",
+      "name": "CHASE CARD ONLINE PMT 8841",
+      "original_description": "CHASE CARD ONLINE PMT 8841",
+      "merchant_name": null,
+      "amount": 329.57,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "Chase Bank",
+          "type": "financial_institution",
+          "website": "chase.com",
+          "logo_url": null,
+          "entity_id": "o2Ry34bq605MvmEed3yjqjkYWwqRQYpnkjd0O",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "datetime": "2026-07-20T05:00:00.000Z",
+      "authorized_datetime": null,
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "LOAN_PAYMENTS",
+        "version": "v2",
+        "detailed": "LOAN_PAYMENTS_CREDIT_CARD_PAYMENT",
+        "confidence_level": "HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_LOAN_PAYMENTS.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
+      "account_name": "Chase Total Checking",
+      "account_official_name": "Chase Total Checking",
+      "institution_name": "First Platypus Bank",
+      "account_transfer_group": "5c887c47-9018-4007-a5b3-10a67cb4efd6",
+      "netting_group": null,
+      "bucket_1_tag_id": null,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": []
+    },
+    {
+      "transaction_id": "yXe1DzV4E6uG75xjv7qPhLGBlWo59ZuJyepd7",
+      "name": "TRANSFER FROM CHASE CHECKING",
+      "original_description": "TRANSFER FROM CHASE CHECKING",
+      "merchant_name": null,
+      "amount": -475,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "Chase Bank",
+          "type": "financial_institution",
+          "website": "chase.com",
+          "logo_url": null,
+          "entity_id": "o2Ry34bq605MvmEed3yjqjkYWwqRQYpnkjd0O",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "datetime": "2026-07-20T05:00:00.000Z",
+      "authorized_datetime": null,
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "TRANSFER_IN",
+        "version": "v2",
+        "detailed": "TRANSFER_IN_ACCOUNT_TRANSFER",
+        "confidence_level": "HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_TRANSFER_IN.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "mGkxaZ5mj6INZ7QqzZXdCPkygqygE8iG9ngv4",
+      "account_name": "SoFi High Yield Savings",
+      "account_official_name": "SoFi Bank High Yield Savings",
+      "institution_name": "First Platypus Bank",
+      "account_transfer_group": "126baad1-8ef1-420d-8ad0-02a968d6c14a",
+      "netting_group": null,
+      "bucket_1_tag_id": null,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": []
+    },
+    {
+      "transaction_id": "8dkXvVpNbofvLEmdXLn4co9greXG3MHPwjeaz",
+      "name": "ONLINE TRANSFER TO SOFI SAVINGS",
+      "original_description": "ONLINE TRANSFER TO SOFI SAVINGS",
+      "merchant_name": "SoFi",
+      "amount": 475,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "SoFi",
+          "type": "financial_institution",
+          "website": "sofi.com",
+          "logo_url": "https://plaid-counterparty-logos.plaid.com/sofi_44.png",
+          "entity_id": "Jwmzr8p2YvO541zgm66Bm339mWgm56gYLJ4Ak",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "datetime": "2026-07-19T05:00:00.000Z",
+      "authorized_datetime": null,
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "TRANSFER_OUT",
+        "version": "v2",
+        "detailed": "TRANSFER_OUT_SAVINGS",
+        "confidence_level": "HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_TRANSFER_OUT.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
+      "account_name": "Chase Total Checking",
+      "account_official_name": "Chase Total Checking",
+      "institution_name": "First Platypus Bank",
+      "account_transfer_group": "126baad1-8ef1-420d-8ad0-02a968d6c14a",
+      "netting_group": null,
+      "bucket_1_tag_id": null,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": []
+    },
+    {
+      "transaction_id": "gG5qNZbExDIBympe9ybvsXvMAbedKWFegqdDM",
+      "name": "Amtrak",
+      "original_description": "AMTRAK GUEST REWARDS",
+      "merchant_name": "Amtrak",
+      "amount": 196.34,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "Amtrak",
+          "type": "merchant",
+          "website": "amtrak.com",
+          "logo_url": "https://plaid-merchant-logos.plaid.com/amtrak_59.png",
+          "entity_id": "gRgAY6y3Qaab2kNnXVL8YeKEQR1orKDreka2E",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "datetime": "2026-07-14T05:00:00.000Z",
+      "authorized_datetime": null,
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "TRANSPORTATION",
+        "version": "v2",
+        "detailed": "TRANSPORTATION_PUBLIC_TRANSIT",
+        "confidence_level": "HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_TRANSPORTATION.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
+      "account_name": "Chase Total Checking",
+      "account_official_name": "Chase Total Checking",
+      "institution_name": "First Platypus Bank",
+      "account_transfer_group": null,
+      "netting_group": null,
+      "bucket_1_tag_id": 6,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": []
+    },
+    {
+      "transaction_id": "nGzdb15y76IPXE3KkXAgHnlzmD9Mrbta6wgkm",
+      "name": "Best Buy",
+      "original_description": "BEST BUY 00041234",
+      "merchant_name": "Best Buy",
+      "amount": 91.44,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "Best Buy",
+          "type": "merchant",
+          "website": "bestbuy.com",
+          "logo_url": "https://plaid-merchant-logos.plaid.com/best_buy_103.png",
+          "entity_id": "q63vdERovbmjyQoYA6k7m6je8EzOv6ywA7Ea2",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "datetime": "2026-07-13T05:00:00.000Z",
+      "authorized_datetime": null,
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "GENERAL_MERCHANDISE",
+        "version": "v2",
+        "detailed": "GENERAL_MERCHANDISE_ELECTRONICS",
+        "confidence_level": "LOW"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_GENERAL_MERCHANDISE.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "bGJnwQxLKRIlZzx4PZbncwXGkLGk7WcRE1m4m",
+      "account_name": "Chase Freedom Credit Card",
+      "account_official_name": "Chase Freedom Visa",
+      "institution_name": "First Platypus Bank",
+      "account_transfer_group": null,
+      "netting_group": null,
+      "bucket_1_tag_id": null,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": []
+    },
+    {
+      "transaction_id": "oGBaWN5le6Ij9aVr391lcQ8qXr9p73UJR8G9k",
+      "name": "TST*LUNA CANTINA",
+      "original_description": "TST*LUNA CANTINA",
+      "merchant_name": null,
+      "amount": 48.92,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "Toast",
+          "type": "payment_terminal",
+          "website": "pos.toasttab.com",
+          "logo_url": "https://plaid-counterparty-logos.plaid.com/toast_182.png",
+          "entity_id": "VmnapWdRwMn50bwvEaKZRKNkQXW1LvNrwdLeW",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "datetime": "2026-07-10T05:00:00.000Z",
+      "authorized_datetime": null,
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "FOOD_AND_DRINK",
+        "version": "v2",
+        "detailed": "FOOD_AND_DRINK_RESTAURANT",
+        "confidence_level": "MEDIUM"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_FOOD_AND_DRINK.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
+      "account_name": "Chase Total Checking",
+      "account_official_name": "Chase Total Checking",
+      "institution_name": "First Platypus Bank",
+      "account_transfer_group": null,
+      "netting_group": null,
+      "bucket_1_tag_id": 4,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": []
+    },
+    {
+      "transaction_id": "Gg5XRBQW4VcXzwo57zVZTpongqXZL7CV1yR9R",
+      "name": "DIN TAI FUNG SEATTLE",
+      "original_description": "DIN TAI FUNG SEATTLE",
+      "merchant_name": null,
+      "amount": 67.22,
+      "iso_currency_code": "USD",
+      "counterparties": [],
+      "datetime": "2026-07-08T05:00:00.000Z",
+      "authorized_datetime": null,
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "FOOD_AND_DRINK",
+        "version": "v2",
+        "detailed": "FOOD_AND_DRINK_RESTAURANT",
+        "confidence_level": "HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_FOOD_AND_DRINK.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "bGJnwQxLKRIlZzx4PZbncwXGkLGk7WcRE1m4m",
+      "account_name": "Chase Freedom Credit Card",
+      "account_official_name": "Chase Freedom Visa",
+      "institution_name": "First Platypus Bank",
+      "account_transfer_group": null,
+      "netting_group": null,
+      "bucket_1_tag_id": 4,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": []
+    },
+    {
+      "transaction_id": "py34lp5qQ6CGgvQzxgDqhwl8pzXd3GI7L38gJ",
+      "name": "CITY OF SEATTLE UTILITIES",
+      "original_description": "CITY OF SEATTLE UTILITIES",
+      "merchant_name": null,
+      "amount": 133.27,
+      "iso_currency_code": "USD",
+      "counterparties": [],
+      "datetime": "2026-07-06T05:00:00.000Z",
+      "authorized_datetime": null,
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "RENT_AND_UTILITIES",
+        "version": "v2",
+        "detailed": "RENT_AND_UTILITIES_OTHER_UTILITIES",
+        "confidence_level": "LOW"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_RENT_AND_UTILITIES.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
+      "account_name": "Chase Total Checking",
+      "account_official_name": "Chase Total Checking",
+      "institution_name": "First Platypus Bank",
+      "account_transfer_group": null,
+      "netting_group": null,
+      "bucket_1_tag_id": 10,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": []
+    },
+    {
+      "transaction_id": "Lr5XQyVmeAiyXAP51X9lToGZrMEpm7HAPGd8k",
+      "name": "ACME CORP PAYROLL PPD",
+      "original_description": "ACME CORP PAYROLL PPD",
+      "merchant_name": "Acme Markets",
+      "amount": -2868.45,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "Acme Markets",
+          "type": "merchant",
+          "website": "acmemarkets.com",
+          "logo_url": "https://plaid-merchant-logos.plaid.com/acme_markets_12.png",
+          "entity_id": "5VDpAWnN4X9VYR437da5D71Bva4o7RLQ2V3NY",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "datetime": "2026-07-03T05:00:00.000Z",
+      "authorized_datetime": null,
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "INCOME",
+        "version": "v2",
+        "detailed": "INCOME_SALARY",
+        "confidence_level": "VERY_HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_INCOME.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
+      "account_name": "Chase Total Checking",
+      "account_official_name": "Chase Total Checking",
+      "institution_name": "First Platypus Bank",
+      "account_transfer_group": null,
+      "netting_group": null,
+      "bucket_1_tag_id": 3,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": []
+    },
+    {
+      "transaction_id": "Lr5XQyVmeAiyXAP51X9lToGdaElRZNCZnb5pG",
+      "name": "HOTELTONIGHT *BOOKING",
+      "original_description": "HOTELTONIGHT *BOOKING",
+      "merchant_name": null,
+      "amount": 112.35,
+      "iso_currency_code": "USD",
+      "counterparties": [],
+      "datetime": "2026-07-02T05:00:00.000Z",
+      "authorized_datetime": null,
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "TRAVEL",
+        "version": "v2",
+        "detailed": "TRAVEL_LODGING",
+        "confidence_level": "HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_TRAVEL.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "bGJnwQxLKRIlZzx4PZbncwXGkLGk7WcRE1m4m",
+      "account_name": "Chase Freedom Credit Card",
+      "account_official_name": "Chase Freedom Visa",
+      "institution_name": "First Platypus Bank",
+      "account_transfer_group": null,
+      "netting_group": null,
+      "bucket_1_tag_id": 7,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": []
+    },
+    {
+      "transaction_id": "bGJnwQxLKRIlZzx4PZbncwXzlWJMm9IAp5eZw",
+      "name": "SOFI INTEREST PAYMENT",
+      "original_description": "SOFI INTEREST PAYMENT",
+      "merchant_name": "SoFi",
+      "amount": -12.41,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "SoFi",
+          "type": "financial_institution",
+          "website": "sofi.com",
+          "logo_url": "https://plaid-counterparty-logos.plaid.com/sofi_44.png",
+          "entity_id": "Jwmzr8p2YvO541zgm66Bm339mWgm56gYLJ4Ak",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "datetime": "2026-06-30T05:00:00.000Z",
+      "authorized_datetime": null,
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "INCOME",
+        "version": "v2",
+        "detailed": "INCOME_INTEREST_EARNED",
+        "confidence_level": "HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_INCOME.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "mGkxaZ5mj6INZ7QqzZXdCPkygqygE8iG9ngv4",
+      "account_name": "SoFi High Yield Savings",
+      "account_official_name": "SoFi Bank High Yield Savings",
+      "institution_name": "First Platypus Bank",
+      "account_transfer_group": null,
+      "netting_group": null,
+      "bucket_1_tag_id": 2,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": []
+    },
+    {
+      "transaction_id": "wGjZx9Kdk6IpZzWV7ZmLcNZnpv8oGyCnXv8jy",
+      "name": "ZELLE FROM M TORRES",
+      "original_description": "ZELLE FROM M TORRES",
+      "merchant_name": null,
+      "amount": -118.2,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "Zelle",
+          "type": "payment_app",
+          "website": "zellepay.com",
+          "logo_url": "https://plaid-counterparty-logos.plaid.com/zelle_73.png",
+          "entity_id": "zQ64DmD0mdD4r6QrYndzZWLwJn7DyJEYdwLYp",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "datetime": "2026-06-26T05:00:00.000Z",
+      "authorized_datetime": null,
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "TRANSFER_IN",
+        "version": "v2",
+        "detailed": "TRANSFER_IN_TRANSFER_IN_FROM_APPS",
+        "confidence_level": "HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_TRANSFER_IN.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
+      "account_name": "Chase Total Checking",
+      "account_official_name": "Chase Total Checking",
+      "institution_name": "First Platypus Bank",
+      "account_transfer_group": null,
+      "netting_group": null,
+      "bucket_1_tag_id": null,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": []
+    },
+    {
+      "transaction_id": "1q18L3lzgASr6VBqD6kpuoQrAaREvpC6dg1eG",
+      "name": "AMC LOEWS PACIFIC PL",
+      "original_description": "AMC LOEWS PACIFIC PL",
+      "merchant_name": "AMC Theatres",
+      "amount": 46.81,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "AMC Theatres",
+          "type": "merchant",
+          "website": "amctheatres.com",
+          "logo_url": "https://plaid-merchant-logos.plaid.com/amc_theatres_49.png",
+          "entity_id": "nADWWmL6e6BBZZLzvkvQn3evqKj61KrZanN1O",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "datetime": "2026-06-25T05:00:00.000Z",
+      "authorized_datetime": null,
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "ENTERTAINMENT",
+        "version": "v2",
+        "detailed": "ENTERTAINMENT_TV_AND_MOVIES",
+        "confidence_level": "VERY_HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_ENTERTAINMENT.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "bGJnwQxLKRIlZzx4PZbncwXGkLGk7WcRE1m4m",
+      "account_name": "Chase Freedom Credit Card",
+      "account_official_name": "Chase Freedom Visa",
+      "institution_name": "First Platypus Bank",
+      "account_transfer_group": null,
+      "netting_group": null,
+      "bucket_1_tag_id": 12,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": []
+    },
+    {
+      "transaction_id": "Mz5XRG7yQnc7zKP5LzDqhW1aymQjVqtagBrPE",
+      "name": "ONLINE PAYMENT THANK YOU",
+      "original_description": "ONLINE PAYMENT THANK YOU",
+      "merchant_name": null,
+      "amount": -287.96,
+      "iso_currency_code": "USD",
+      "counterparties": [],
+      "datetime": "2026-06-24T05:00:00.000Z",
+      "authorized_datetime": null,
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "LOAN_PAYMENTS",
+        "version": "v2",
+        "detailed": "LOAN_PAYMENTS_CREDIT_CARD_PAYMENT",
+        "confidence_level": "VERY_HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_LOAN_PAYMENTS.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "bGJnwQxLKRIlZzx4PZbncwXGkLGk7WcRE1m4m",
+      "account_name": "Chase Freedom Credit Card",
+      "account_official_name": "Chase Freedom Visa",
+      "institution_name": "First Platypus Bank",
+      "account_transfer_group": "56439f8a-cdbf-43ed-9942-4f6e66e56d01",
+      "netting_group": null,
+      "bucket_1_tag_id": null,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": []
+    },
+    {
+      "transaction_id": "Vj5JwGWdEzfLgBK5XgxGcaLMKWgNwzfGM4rev",
+      "name": "CHASE CARD ONLINE PMT 8841",
+      "original_description": "CHASE CARD ONLINE PMT 8841",
+      "merchant_name": null,
+      "amount": 287.96,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "Chase Bank",
+          "type": "financial_institution",
+          "website": "chase.com",
+          "logo_url": null,
+          "entity_id": "o2Ry34bq605MvmEed3yjqjkYWwqRQYpnkjd0O",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "datetime": "2026-06-23T05:00:00.000Z",
+      "authorized_datetime": null,
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "LOAN_PAYMENTS",
+        "version": "v2",
+        "detailed": "LOAN_PAYMENTS_CREDIT_CARD_PAYMENT",
+        "confidence_level": "HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_LOAN_PAYMENTS.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
+      "account_name": "Chase Total Checking",
+      "account_official_name": "Chase Total Checking",
+      "institution_name": "First Platypus Bank",
+      "account_transfer_group": "56439f8a-cdbf-43ed-9942-4f6e66e56d01",
+      "netting_group": null,
+      "bucket_1_tag_id": null,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": []
+    },
+    {
+      "transaction_id": "DL5X4j8gkECDV185NVBZu7VlLX9da1tjqgMxM",
+      "name": "ONLINE TRANSFER TO SOFI SAVINGS",
+      "original_description": "ONLINE TRANSFER TO SOFI SAVINGS",
+      "merchant_name": "SoFi",
+      "amount": 450,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "SoFi",
+          "type": "financial_institution",
+          "website": "sofi.com",
+          "logo_url": "https://plaid-counterparty-logos.plaid.com/sofi_44.png",
+          "entity_id": "Jwmzr8p2YvO541zgm66Bm339mWgm56gYLJ4Ak",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "datetime": "2026-06-21T05:00:00.000Z",
+      "authorized_datetime": null,
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "TRANSFER_OUT",
+        "version": "v2",
+        "detailed": "TRANSFER_OUT_SAVINGS",
+        "confidence_level": "HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_TRANSFER_OUT.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
+      "account_name": "Chase Total Checking",
+      "account_official_name": "Chase Total Checking",
+      "institution_name": "First Platypus Bank",
+      "account_transfer_group": "d43f7ba2-4ad7-4c9e-8623-5084a0de0d0a",
+      "netting_group": null,
+      "bucket_1_tag_id": null,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": []
+    },
+    {
+      "transaction_id": "nGzdb15y76IPXE3KkXAgHnlpP9gQz7c1qd4Wj",
+      "name": "TRANSFER FROM CHASE CHECKING",
+      "original_description": "TRANSFER FROM CHASE CHECKING",
+      "merchant_name": null,
+      "amount": -450,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "Chase Bank",
+          "type": "financial_institution",
+          "website": "chase.com",
+          "logo_url": null,
+          "entity_id": "o2Ry34bq605MvmEed3yjqjkYWwqRQYpnkjd0O",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "datetime": "2026-06-21T05:00:00.000Z",
+      "authorized_datetime": null,
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "TRANSFER_IN",
+        "version": "v2",
+        "detailed": "TRANSFER_IN_ACCOUNT_TRANSFER",
+        "confidence_level": "HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_TRANSFER_IN.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "mGkxaZ5mj6INZ7QqzZXdCPkygqygE8iG9ngv4",
+      "account_name": "SoFi High Yield Savings",
+      "account_official_name": "SoFi Bank High Yield Savings",
+      "institution_name": "First Platypus Bank",
+      "account_transfer_group": "d43f7ba2-4ad7-4c9e-8623-5084a0de0d0a",
+      "netting_group": null,
+      "bucket_1_tag_id": null,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": []
+    },
+    {
+      "transaction_id": "Xe5JQE84A3uj8wXlB8nNcoQwvL9KVACoA4aqZ",
+      "name": "Spotify",
+      "original_description": "SPOTIFY P0A6B3 PREMIUM",
+      "merchant_name": "Spotify",
+      "amount": 64.8,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "Spotify",
+          "type": "merchant",
+          "website": "spotify.com",
+          "logo_url": "https://plaid-merchant-logos.plaid.com/spotify_947.png",
+          "entity_id": "2373QOZJ18DqqK0KWvgpng3nmVDLMvDvy05RN",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "datetime": "2026-06-16T05:00:00.000Z",
+      "authorized_datetime": null,
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "ENTERTAINMENT",
+        "version": "v2",
+        "detailed": "ENTERTAINMENT_MUSIC_AND_AUDIO",
+        "confidence_level": "VERY_HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_ENTERTAINMENT.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
+      "account_name": "Chase Total Checking",
+      "account_official_name": "Chase Total Checking",
+      "institution_name": "First Platypus Bank",
+      "account_transfer_group": null,
+      "netting_group": null,
+      "bucket_1_tag_id": 12,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": []
+    },
+    {
+      "transaction_id": "ZZ5RpDqPnkuzpg3KbpPmUjBgdWw1PKcZy5BX4",
+      "name": "H MART 00027 BELLEVUE",
+      "original_description": "H MART 00027 BELLEVUE",
+      "merchant_name": "H Mart",
+      "amount": 84.17,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "H Mart",
+          "type": "merchant",
+          "website": "hmart.com",
+          "logo_url": "https://plaid-merchant-logos.plaid.com/h_mart_465.png",
+          "entity_id": "prWLmpV8OY0qpzd66VQ29O7AawOaQoBBy2jr8",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "datetime": "2026-06-13T05:00:00.000Z",
+      "authorized_datetime": null,
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": "Bellevue",
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "FOOD_AND_DRINK",
+        "version": "v2",
+        "detailed": "FOOD_AND_DRINK_GROCERIES",
+        "confidence_level": "HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_FOOD_AND_DRINK.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "bGJnwQxLKRIlZzx4PZbncwXGkLGk7WcRE1m4m",
+      "account_name": "Chase Freedom Credit Card",
+      "account_official_name": "Chase Freedom Visa",
+      "institution_name": "First Platypus Bank",
+      "account_transfer_group": null,
+      "netting_group": null,
+      "bucket_1_tag_id": 5,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": []
+    },
+    {
+      "transaction_id": "638DLNgaGkCel4j35lrLI4newkmQoziv7W5LJ",
+      "name": "Home Depot",
+      "original_description": "THE HOME DEPOT #721",
+      "merchant_name": "The Home Depot",
+      "amount": 214.09,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "The Home Depot",
+          "type": "merchant",
+          "website": "homedepot.com",
+          "logo_url": "https://plaid-merchant-logos.plaid.com/home_depot_491.png",
+          "entity_id": "kVawvV6p0R25gKw3qbp4Kq7kEzDdY5RnjV7RK",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "datetime": "2026-06-11T05:00:00.000Z",
+      "authorized_datetime": null,
+      "location": {
+        "lat": 36.046387,
+        "lon": -86.666306,
+        "city": "Antioch",
+        "region": "TN",
+        "address": "1155 Bell Rd",
+        "country": null,
+        "postal_code": "37013",
+        "store_number": "721"
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "HOME_IMPROVEMENT",
+        "version": "v2",
+        "detailed": "HOME_IMPROVEMENT_HARDWARE",
+        "confidence_level": "VERY_HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_HOME_IMPROVEMENT.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
+      "account_name": "Chase Total Checking",
+      "account_official_name": "Chase Total Checking",
+      "institution_name": "First Platypus Bank",
+      "account_transfer_group": null,
+      "netting_group": null,
+      "bucket_1_tag_id": 8,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": [
+        9
+      ]
+    },
+    {
+      "transaction_id": "Ra5nZX8zplHBpDb5Jpa3srd74bAG8kfeVKE3l",
+      "name": "Safeway",
+      "original_description": "SAFEWAY STORE 2741",
+      "merchant_name": "Safeway",
+      "amount": 93.51,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "Safeway",
+          "type": "merchant",
+          "website": "safeway.com",
+          "logo_url": "https://plaid-merchant-logos.plaid.com/safeway_853.png",
+          "entity_id": "DgqEw70j77DbJqybaK2rmMq6Zzwjg68J7B7zo",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "datetime": "2026-06-08T05:00:00.000Z",
+      "authorized_datetime": null,
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "FOOD_AND_DRINK",
+        "version": "v2",
+        "detailed": "FOOD_AND_DRINK_GROCERIES",
+        "confidence_level": "VERY_HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_FOOD_AND_DRINK.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
+      "account_name": "Chase Total Checking",
+      "account_official_name": "Chase Total Checking",
+      "institution_name": "First Platypus Bank",
+      "account_transfer_group": null,
+      "netting_group": null,
+      "bucket_1_tag_id": 5,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": []
+    },
+    {
+      "transaction_id": "Qd5y7gJrLRf7rkN5Wrlohe5j3J64rPsbQxV79",
+      "name": "Lyft",
+      "original_description": "LYFT *RIDE SUN 8PM",
+      "merchant_name": "Lyft",
+      "amount": 38.92,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "Lyft",
+          "type": "merchant",
+          "website": "lyft.com",
+          "logo_url": "https://plaid-merchant-logos.plaid.com/lyft_597.png",
+          "entity_id": "zBbZNQaVrRoDBEEv6ngwJ6wBk74Wd1venVVDa",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "datetime": "2026-06-07T05:00:00.000Z",
+      "authorized_datetime": null,
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "TRANSPORTATION",
+        "version": "v2",
+        "detailed": "TRANSPORTATION_TAXIS_AND_RIDE_SHARES",
+        "confidence_level": "VERY_HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_TRANSPORTATION.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "bGJnwQxLKRIlZzx4PZbncwXGkLGk7WcRE1m4m",
+      "account_name": "Chase Freedom Credit Card",
+      "account_official_name": "Chase Freedom Visa",
+      "institution_name": "First Platypus Bank",
+      "account_transfer_group": null,
+      "netting_group": null,
+      "bucket_1_tag_id": 6,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": []
+    },
+    {
+      "transaction_id": "vwPQ39qxo6umyqz4jykNULEWwdv8y4CyQjdAK",
+      "name": "ACME CORP PAYROLL PPD",
+      "original_description": "ACME CORP PAYROLL PPD",
+      "merchant_name": "Acme Markets",
+      "amount": -2849.77,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "Acme Markets",
+          "type": "merchant",
+          "website": "acmemarkets.com",
+          "logo_url": "https://plaid-merchant-logos.plaid.com/acme_markets_12.png",
+          "entity_id": "5VDpAWnN4X9VYR437da5D71Bva4o7RLQ2V3NY",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "datetime": "2026-06-03T05:00:00.000Z",
+      "authorized_datetime": null,
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "INCOME",
+        "version": "v2",
+        "detailed": "INCOME_SALARY",
+        "confidence_level": "VERY_HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_INCOME.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
+      "account_name": "Chase Total Checking",
+      "account_official_name": "Chase Total Checking",
+      "institution_name": "First Platypus Bank",
+      "account_transfer_group": null,
+      "netting_group": null,
+      "bucket_1_tag_id": 3,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": []
+    },
+    {
+      "transaction_id": "eG5nyQvgBRIrlX1jWlazuw4XrWV6kKIAZNG5W",
+      "name": "United Airlines",
+      "original_description": "UNITED AIRLINES 0162419",
+      "merchant_name": "United Airlines",
+      "amount": 118.44,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "United Airlines",
+          "type": "merchant",
+          "website": "united.com",
+          "logo_url": "https://plaid-merchant-logos.plaid.com/united_airlines_1065.png",
+          "entity_id": "NKDjqyAdQQzpyeD8qpLnX0D6yvLe2KYKYYzQ4",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "datetime": "2026-06-02T05:00:00.000Z",
+      "authorized_datetime": null,
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "TRAVEL",
+        "version": "v2",
+        "detailed": "TRAVEL_FLIGHTS",
+        "confidence_level": "VERY_HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_TRAVEL.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "bGJnwQxLKRIlZzx4PZbncwXGkLGk7WcRE1m4m",
+      "account_name": "Chase Freedom Credit Card",
+      "account_official_name": "Chase Freedom Visa",
+      "institution_name": "First Platypus Bank",
+      "account_transfer_group": null,
+      "netting_group": null,
+      "bucket_1_tag_id": 6,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": []
+    },
+    {
+      "transaction_id": "Gg5XRBQW4VcXzwo57zVZTpor3XvknytDgldPg",
+      "name": "SOFI INTEREST PAYMENT",
+      "original_description": "SOFI INTEREST PAYMENT",
+      "merchant_name": "SoFi",
+      "amount": -12.16,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "SoFi",
+          "type": "financial_institution",
+          "website": "sofi.com",
+          "logo_url": "https://plaid-counterparty-logos.plaid.com/sofi_44.png",
+          "entity_id": "Jwmzr8p2YvO541zgm66Bm339mWgm56gYLJ4Ak",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "datetime": "2026-05-31T05:00:00.000Z",
+      "authorized_datetime": null,
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "INCOME",
+        "version": "v2",
+        "detailed": "INCOME_INTEREST_EARNED",
+        "confidence_level": "HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_INCOME.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "mGkxaZ5mj6INZ7QqzZXdCPkygqygE8iG9ngv4",
+      "account_name": "SoFi High Yield Savings",
+      "account_official_name": "SoFi Bank High Yield Savings",
+      "institution_name": "First Platypus Bank",
+      "account_transfer_group": null,
+      "netting_group": null,
+      "bucket_1_tag_id": 2,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": []
+    },
+    {
+      "transaction_id": "7xEkL3p4nguloeGEqodVcQJxae3k47cDkWqLv",
+      "name": "REI 018 SEATTLE FLAGSHIP",
+      "original_description": "REI 018 SEATTLE FLAGSHIP",
+      "merchant_name": "REI",
+      "amount": 75.88,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "REI",
+          "type": "merchant",
+          "website": "rei.com",
+          "logo_url": "https://plaid-merchant-logos.plaid.com/rei_1251.png",
+          "entity_id": "pN33gK131BWXzv6yqJ1qyRb8J24wDkbyBdrrY",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "datetime": "2026-05-29T05:00:00.000Z",
+      "authorized_datetime": null,
+      "location": {
+        "lat": 39.755329,
+        "lon": -105.009445,
+        "city": "Denver",
+        "region": "CO",
+        "address": "1416 Platte St",
+        "country": null,
+        "postal_code": "80202",
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "GENERAL_MERCHANDISE",
+        "version": "v2",
+        "detailed": "GENERAL_MERCHANDISE_SPORTING_GOODS",
+        "confidence_level": "HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_GENERAL_MERCHANDISE.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "bGJnwQxLKRIlZzx4PZbncwXGkLGk7WcRE1m4m",
+      "account_name": "Chase Freedom Credit Card",
+      "account_official_name": "Chase Freedom Visa",
+      "institution_name": "First Platypus Bank",
+      "account_transfer_group": null,
+      "netting_group": null,
+      "bucket_1_tag_id": null,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": []
+    },
+    {
+      "transaction_id": "9aAX5N8PmoHkeDjalewVTKxkpqvXBPhdNL6ar",
+      "name": "LUNCH REFUND",
+      "original_description": "SQ *LUNCH REFUND",
+      "merchant_name": null,
+      "amount": -27.84,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "Square",
+          "type": "payment_terminal",
+          "website": "squareup.com",
+          "logo_url": "https://plaid-counterparty-logos.plaid.com/square_154.png",
+          "entity_id": "kYyzLr7JDEvmN43YaaWagRKZKpnwrN2Mkpy2g",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "datetime": "2026-05-28T05:00:00.000Z",
+      "authorized_datetime": null,
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "FOOD_AND_DRINK",
+        "version": "v2",
+        "detailed": "FOOD_AND_DRINK_RESTAURANT",
+        "confidence_level": "LOW"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_FOOD_AND_DRINK.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
+      "account_name": "Chase Total Checking",
+      "account_official_name": "Chase Total Checking",
+      "institution_name": "First Platypus Bank",
+      "account_transfer_group": null,
+      "netting_group": null,
+      "bucket_1_tag_id": null,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": []
+    },
+    {
+      "transaction_id": "j9lzkXbG4RTG16VAq1PLhKVWGzJ8Nwhng5eqn",
+      "name": "ONLINE PAYMENT THANK YOU",
+      "original_description": "ONLINE PAYMENT THANK YOU",
+      "merchant_name": null,
+      "amount": -301.18,
+      "iso_currency_code": "USD",
+      "counterparties": [],
+      "datetime": "2026-05-23T05:00:00.000Z",
+      "authorized_datetime": null,
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "LOAN_PAYMENTS",
+        "version": "v2",
+        "detailed": "LOAN_PAYMENTS_CREDIT_CARD_PAYMENT",
+        "confidence_level": "VERY_HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_LOAN_PAYMENTS.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "bGJnwQxLKRIlZzx4PZbncwXGkLGk7WcRE1m4m",
+      "account_name": "Chase Freedom Credit Card",
+      "account_official_name": "Chase Freedom Visa",
+      "institution_name": "First Platypus Bank",
+      "account_transfer_group": "030e03a3-9805-4266-9665-22882b296c9b",
+      "netting_group": null,
+      "bucket_1_tag_id": null,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": []
+    },
+    {
+      "transaction_id": "yXe1DzV4E6uG75xjv7qPhLGKVoqjBpCVR9Be9",
+      "name": "CHASE CARD ONLINE PMT 8841",
+      "original_description": "CHASE CARD ONLINE PMT 8841",
+      "merchant_name": null,
+      "amount": 301.18,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "Chase Bank",
+          "type": "financial_institution",
+          "website": "chase.com",
+          "logo_url": null,
+          "entity_id": "o2Ry34bq605MvmEed3yjqjkYWwqRQYpnkjd0O",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "datetime": "2026-05-22T05:00:00.000Z",
+      "authorized_datetime": null,
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "LOAN_PAYMENTS",
+        "version": "v2",
+        "detailed": "LOAN_PAYMENTS_CREDIT_CARD_PAYMENT",
+        "confidence_level": "HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_LOAN_PAYMENTS.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
+      "account_name": "Chase Total Checking",
+      "account_official_name": "Chase Total Checking",
+      "institution_name": "First Platypus Bank",
+      "account_transfer_group": "030e03a3-9805-4266-9665-22882b296c9b",
+      "netting_group": null,
+      "bucket_1_tag_id": null,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": []
+    },
+    {
+      "transaction_id": "AZRX4bnLzouy5bqZd546TpeyQgVdxatqN7mAr",
+      "name": "TRANSFER FROM CHASE CHECKING",
+      "original_description": "TRANSFER FROM CHASE CHECKING",
+      "merchant_name": null,
+      "amount": -430,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "Chase Bank",
+          "type": "financial_institution",
+          "website": "chase.com",
+          "logo_url": null,
+          "entity_id": "o2Ry34bq605MvmEed3yjqjkYWwqRQYpnkjd0O",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "datetime": "2026-05-20T05:00:00.000Z",
+      "authorized_datetime": null,
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "TRANSFER_IN",
+        "version": "v2",
+        "detailed": "TRANSFER_IN_ACCOUNT_TRANSFER",
+        "confidence_level": "HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_TRANSFER_IN.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "mGkxaZ5mj6INZ7QqzZXdCPkygqygE8iG9ngv4",
+      "account_name": "SoFi High Yield Savings",
+      "account_official_name": "SoFi Bank High Yield Savings",
+      "institution_name": "First Platypus Bank",
+      "account_transfer_group": "e594264c-0443-481a-b916-1043e076f084",
+      "netting_group": null,
+      "bucket_1_tag_id": null,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": []
+    },
+    {
+      "transaction_id": "mGkxaZ5mj6INZ7QqzZXdCPkWG8xJwKFBZbazv",
+      "name": "ONLINE TRANSFER TO SOFI SAVINGS",
+      "original_description": "ONLINE TRANSFER TO SOFI SAVINGS",
+      "merchant_name": "SoFi",
+      "amount": 430,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "SoFi",
+          "type": "financial_institution",
+          "website": "sofi.com",
+          "logo_url": "https://plaid-counterparty-logos.plaid.com/sofi_44.png",
+          "entity_id": "Jwmzr8p2YvO541zgm66Bm339mWgm56gYLJ4Ak",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "datetime": "2026-05-20T05:00:00.000Z",
+      "authorized_datetime": null,
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "TRANSFER_OUT",
+        "version": "v2",
+        "detailed": "TRANSFER_OUT_SAVINGS",
+        "confidence_level": "HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_TRANSFER_OUT.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
+      "account_name": "Chase Total Checking",
+      "account_official_name": "Chase Total Checking",
+      "institution_name": "First Platypus Bank",
+      "account_transfer_group": "e594264c-0443-481a-b916-1043e076f084",
+      "netting_group": null,
+      "bucket_1_tag_id": null,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": []
+    },
+    {
+      "transaction_id": "Px5VjXbK1LuopAN5gpVzh39PvWLrKNsqlDRZp",
+      "name": "Panda Express",
+      "original_description": "PANDA EXPRESS #2241",
+      "merchant_name": "Panda Express",
+      "amount": 52.63,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "Panda Express",
+          "type": "merchant",
+          "website": "pandaexpress.com",
+          "logo_url": "https://plaid-merchant-logos.plaid.com/panda_express_714.png",
+          "entity_id": "Ew00y0rDXn7nvvXkrWe3RQ9Y8e1Bw6pq3pwYJ",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "datetime": "2026-05-17T05:00:00.000Z",
+      "authorized_datetime": null,
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": "2241"
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "FOOD_AND_DRINK",
+        "version": "v2",
+        "detailed": "FOOD_AND_DRINK_FAST_FOOD",
+        "confidence_level": "VERY_HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_FOOD_AND_DRINK.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "bGJnwQxLKRIlZzx4PZbncwXGkLGk7WcRE1m4m",
+      "account_name": "Chase Freedom Credit Card",
+      "account_official_name": "Chase Freedom Visa",
+      "institution_name": "First Platypus Bank",
+      "account_transfer_group": null,
+      "netting_group": null,
+      "bucket_1_tag_id": 4,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": []
+    },
+    {
+      "transaction_id": "bGJnwQxLKRIlZzx4PZbncwXzlWJMm9IAp5eQw",
+      "name": "Delta Air Lines",
+      "original_description": "DELTA AIR LINES ECOM",
+      "merchant_name": "Delta Air Lines",
+      "amount": 312.76,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "Delta Air Lines",
+          "type": "merchant",
+          "website": "delta.com",
+          "logo_url": "https://plaid-merchant-logos.plaid.com/delta_air_lines_273.png",
+          "entity_id": "Q83YAmrM5QR8LRr3Zaq012Ez9yd81pdD9yzKm",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "datetime": "2026-05-15T05:00:00.000Z",
+      "authorized_datetime": null,
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "TRAVEL",
+        "version": "v2",
+        "detailed": "TRAVEL_FLIGHTS",
+        "confidence_level": "VERY_HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_TRAVEL.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
+      "account_name": "Chase Total Checking",
+      "account_official_name": "Chase Total Checking",
+      "institution_name": "First Platypus Bank",
+      "account_transfer_group": null,
+      "netting_group": null,
+      "bucket_1_tag_id": 6,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": []
+    },
+    {
+      "transaction_id": "NB5XMbRlZLueE3N5pE6XIlq4kLVgnyuRJvwml",
+      "name": "AIRBNB HMPN4J3R2",
+      "original_description": "AIRBNB HMPN4J3R2",
+      "merchant_name": "Airbnb",
+      "amount": 129.74,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "Airbnb",
+          "type": "merchant",
+          "website": "airbnb.com",
+          "logo_url": "https://plaid-merchant-logos.plaid.com/airbnb_29.png",
+          "entity_id": "b5JD7jwmQYwpb9raKaZbLjV8903dVXaJXm5ap",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "datetime": "2026-05-10T05:00:00.000Z",
+      "authorized_datetime": null,
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "TRAVEL",
+        "version": "v2",
+        "detailed": "TRAVEL_LODGING",
+        "confidence_level": "VERY_HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_TRAVEL.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "bGJnwQxLKRIlZzx4PZbncwXGkLGk7WcRE1m4m",
+      "account_name": "Chase Freedom Credit Card",
+      "account_official_name": "Chase Freedom Visa",
+      "institution_name": "First Platypus Bank",
+      "account_transfer_group": null,
+      "netting_group": null,
+      "bucket_1_tag_id": 7,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": []
+    },
+    {
+      "transaction_id": "nGzdb15y76IPXE3KkXAgHnlpP9gQz7c1qd4wj",
+      "name": "Verizon Wireless",
+      "original_description": "VERIZON WIRELESS WEB",
+      "merchant_name": "Verizon",
+      "amount": 141.63,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "Verizon",
+          "type": "merchant",
+          "website": "verizon.com",
+          "logo_url": "https://plaid-merchant-logos.plaid.com/verizon_1086.png",
+          "entity_id": "JYOeW20DZobYLQyVM2aJO5aN6RRz6oLaLvaJV",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "datetime": "2026-05-08T05:00:00.000Z",
+      "authorized_datetime": null,
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "RENT_AND_UTILITIES",
+        "version": "v2",
+        "detailed": "RENT_AND_UTILITIES_TELEPHONE",
+        "confidence_level": "VERY_HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_RENT_AND_UTILITIES.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
+      "account_name": "Chase Total Checking",
+      "account_official_name": "Chase Total Checking",
+      "institution_name": "First Platypus Bank",
+      "account_transfer_group": null,
+      "netting_group": null,
+      "bucket_1_tag_id": 12,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": []
+    },
+    {
+      "transaction_id": "Gg5XRBQW4VcXzwo57zVZTpor3XvknytDgldyg",
+      "name": "Trader Joe's",
+      "original_description": "TRADER JOES #445 QPS",
+      "merchant_name": "Trader Joe's",
+      "amount": 72.11,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "Trader Joe's",
+          "type": "merchant",
+          "website": "traderjoes.com",
+          "logo_url": "https://plaid-merchant-logos.plaid.com/trader_joes_1041.png",
+          "entity_id": "7mk1K28bOEO76459EoRBN498DgKgdnY73qbgn",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "datetime": "2026-05-05T05:00:00.000Z",
+      "authorized_datetime": null,
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": "445"
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "FOOD_AND_DRINK",
+        "version": "v2",
+        "detailed": "FOOD_AND_DRINK_GROCERIES",
+        "confidence_level": "VERY_HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_FOOD_AND_DRINK.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
+      "account_name": "Chase Total Checking",
+      "account_official_name": "Chase Total Checking",
+      "institution_name": "First Platypus Bank",
+      "account_transfer_group": null,
+      "netting_group": null,
+      "bucket_1_tag_id": 5,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": []
+    },
+    {
+      "transaction_id": "4zompjrxWAcrdgMEPd94uPgzE8VyKMFGyeP7N",
+      "name": "CVS",
+      "original_description": "CVS/PHARMACY #10387",
+      "merchant_name": "CVS",
+      "amount": 44.19,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "CVS",
+          "type": "merchant",
+          "website": "cvs.com",
+          "logo_url": "https://plaid-merchant-logos.plaid.com/cvs_264.png",
+          "entity_id": "qkd60geNmo8qMV0wAXbL3yYbqdnoY4ezwbe1R",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "datetime": "2026-05-03T05:00:00.000Z",
+      "authorized_datetime": null,
+      "location": {
+        "lat": 47.661583,
+        "lon": -122.333359,
+        "city": "Seattle",
+        "region": "WA",
+        "address": "2100 N 45th St",
+        "country": null,
+        "postal_code": "98103",
+        "store_number": "10387"
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "MEDICAL",
+        "version": "v2",
+        "detailed": "MEDICAL_PHARMACIES_AND_SUPPLEMENTS",
+        "confidence_level": "VERY_HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_MEDICAL.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "bGJnwQxLKRIlZzx4PZbncwXGkLGk7WcRE1m4m",
+      "account_name": "Chase Freedom Credit Card",
+      "account_official_name": "Chase Freedom Visa",
+      "institution_name": "First Platypus Bank",
+      "account_transfer_group": null,
+      "netting_group": null,
+      "bucket_1_tag_id": null,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": []
+    },
+    {
+      "transaction_id": "AZRX4bnLzouy5bqZd546TpeyQgVdxatqN7mEr",
+      "name": "ACME CORP PAYROLL PPD",
+      "original_description": "ACME CORP PAYROLL PPD",
+      "merchant_name": "Acme Markets",
+      "amount": -2861.9,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "Acme Markets",
+          "type": "merchant",
+          "website": "acmemarkets.com",
+          "logo_url": "https://plaid-merchant-logos.plaid.com/acme_markets_12.png",
+          "entity_id": "5VDpAWnN4X9VYR437da5D71Bva4o7RLQ2V3NY",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "datetime": "2026-05-01T05:00:00.000Z",
+      "authorized_datetime": null,
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "INCOME",
+        "version": "v2",
+        "detailed": "INCOME_SALARY",
+        "confidence_level": "VERY_HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_INCOME.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
+      "account_name": "Chase Total Checking",
+      "account_official_name": "Chase Total Checking",
+      "institution_name": "First Platypus Bank",
+      "account_transfer_group": null,
+      "netting_group": null,
+      "bucket_1_tag_id": 3,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": []
+    },
+    {
+      "transaction_id": "W75npgRaWBIB87r5L8vRsq71KXleJwUezrV1y",
+      "name": "SOFI INTEREST PAYMENT",
+      "original_description": "SOFI INTEREST PAYMENT",
+      "merchant_name": "SoFi",
+      "amount": -11.84,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "SoFi",
+          "type": "financial_institution",
+          "website": "sofi.com",
+          "logo_url": "https://plaid-counterparty-logos.plaid.com/sofi_44.png",
+          "entity_id": "Jwmzr8p2YvO541zgm66Bm339mWgm56gYLJ4Ak",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "datetime": "2026-04-30T05:00:00.000Z",
+      "authorized_datetime": null,
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "INCOME",
+        "version": "v2",
+        "detailed": "INCOME_INTEREST_EARNED",
+        "confidence_level": "HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_INCOME.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "mGkxaZ5mj6INZ7QqzZXdCPkygqygE8iG9ngv4",
+      "account_name": "SoFi High Yield Savings",
+      "account_official_name": "SoFi Bank High Yield Savings",
+      "institution_name": "First Platypus Bank",
+      "account_transfer_group": null,
+      "netting_group": null,
+      "bucket_1_tag_id": 2,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": []
+    },
+    {
+      "transaction_id": "a85DPye1qRuQpkyvLp41U9BWdvRaPNFymqMLG",
+      "name": "Alaska Airlines",
+      "original_description": "ALASKA AIR WIFI",
+      "merchant_name": "Alaska Airlines",
+      "amount": 87.31,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "Alaska Airlines",
+          "type": "merchant",
+          "website": "alaskaair.com",
+          "logo_url": "https://plaid-merchant-logos.plaid.com/alaska_airlines_32.png",
+          "entity_id": "WV2QADWmjE39QLEwDbAD01wyW3D1n1pbXewqW",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "datetime": "2026-04-27T05:00:00.000Z",
+      "authorized_datetime": null,
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "TRAVEL",
+        "version": "v2",
+        "detailed": "TRAVEL_FLIGHTS",
+        "confidence_level": "HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_TRAVEL.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "bGJnwQxLKRIlZzx4PZbncwXGkLGk7WcRE1m4m",
+      "account_name": "Chase Freedom Credit Card",
+      "account_official_name": "Chase Freedom Visa",
+      "institution_name": "First Platypus Bank",
+      "account_transfer_group": null,
+      "netting_group": null,
+      "bucket_1_tag_id": 6,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": []
+    },
+    {
+      "transaction_id": "dk5bNawozRHGKMDWrKe1h3jPG6zpqgsV1wper",
+      "name": "ONLINE PAYMENT THANK YOU",
+      "original_description": "ONLINE PAYMENT THANK YOU",
+      "merchant_name": null,
+      "amount": -268.44,
+      "iso_currency_code": "USD",
+      "counterparties": [],
+      "datetime": "2026-04-24T05:00:00.000Z",
+      "authorized_datetime": null,
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "LOAN_PAYMENTS",
+        "version": "v2",
+        "detailed": "LOAN_PAYMENTS_CREDIT_CARD_PAYMENT",
+        "confidence_level": "VERY_HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_LOAN_PAYMENTS.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "bGJnwQxLKRIlZzx4PZbncwXGkLGk7WcRE1m4m",
+      "account_name": "Chase Freedom Credit Card",
+      "account_official_name": "Chase Freedom Visa",
+      "institution_name": "First Platypus Bank",
+      "account_transfer_group": "6e7cbeea-2757-4520-9f31-fd2bd864291a",
+      "netting_group": null,
+      "bucket_1_tag_id": null,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": []
+    },
+    {
+      "transaction_id": "W75npgRaWBIB87r5L8vRsq71KXleJwUezrVKy",
+      "name": "CHASE CARD ONLINE PMT 8841",
+      "original_description": "CHASE CARD ONLINE PMT 8841",
+      "merchant_name": null,
+      "amount": 268.44,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "Chase Bank",
+          "type": "financial_institution",
+          "website": "chase.com",
+          "logo_url": null,
+          "entity_id": "o2Ry34bq605MvmEed3yjqjkYWwqRQYpnkjd0O",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "datetime": "2026-04-23T05:00:00.000Z",
+      "authorized_datetime": null,
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "LOAN_PAYMENTS",
+        "version": "v2",
+        "detailed": "LOAN_PAYMENTS_CREDIT_CARD_PAYMENT",
+        "confidence_level": "HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_LOAN_PAYMENTS.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
+      "account_name": "Chase Total Checking",
+      "account_official_name": "Chase Total Checking",
+      "institution_name": "First Platypus Bank",
+      "account_transfer_group": "6e7cbeea-2757-4520-9f31-fd2bd864291a",
+      "netting_group": null,
+      "bucket_1_tag_id": null,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": []
+    },
+    {
+      "transaction_id": "Ep5XnE98dLub7vz5P7VyHz1qajEQ4giWnwNJ8",
+      "name": "ONLINE TRANSFER TO SOFI SAVINGS",
+      "original_description": "ONLINE TRANSFER TO SOFI SAVINGS",
+      "merchant_name": "SoFi",
+      "amount": 415,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "SoFi",
+          "type": "financial_institution",
+          "website": "sofi.com",
+          "logo_url": "https://plaid-counterparty-logos.plaid.com/sofi_44.png",
+          "entity_id": "Jwmzr8p2YvO541zgm66Bm339mWgm56gYLJ4Ak",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "datetime": "2026-04-22T05:00:00.000Z",
+      "authorized_datetime": null,
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "TRANSFER_OUT",
+        "version": "v2",
+        "detailed": "TRANSFER_OUT_SAVINGS",
+        "confidence_level": "HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_TRANSFER_OUT.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
+      "account_name": "Chase Total Checking",
+      "account_official_name": "Chase Total Checking",
+      "institution_name": "First Platypus Bank",
+      "account_transfer_group": "4d0fdbda-a92b-4c0a-930a-220f5f47a922",
+      "netting_group": null,
+      "bucket_1_tag_id": null,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": []
+    },
+    {
+      "transaction_id": "Ep5XnE98dLub7vz5P7VyHz1qajEQ4giWnwNk8",
+      "name": "TRANSFER FROM CHASE CHECKING",
+      "original_description": "TRANSFER FROM CHASE CHECKING",
+      "merchant_name": null,
+      "amount": -415,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "Chase Bank",
+          "type": "financial_institution",
+          "website": "chase.com",
+          "logo_url": null,
+          "entity_id": "o2Ry34bq605MvmEed3yjqjkYWwqRQYpnkjd0O",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "datetime": "2026-04-22T05:00:00.000Z",
+      "authorized_datetime": null,
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "TRANSFER_IN",
+        "version": "v2",
+        "detailed": "TRANSFER_IN_ACCOUNT_TRANSFER",
+        "confidence_level": "HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_TRANSFER_IN.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "mGkxaZ5mj6INZ7QqzZXdCPkygqygE8iG9ngv4",
+      "account_name": "SoFi High Yield Savings",
+      "account_official_name": "SoFi Bank High Yield Savings",
+      "institution_name": "First Platypus Bank",
+      "account_transfer_group": "4d0fdbda-a92b-4c0a-930a-220f5f47a922",
+      "netting_group": null,
+      "bucket_1_tag_id": null,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": []
+    },
+    {
+      "transaction_id": "8dkXvVpNbofvLEmdXLn4co9vbXpNgKCDoABjJ",
+      "name": "Venmo",
+      "original_description": "VENMO CASHOUT J LIU",
+      "merchant_name": null,
+      "amount": -42.5,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "Venmo",
+          "type": "payment_app",
+          "website": "venmo.com",
+          "logo_url": "https://plaid-counterparty-logos.plaid.com/venmo_74.png",
+          "entity_id": "8VRm0p98Ydk05nn1kVd1o4Zgop4n1V9DdveE6",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "datetime": "2026-04-18T05:00:00.000Z",
+      "authorized_datetime": null,
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "TRANSFER_IN",
+        "version": "v2",
+        "detailed": "TRANSFER_IN_TRANSFER_IN_FROM_APPS",
+        "confidence_level": "HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_TRANSFER_IN.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
+      "account_name": "Chase Total Checking",
+      "account_official_name": "Chase Total Checking",
+      "institution_name": "First Platypus Bank",
+      "account_transfer_group": null,
+      "netting_group": null,
+      "bucket_1_tag_id": null,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": []
+    },
+    {
+      "transaction_id": "xG7MRwra86IoGg3PeGyNh1eDnEGpyXCraobvg",
+      "name": "Target",
+      "original_description": "TARGET T-1287 SEATTLE WA",
+      "merchant_name": "Target",
+      "amount": 96.8,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "Target",
+          "type": "merchant",
+          "website": "target.com",
+          "logo_url": "https://plaid-merchant-logos.plaid.com/target_997.png",
+          "entity_id": "Eaq3KXm0jJ61KrmMrV0aw9VaY2grqv517d3ep",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "datetime": "2026-04-15T05:00:00.000Z",
+      "authorized_datetime": null,
+      "location": {
+        "lat": 42.054928,
+        "lon": -80.095047,
+        "city": "Erie",
+        "region": "PA",
+        "address": "6700 Peach St",
+        "country": null,
+        "postal_code": "16509",
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "GENERAL_MERCHANDISE",
+        "version": "v2",
+        "detailed": "GENERAL_MERCHANDISE_SUPERSTORES",
+        "confidence_level": "VERY_HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_GENERAL_MERCHANDISE.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "bGJnwQxLKRIlZzx4PZbncwXGkLGk7WcRE1m4m",
+      "account_name": "Chase Freedom Credit Card",
+      "account_official_name": "Chase Freedom Visa",
+      "institution_name": "First Platypus Bank",
+      "account_transfer_group": null,
+      "netting_group": null,
+      "bucket_1_tag_id": 5,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": []
+    },
+    {
+      "transaction_id": "DL5X4j8gkECDV185NVBZu7VlLX9da1tjqgMxJ",
+      "name": "Uber",
+      "original_description": "UBER *TRIP HELP.UBER.COM",
+      "merchant_name": "Uber",
+      "amount": 58.27,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "Uber",
+          "type": "merchant",
+          "website": "uber.com",
+          "logo_url": "https://plaid-merchant-logos.plaid.com/uber_1060.png",
+          "entity_id": "eyg8o776k0QmNgVpAmaQj4WgzW9Qzo6O51gdd",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "datetime": "2026-04-12T05:00:00.000Z",
+      "authorized_datetime": null,
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "TRANSPORTATION",
+        "version": "v2",
+        "detailed": "TRANSPORTATION_TAXIS_AND_RIDE_SHARES",
+        "confidence_level": "HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_TRANSPORTATION.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
+      "account_name": "Chase Total Checking",
+      "account_official_name": "Chase Total Checking",
+      "institution_name": "First Platypus Bank",
+      "account_transfer_group": null,
+      "netting_group": null,
+      "bucket_1_tag_id": 6,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": []
+    },
+    {
+      "transaction_id": "Xe5JQE84A3uj8wXlB8nNcoQwvL9KVACoA4aqE",
+      "name": "CONED BILLPAY",
+      "original_description": "CONED BILLPAY",
+      "merchant_name": null,
+      "amount": 124.18,
+      "iso_currency_code": "USD",
+      "counterparties": [],
+      "datetime": "2026-04-09T05:00:00.000Z",
+      "authorized_datetime": null,
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "RENT_AND_UTILITIES",
+        "version": "v2",
+        "detailed": "RENT_AND_UTILITIES_GAS_AND_ELECTRICITY",
+        "confidence_level": "HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_RENT_AND_UTILITIES.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
+      "account_name": "Chase Total Checking",
+      "account_official_name": "Chase Total Checking",
+      "institution_name": "First Platypus Bank",
+      "account_transfer_group": null,
+      "netting_group": null,
+      "bucket_1_tag_id": 10,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": []
+    },
+    {
+      "transaction_id": "3rp5LwK3EZiwD9yRxDjLh8wEJoDy6nF4ypx3W",
+      "name": "Shell",
+      "original_description": "SHELL OIL 575241983QPS",
+      "merchant_name": "Shell",
+      "amount": 61.27,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "Shell",
+          "type": "merchant",
+          "website": "shell.com",
+          "logo_url": "https://plaid-merchant-logos.plaid.com/shell_891.png",
+          "entity_id": "8y7851JXryBnkOWOjW163yqzAB01oa8k6e1g9",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "datetime": "2026-04-08T05:00:00.000Z",
+      "authorized_datetime": null,
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "TRANSPORTATION",
+        "version": "v2",
+        "detailed": "TRANSPORTATION_GAS",
+        "confidence_level": "VERY_HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_TRANSPORTATION.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "bGJnwQxLKRIlZzx4PZbncwXGkLGk7WcRE1m4m",
+      "account_name": "Chase Freedom Credit Card",
+      "account_official_name": "Chase Freedom Visa",
+      "institution_name": "First Platypus Bank",
+      "account_transfer_group": null,
+      "netting_group": null,
+      "bucket_1_tag_id": 11,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": []
+    },
+    {
+      "transaction_id": "638DLNgaGkCel4j35lrLI4newkmQoziv7W5LX",
+      "name": "Whole Foods",
+      "original_description": "WHOLE FOODS MARKET 10215",
+      "merchant_name": "Whole Foods",
+      "amount": 86.42,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "Whole Foods",
+          "type": "merchant",
+          "website": "wholefoods.com",
+          "logo_url": "https://plaid-merchant-logos.plaid.com/whole_foods_1122.png",
+          "entity_id": "Y0BVyRYwZgNLpDw6Lrvy7yJX38YQWEXBEEoAW",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "datetime": "2026-04-06T05:00:00.000Z",
+      "authorized_datetime": null,
+      "location": {
+        "lat": 34.012989,
+        "lon": -84.183563,
+        "city": "Duluth",
+        "region": "GA",
+        "address": "5945 State Bridge Rd",
+        "country": null,
+        "postal_code": "30097",
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "FOOD_AND_DRINK",
+        "version": "v2",
+        "detailed": "FOOD_AND_DRINK_GROCERIES",
+        "confidence_level": "VERY_HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_FOOD_AND_DRINK.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
+      "account_name": "Chase Total Checking",
+      "account_official_name": "Chase Total Checking",
+      "institution_name": "First Platypus Bank",
+      "account_transfer_group": null,
+      "netting_group": null,
+      "bucket_1_tag_id": 5,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": []
+    },
+    {
+      "transaction_id": "BM6XvdRpBouWdRlEadwpUpNMb4oW9atmoPlnX",
+      "name": "Starbucks",
+      "original_description": "STARBUCKS STORE 19124",
+      "merchant_name": "Starbucks",
+      "amount": 23.48,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "Starbucks",
+          "type": "merchant",
+          "website": "starbucks.com",
+          "logo_url": "https://plaid-merchant-logos.plaid.com/starbucks_956.png",
+          "entity_id": "NZAJQ5wYdo1W1p39X5q5gpb15OMe39pj4pJBb",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "datetime": "2026-04-04T05:00:00.000Z",
+      "authorized_datetime": null,
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "FOOD_AND_DRINK",
+        "version": "v2",
+        "detailed": "FOOD_AND_DRINK_COFFEE",
+        "confidence_level": "VERY_HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_FOOD_AND_DRINK.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "bGJnwQxLKRIlZzx4PZbncwXGkLGk7WcRE1m4m",
+      "account_name": "Chase Freedom Credit Card",
+      "account_official_name": "Chase Freedom Visa",
+      "institution_name": "First Platypus Bank",
+      "account_transfer_group": null,
+      "netting_group": null,
+      "bucket_1_tag_id": 4,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": []
+    },
+    {
+      "transaction_id": "Ra5nZX8zplHBpDb5Jpa3srd74bAG8kfeVKE33",
+      "name": "ACME CORP PAYROLL PPD",
+      "original_description": "ACME CORP PAYROLL PPD",
+      "merchant_name": "Acme Markets",
+      "amount": -2847.33,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "Acme Markets",
+          "type": "merchant",
+          "website": "acmemarkets.com",
+          "logo_url": "https://plaid-merchant-logos.plaid.com/acme_markets_12.png",
+          "entity_id": "5VDpAWnN4X9VYR437da5D71Bva4o7RLQ2V3NY",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "datetime": "2026-04-02T05:00:00.000Z",
+      "authorized_datetime": null,
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "INCOME",
+        "version": "v2",
+        "detailed": "INCOME_SALARY",
+        "confidence_level": "VERY_HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_INCOME.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
+      "account_name": "Chase Total Checking",
+      "account_official_name": "Chase Total Checking",
+      "institution_name": "First Platypus Bank",
+      "account_transfer_group": null,
+      "netting_group": null,
+      "bucket_1_tag_id": 3,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": []
+    }
+  ]
+}
