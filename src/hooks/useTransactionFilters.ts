@@ -3,6 +3,9 @@ import type { MissingTagFilter, TagStateFilter, TextMode, Txn } from "../compone
 import { buildDatePreset } from "../utils/datePresets";
 import { formatCategoryLabel, formatCategorySubLabel, getTxnDateOnly } from "../utils/transactionUtils";
 
+/** Sentinel tag id for filtering account transfers (not a DB tag). */
+export const ACCOUNT_TRANSFER_TAG_ID = 1;
+
 type CategoryOptionGroup = {
   primary: string;
   primaryLabel: string;
@@ -150,6 +153,7 @@ export function useTransactionFilters(transactions: Txn[]): UseTransactionFilter
         selectedTagIds.includes(t.bucket_1_tag_id ?? -1)
         || selectedTagIds.includes(t.bucket_2_tag_id ?? -1)
         || (t.meta_tag_ids?.some((id) => selectedTagIds.includes(id)) ?? false)
+        || (selectedTagIds.includes(ACCOUNT_TRANSFER_TAG_ID) && t.account_transfer_group != null)
       );
     }
 

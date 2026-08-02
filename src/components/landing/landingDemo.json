@@ -81,7 +81,7 @@
   "items": [
     {
       "id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
-      "institution_name": "First Platypus Bank",
+      "institution_name": null,
       "inst_url": "https://www.platypus.com",
       "inst_logo": "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",
       "inst_color": "#0075a3"
@@ -159,8 +159,6 @@
           "confidence_level": "VERY_HIGH"
         }
       ],
-      "datetime": "2026-07-31T05:00:00.000Z",
-      "authorized_datetime": null,
       "location": {
         "lat": null,
         "lon": null,
@@ -183,12 +181,14 @@
       "account_id": "mGkxaZ5mj6INZ7QqzZXdCPkygqygE8iG9ngv4",
       "account_name": "SoFi High Yield Savings",
       "account_official_name": "SoFi Bank High Yield Savings",
-      "institution_name": "First Platypus Bank",
+      "institution_name": null,
       "account_transfer_group": null,
       "netting_group": null,
       "bucket_1_tag_id": 2,
       "bucket_2_tag_id": null,
-      "meta_tag_ids": []
+      "meta_tag_ids": [],
+      "days_ago": 0,
+      "authorized_days_ago": null
     },
     {
       "transaction_id": "AZRX4bnLzouy5bqZd546TpexBEg5krCb1E3wM",
@@ -208,8 +208,6 @@
           "confidence_level": "VERY_HIGH"
         }
       ],
-      "datetime": "2026-07-29T05:00:00.000Z",
-      "authorized_datetime": null,
       "location": {
         "lat": null,
         "lon": null,
@@ -232,12 +230,14 @@
       "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
       "account_name": "Chase Total Checking",
       "account_official_name": "Chase Total Checking",
-      "institution_name": "First Platypus Bank",
+      "institution_name": null,
       "account_transfer_group": null,
       "netting_group": null,
       "bucket_1_tag_id": null,
       "bucket_2_tag_id": null,
-      "meta_tag_ids": []
+      "meta_tag_ids": [],
+      "days_ago": 2,
+      "authorized_days_ago": null
     },
     {
       "transaction_id": "mGkxaZ5mj6INZ7QqzZXdCPkw9V8BQEiGLz8jG",
@@ -257,8 +257,6 @@
           "confidence_level": "VERY_HIGH"
         }
       ],
-      "datetime": "2026-07-27T05:00:00.000Z",
-      "authorized_datetime": null,
       "location": {
         "lat": null,
         "lon": null,
@@ -281,12 +279,14 @@
       "account_id": "bGJnwQxLKRIlZzx4PZbncwXGkLGk7WcRE1m4m",
       "account_name": "Chase Freedom Credit Card",
       "account_official_name": "Chase Freedom Visa",
-      "institution_name": "First Platypus Bank",
+      "institution_name": null,
       "account_transfer_group": null,
       "netting_group": null,
       "bucket_1_tag_id": 5,
       "bucket_2_tag_id": null,
-      "meta_tag_ids": []
+      "meta_tag_ids": [],
+      "days_ago": 4,
+      "authorized_days_ago": null
     },
     {
       "transaction_id": "W75npgRaWBIB87r5L8vRsq7JEdXgQnCdlKqMB",
@@ -306,8 +306,6 @@
           "confidence_level": "VERY_HIGH"
         }
       ],
-      "datetime": "2026-07-24T05:00:00.000Z",
-      "authorized_datetime": null,
       "location": {
         "lat": null,
         "lon": null,
@@ -330,12 +328,14 @@
       "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
       "account_name": "Chase Total Checking",
       "account_official_name": "Chase Total Checking",
-      "institution_name": "First Platypus Bank",
+      "institution_name": null,
       "account_transfer_group": null,
       "netting_group": null,
       "bucket_1_tag_id": null,
       "bucket_2_tag_id": null,
-      "meta_tag_ids": []
+      "meta_tag_ids": [],
+      "days_ago": 7,
+      "authorized_days_ago": null
     },
     {
       "transaction_id": "bGJnwQxLKRIlZzx4PZbncwXmnVWgv7IRVQrLy",
@@ -345,8 +345,6 @@
       "amount": -329.57,
       "iso_currency_code": "USD",
       "counterparties": [],
-      "datetime": "2026-07-21T05:00:00.000Z",
-      "authorized_datetime": null,
       "location": {
         "lat": null,
         "lon": null,
@@ -369,12 +367,14 @@
       "account_id": "bGJnwQxLKRIlZzx4PZbncwXGkLGk7WcRE1m4m",
       "account_name": "Chase Freedom Credit Card",
       "account_official_name": "Chase Freedom Visa",
-      "institution_name": "First Platypus Bank",
+      "institution_name": null,
       "account_transfer_group": "5c887c47-9018-4007-a5b3-10a67cb4efd6",
       "netting_group": null,
       "bucket_1_tag_id": null,
       "bucket_2_tag_id": null,
-      "meta_tag_ids": []
+      "meta_tag_ids": [],
+      "days_ago": 10,
+      "authorized_days_ago": null
     },
     {
       "transaction_id": "Ep5XnE98dLub7vz5P7VyHz14Jwj9MktaXJ3Qr",
@@ -394,8 +394,6 @@
           "confidence_level": "VERY_HIGH"
         }
       ],
-      "datetime": "2026-07-20T05:00:00.000Z",
-      "authorized_datetime": null,
       "location": {
         "lat": null,
         "lon": null,
@@ -418,12 +416,14 @@
       "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
       "account_name": "Chase Total Checking",
       "account_official_name": "Chase Total Checking",
-      "institution_name": "First Platypus Bank",
+      "institution_name": null,
       "account_transfer_group": "5c887c47-9018-4007-a5b3-10a67cb4efd6",
       "netting_group": null,
       "bucket_1_tag_id": null,
       "bucket_2_tag_id": null,
-      "meta_tag_ids": []
+      "meta_tag_ids": [],
+      "days_ago": 11,
+      "authorized_days_ago": null
     },
     {
       "transaction_id": "yXe1DzV4E6uG75xjv7qPhLGBlWo59ZuJyepd7",
@@ -443,8 +443,6 @@
           "confidence_level": "VERY_HIGH"
         }
       ],
-      "datetime": "2026-07-20T05:00:00.000Z",
-      "authorized_datetime": null,
       "location": {
         "lat": null,
         "lon": null,
@@ -467,12 +465,14 @@
       "account_id": "mGkxaZ5mj6INZ7QqzZXdCPkygqygE8iG9ngv4",
       "account_name": "SoFi High Yield Savings",
       "account_official_name": "SoFi Bank High Yield Savings",
-      "institution_name": "First Platypus Bank",
+      "institution_name": null,
       "account_transfer_group": "126baad1-8ef1-420d-8ad0-02a968d6c14a",
       "netting_group": null,
       "bucket_1_tag_id": null,
       "bucket_2_tag_id": null,
-      "meta_tag_ids": []
+      "meta_tag_ids": [],
+      "days_ago": 11,
+      "authorized_days_ago": null
     },
     {
       "transaction_id": "8dkXvVpNbofvLEmdXLn4co9greXG3MHPwjeaz",
@@ -492,8 +492,6 @@
           "confidence_level": "VERY_HIGH"
         }
       ],
-      "datetime": "2026-07-19T05:00:00.000Z",
-      "authorized_datetime": null,
       "location": {
         "lat": null,
         "lon": null,
@@ -516,12 +514,14 @@
       "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
       "account_name": "Chase Total Checking",
       "account_official_name": "Chase Total Checking",
-      "institution_name": "First Platypus Bank",
+      "institution_name": null,
       "account_transfer_group": "126baad1-8ef1-420d-8ad0-02a968d6c14a",
       "netting_group": null,
       "bucket_1_tag_id": null,
       "bucket_2_tag_id": null,
-      "meta_tag_ids": []
+      "meta_tag_ids": [],
+      "days_ago": 12,
+      "authorized_days_ago": null
     },
     {
       "transaction_id": "gG5qNZbExDIBympe9ybvsXvMAbedKWFegqdDM",
@@ -541,8 +541,6 @@
           "confidence_level": "VERY_HIGH"
         }
       ],
-      "datetime": "2026-07-14T05:00:00.000Z",
-      "authorized_datetime": null,
       "location": {
         "lat": null,
         "lon": null,
@@ -565,12 +563,14 @@
       "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
       "account_name": "Chase Total Checking",
       "account_official_name": "Chase Total Checking",
-      "institution_name": "First Platypus Bank",
+      "institution_name": null,
       "account_transfer_group": null,
       "netting_group": null,
       "bucket_1_tag_id": 6,
       "bucket_2_tag_id": null,
-      "meta_tag_ids": []
+      "meta_tag_ids": [],
+      "days_ago": 17,
+      "authorized_days_ago": null
     },
     {
       "transaction_id": "nGzdb15y76IPXE3KkXAgHnlzmD9Mrbta6wgkm",
@@ -590,8 +590,6 @@
           "confidence_level": "VERY_HIGH"
         }
       ],
-      "datetime": "2026-07-13T05:00:00.000Z",
-      "authorized_datetime": null,
       "location": {
         "lat": null,
         "lon": null,
@@ -614,12 +612,14 @@
       "account_id": "bGJnwQxLKRIlZzx4PZbncwXGkLGk7WcRE1m4m",
       "account_name": "Chase Freedom Credit Card",
       "account_official_name": "Chase Freedom Visa",
-      "institution_name": "First Platypus Bank",
+      "institution_name": null,
       "account_transfer_group": null,
       "netting_group": null,
       "bucket_1_tag_id": null,
       "bucket_2_tag_id": null,
-      "meta_tag_ids": []
+      "meta_tag_ids": [],
+      "days_ago": 18,
+      "authorized_days_ago": null
     },
     {
       "transaction_id": "oGBaWN5le6Ij9aVr391lcQ8qXr9p73UJR8G9k",
@@ -639,8 +639,6 @@
           "confidence_level": "VERY_HIGH"
         }
       ],
-      "datetime": "2026-07-10T05:00:00.000Z",
-      "authorized_datetime": null,
       "location": {
         "lat": null,
         "lon": null,
@@ -663,12 +661,14 @@
       "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
       "account_name": "Chase Total Checking",
       "account_official_name": "Chase Total Checking",
-      "institution_name": "First Platypus Bank",
+      "institution_name": null,
       "account_transfer_group": null,
       "netting_group": null,
       "bucket_1_tag_id": 4,
       "bucket_2_tag_id": null,
-      "meta_tag_ids": []
+      "meta_tag_ids": [],
+      "days_ago": 21,
+      "authorized_days_ago": null
     },
     {
       "transaction_id": "Gg5XRBQW4VcXzwo57zVZTpongqXZL7CV1yR9R",
@@ -678,8 +678,6 @@
       "amount": 67.22,
       "iso_currency_code": "USD",
       "counterparties": [],
-      "datetime": "2026-07-08T05:00:00.000Z",
-      "authorized_datetime": null,
       "location": {
         "lat": null,
         "lon": null,
@@ -702,12 +700,14 @@
       "account_id": "bGJnwQxLKRIlZzx4PZbncwXGkLGk7WcRE1m4m",
       "account_name": "Chase Freedom Credit Card",
       "account_official_name": "Chase Freedom Visa",
-      "institution_name": "First Platypus Bank",
+      "institution_name": null,
       "account_transfer_group": null,
       "netting_group": null,
       "bucket_1_tag_id": 4,
       "bucket_2_tag_id": null,
-      "meta_tag_ids": []
+      "meta_tag_ids": [],
+      "days_ago": 23,
+      "authorized_days_ago": null
     },
     {
       "transaction_id": "py34lp5qQ6CGgvQzxgDqhwl8pzXd3GI7L38gJ",
@@ -717,8 +717,6 @@
       "amount": 133.27,
       "iso_currency_code": "USD",
       "counterparties": [],
-      "datetime": "2026-07-06T05:00:00.000Z",
-      "authorized_datetime": null,
       "location": {
         "lat": null,
         "lon": null,
@@ -741,12 +739,14 @@
       "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
       "account_name": "Chase Total Checking",
       "account_official_name": "Chase Total Checking",
-      "institution_name": "First Platypus Bank",
+      "institution_name": null,
       "account_transfer_group": null,
       "netting_group": null,
       "bucket_1_tag_id": 10,
       "bucket_2_tag_id": null,
-      "meta_tag_ids": []
+      "meta_tag_ids": [],
+      "days_ago": 25,
+      "authorized_days_ago": null
     },
     {
       "transaction_id": "Lr5XQyVmeAiyXAP51X9lToGZrMEpm7HAPGd8k",
@@ -766,8 +766,6 @@
           "confidence_level": "VERY_HIGH"
         }
       ],
-      "datetime": "2026-07-03T05:00:00.000Z",
-      "authorized_datetime": null,
       "location": {
         "lat": null,
         "lon": null,
@@ -790,12 +788,14 @@
       "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
       "account_name": "Chase Total Checking",
       "account_official_name": "Chase Total Checking",
-      "institution_name": "First Platypus Bank",
+      "institution_name": null,
       "account_transfer_group": null,
       "netting_group": null,
       "bucket_1_tag_id": 3,
       "bucket_2_tag_id": null,
-      "meta_tag_ids": []
+      "meta_tag_ids": [],
+      "days_ago": 28,
+      "authorized_days_ago": null
     },
     {
       "transaction_id": "Lr5XQyVmeAiyXAP51X9lToGdaElRZNCZnb5pG",
@@ -805,8 +805,6 @@
       "amount": 112.35,
       "iso_currency_code": "USD",
       "counterparties": [],
-      "datetime": "2026-07-02T05:00:00.000Z",
-      "authorized_datetime": null,
       "location": {
         "lat": null,
         "lon": null,
@@ -829,12 +827,14 @@
       "account_id": "bGJnwQxLKRIlZzx4PZbncwXGkLGk7WcRE1m4m",
       "account_name": "Chase Freedom Credit Card",
       "account_official_name": "Chase Freedom Visa",
-      "institution_name": "First Platypus Bank",
+      "institution_name": null,
       "account_transfer_group": null,
       "netting_group": null,
       "bucket_1_tag_id": 7,
       "bucket_2_tag_id": null,
-      "meta_tag_ids": []
+      "meta_tag_ids": [],
+      "days_ago": 29,
+      "authorized_days_ago": null
     },
     {
       "transaction_id": "bGJnwQxLKRIlZzx4PZbncwXzlWJMm9IAp5eZw",
@@ -854,8 +854,6 @@
           "confidence_level": "VERY_HIGH"
         }
       ],
-      "datetime": "2026-06-30T05:00:00.000Z",
-      "authorized_datetime": null,
       "location": {
         "lat": null,
         "lon": null,
@@ -878,12 +876,14 @@
       "account_id": "mGkxaZ5mj6INZ7QqzZXdCPkygqygE8iG9ngv4",
       "account_name": "SoFi High Yield Savings",
       "account_official_name": "SoFi Bank High Yield Savings",
-      "institution_name": "First Platypus Bank",
+      "institution_name": null,
       "account_transfer_group": null,
       "netting_group": null,
       "bucket_1_tag_id": 2,
       "bucket_2_tag_id": null,
-      "meta_tag_ids": []
+      "meta_tag_ids": [],
+      "days_ago": 31,
+      "authorized_days_ago": null
     },
     {
       "transaction_id": "wGjZx9Kdk6IpZzWV7ZmLcNZnpv8oGyCnXv8jy",
@@ -903,8 +903,6 @@
           "confidence_level": "VERY_HIGH"
         }
       ],
-      "datetime": "2026-06-26T05:00:00.000Z",
-      "authorized_datetime": null,
       "location": {
         "lat": null,
         "lon": null,
@@ -927,12 +925,14 @@
       "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
       "account_name": "Chase Total Checking",
       "account_official_name": "Chase Total Checking",
-      "institution_name": "First Platypus Bank",
+      "institution_name": null,
       "account_transfer_group": null,
       "netting_group": null,
       "bucket_1_tag_id": null,
       "bucket_2_tag_id": null,
-      "meta_tag_ids": []
+      "meta_tag_ids": [],
+      "days_ago": 35,
+      "authorized_days_ago": null
     },
     {
       "transaction_id": "1q18L3lzgASr6VBqD6kpuoQrAaREvpC6dg1eG",
@@ -952,8 +952,6 @@
           "confidence_level": "VERY_HIGH"
         }
       ],
-      "datetime": "2026-06-25T05:00:00.000Z",
-      "authorized_datetime": null,
       "location": {
         "lat": null,
         "lon": null,
@@ -976,12 +974,14 @@
       "account_id": "bGJnwQxLKRIlZzx4PZbncwXGkLGk7WcRE1m4m",
       "account_name": "Chase Freedom Credit Card",
       "account_official_name": "Chase Freedom Visa",
-      "institution_name": "First Platypus Bank",
+      "institution_name": null,
       "account_transfer_group": null,
       "netting_group": null,
       "bucket_1_tag_id": 12,
       "bucket_2_tag_id": null,
-      "meta_tag_ids": []
+      "meta_tag_ids": [],
+      "days_ago": 36,
+      "authorized_days_ago": null
     },
     {
       "transaction_id": "Mz5XRG7yQnc7zKP5LzDqhW1aymQjVqtagBrPE",
@@ -991,8 +991,6 @@
       "amount": -287.96,
       "iso_currency_code": "USD",
       "counterparties": [],
-      "datetime": "2026-06-24T05:00:00.000Z",
-      "authorized_datetime": null,
       "location": {
         "lat": null,
         "lon": null,
@@ -1015,12 +1013,14 @@
       "account_id": "bGJnwQxLKRIlZzx4PZbncwXGkLGk7WcRE1m4m",
       "account_name": "Chase Freedom Credit Card",
       "account_official_name": "Chase Freedom Visa",
-      "institution_name": "First Platypus Bank",
+      "institution_name": null,
       "account_transfer_group": "56439f8a-cdbf-43ed-9942-4f6e66e56d01",
       "netting_group": null,
       "bucket_1_tag_id": null,
       "bucket_2_tag_id": null,
-      "meta_tag_ids": []
+      "meta_tag_ids": [],
+      "days_ago": 37,
+      "authorized_days_ago": null
     },
     {
       "transaction_id": "Vj5JwGWdEzfLgBK5XgxGcaLMKWgNwzfGM4rev",
@@ -1040,8 +1040,6 @@
           "confidence_level": "VERY_HIGH"
         }
       ],
-      "datetime": "2026-06-23T05:00:00.000Z",
-      "authorized_datetime": null,
       "location": {
         "lat": null,
         "lon": null,
@@ -1064,12 +1062,14 @@
       "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
       "account_name": "Chase Total Checking",
       "account_official_name": "Chase Total Checking",
-      "institution_name": "First Platypus Bank",
+      "institution_name": null,
       "account_transfer_group": "56439f8a-cdbf-43ed-9942-4f6e66e56d01",
       "netting_group": null,
       "bucket_1_tag_id": null,
       "bucket_2_tag_id": null,
-      "meta_tag_ids": []
+      "meta_tag_ids": [],
+      "days_ago": 38,
+      "authorized_days_ago": null
     },
     {
       "transaction_id": "DL5X4j8gkECDV185NVBZu7VlLX9da1tjqgMxM",
@@ -1089,8 +1089,6 @@
           "confidence_level": "VERY_HIGH"
         }
       ],
-      "datetime": "2026-06-21T05:00:00.000Z",
-      "authorized_datetime": null,
       "location": {
         "lat": null,
         "lon": null,
@@ -1113,12 +1111,14 @@
       "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
       "account_name": "Chase Total Checking",
       "account_official_name": "Chase Total Checking",
-      "institution_name": "First Platypus Bank",
+      "institution_name": null,
       "account_transfer_group": "d43f7ba2-4ad7-4c9e-8623-5084a0de0d0a",
       "netting_group": null,
       "bucket_1_tag_id": null,
       "bucket_2_tag_id": null,
-      "meta_tag_ids": []
+      "meta_tag_ids": [],
+      "days_ago": 40,
+      "authorized_days_ago": null
     },
     {
       "transaction_id": "nGzdb15y76IPXE3KkXAgHnlpP9gQz7c1qd4Wj",
@@ -1138,8 +1138,6 @@
           "confidence_level": "VERY_HIGH"
         }
       ],
-      "datetime": "2026-06-21T05:00:00.000Z",
-      "authorized_datetime": null,
       "location": {
         "lat": null,
         "lon": null,
@@ -1162,12 +1160,14 @@
       "account_id": "mGkxaZ5mj6INZ7QqzZXdCPkygqygE8iG9ngv4",
       "account_name": "SoFi High Yield Savings",
       "account_official_name": "SoFi Bank High Yield Savings",
-      "institution_name": "First Platypus Bank",
+      "institution_name": null,
       "account_transfer_group": "d43f7ba2-4ad7-4c9e-8623-5084a0de0d0a",
       "netting_group": null,
       "bucket_1_tag_id": null,
       "bucket_2_tag_id": null,
-      "meta_tag_ids": []
+      "meta_tag_ids": [],
+      "days_ago": 40,
+      "authorized_days_ago": null
     },
     {
       "transaction_id": "Xe5JQE84A3uj8wXlB8nNcoQwvL9KVACoA4aqZ",
@@ -1187,8 +1187,6 @@
           "confidence_level": "VERY_HIGH"
         }
       ],
-      "datetime": "2026-06-16T05:00:00.000Z",
-      "authorized_datetime": null,
       "location": {
         "lat": null,
         "lon": null,
@@ -1211,12 +1209,14 @@
       "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
       "account_name": "Chase Total Checking",
       "account_official_name": "Chase Total Checking",
-      "institution_name": "First Platypus Bank",
+      "institution_name": null,
       "account_transfer_group": null,
       "netting_group": null,
       "bucket_1_tag_id": 12,
       "bucket_2_tag_id": null,
-      "meta_tag_ids": []
+      "meta_tag_ids": [],
+      "days_ago": 45,
+      "authorized_days_ago": null
     },
     {
       "transaction_id": "ZZ5RpDqPnkuzpg3KbpPmUjBgdWw1PKcZy5BX4",
@@ -1236,8 +1236,6 @@
           "confidence_level": "VERY_HIGH"
         }
       ],
-      "datetime": "2026-06-13T05:00:00.000Z",
-      "authorized_datetime": null,
       "location": {
         "lat": null,
         "lon": null,
@@ -1260,12 +1258,14 @@
       "account_id": "bGJnwQxLKRIlZzx4PZbncwXGkLGk7WcRE1m4m",
       "account_name": "Chase Freedom Credit Card",
       "account_official_name": "Chase Freedom Visa",
-      "institution_name": "First Platypus Bank",
+      "institution_name": null,
       "account_transfer_group": null,
       "netting_group": null,
       "bucket_1_tag_id": 5,
       "bucket_2_tag_id": null,
-      "meta_tag_ids": []
+      "meta_tag_ids": [],
+      "days_ago": 48,
+      "authorized_days_ago": null
     },
     {
       "transaction_id": "638DLNgaGkCel4j35lrLI4newkmQoziv7W5LJ",
@@ -1285,8 +1285,6 @@
           "confidence_level": "VERY_HIGH"
         }
       ],
-      "datetime": "2026-06-11T05:00:00.000Z",
-      "authorized_datetime": null,
       "location": {
         "lat": 36.046387,
         "lon": -86.666306,
@@ -1309,14 +1307,16 @@
       "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
       "account_name": "Chase Total Checking",
       "account_official_name": "Chase Total Checking",
-      "institution_name": "First Platypus Bank",
+      "institution_name": null,
       "account_transfer_group": null,
       "netting_group": null,
       "bucket_1_tag_id": 8,
       "bucket_2_tag_id": null,
       "meta_tag_ids": [
         9
-      ]
+      ],
+      "days_ago": 50,
+      "authorized_days_ago": null
     },
     {
       "transaction_id": "Ra5nZX8zplHBpDb5Jpa3srd74bAG8kfeVKE3l",
@@ -1336,8 +1336,6 @@
           "confidence_level": "VERY_HIGH"
         }
       ],
-      "datetime": "2026-06-08T05:00:00.000Z",
-      "authorized_datetime": null,
       "location": {
         "lat": null,
         "lon": null,
@@ -1360,12 +1358,14 @@
       "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
       "account_name": "Chase Total Checking",
       "account_official_name": "Chase Total Checking",
-      "institution_name": "First Platypus Bank",
+      "institution_name": null,
       "account_transfer_group": null,
       "netting_group": null,
       "bucket_1_tag_id": 5,
       "bucket_2_tag_id": null,
-      "meta_tag_ids": []
+      "meta_tag_ids": [],
+      "days_ago": 53,
+      "authorized_days_ago": null
     },
     {
       "transaction_id": "Qd5y7gJrLRf7rkN5Wrlohe5j3J64rPsbQxV79",
@@ -1385,8 +1385,6 @@
           "confidence_level": "VERY_HIGH"
         }
       ],
-      "datetime": "2026-06-07T05:00:00.000Z",
-      "authorized_datetime": null,
       "location": {
         "lat": null,
         "lon": null,
@@ -1409,12 +1407,14 @@
       "account_id": "bGJnwQxLKRIlZzx4PZbncwXGkLGk7WcRE1m4m",
       "account_name": "Chase Freedom Credit Card",
       "account_official_name": "Chase Freedom Visa",
-      "institution_name": "First Platypus Bank",
+      "institution_name": null,
       "account_transfer_group": null,
       "netting_group": null,
       "bucket_1_tag_id": 6,
       "bucket_2_tag_id": null,
-      "meta_tag_ids": []
+      "meta_tag_ids": [],
+      "days_ago": 54,
+      "authorized_days_ago": null
     },
     {
       "transaction_id": "vwPQ39qxo6umyqz4jykNULEWwdv8y4CyQjdAK",
@@ -1434,8 +1434,6 @@
           "confidence_level": "VERY_HIGH"
         }
       ],
-      "datetime": "2026-06-03T05:00:00.000Z",
-      "authorized_datetime": null,
       "location": {
         "lat": null,
         "lon": null,
@@ -1458,12 +1456,14 @@
       "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
       "account_name": "Chase Total Checking",
       "account_official_name": "Chase Total Checking",
-      "institution_name": "First Platypus Bank",
+      "institution_name": null,
       "account_transfer_group": null,
       "netting_group": null,
       "bucket_1_tag_id": 3,
       "bucket_2_tag_id": null,
-      "meta_tag_ids": []
+      "meta_tag_ids": [],
+      "days_ago": 58,
+      "authorized_days_ago": null
     },
     {
       "transaction_id": "eG5nyQvgBRIrlX1jWlazuw4XrWV6kKIAZNG5W",
@@ -1483,8 +1483,6 @@
           "confidence_level": "VERY_HIGH"
         }
       ],
-      "datetime": "2026-06-02T05:00:00.000Z",
-      "authorized_datetime": null,
       "location": {
         "lat": null,
         "lon": null,
@@ -1507,12 +1505,14 @@
       "account_id": "bGJnwQxLKRIlZzx4PZbncwXGkLGk7WcRE1m4m",
       "account_name": "Chase Freedom Credit Card",
       "account_official_name": "Chase Freedom Visa",
-      "institution_name": "First Platypus Bank",
+      "institution_name": null,
       "account_transfer_group": null,
       "netting_group": null,
       "bucket_1_tag_id": 6,
       "bucket_2_tag_id": null,
-      "meta_tag_ids": []
+      "meta_tag_ids": [],
+      "days_ago": 59,
+      "authorized_days_ago": null
     },
     {
       "transaction_id": "Gg5XRBQW4VcXzwo57zVZTpor3XvknytDgldPg",
@@ -1532,8 +1532,6 @@
           "confidence_level": "VERY_HIGH"
         }
       ],
-      "datetime": "2026-05-31T05:00:00.000Z",
-      "authorized_datetime": null,
       "location": {
         "lat": null,
         "lon": null,
@@ -1556,12 +1554,14 @@
       "account_id": "mGkxaZ5mj6INZ7QqzZXdCPkygqygE8iG9ngv4",
       "account_name": "SoFi High Yield Savings",
       "account_official_name": "SoFi Bank High Yield Savings",
-      "institution_name": "First Platypus Bank",
+      "institution_name": null,
       "account_transfer_group": null,
       "netting_group": null,
       "bucket_1_tag_id": 2,
       "bucket_2_tag_id": null,
-      "meta_tag_ids": []
+      "meta_tag_ids": [],
+      "days_ago": 61,
+      "authorized_days_ago": null
     },
     {
       "transaction_id": "7xEkL3p4nguloeGEqodVcQJxae3k47cDkWqLv",
@@ -1581,8 +1581,6 @@
           "confidence_level": "VERY_HIGH"
         }
       ],
-      "datetime": "2026-05-29T05:00:00.000Z",
-      "authorized_datetime": null,
       "location": {
         "lat": 39.755329,
         "lon": -105.009445,
@@ -1605,12 +1603,14 @@
       "account_id": "bGJnwQxLKRIlZzx4PZbncwXGkLGk7WcRE1m4m",
       "account_name": "Chase Freedom Credit Card",
       "account_official_name": "Chase Freedom Visa",
-      "institution_name": "First Platypus Bank",
+      "institution_name": null,
       "account_transfer_group": null,
       "netting_group": null,
       "bucket_1_tag_id": null,
       "bucket_2_tag_id": null,
-      "meta_tag_ids": []
+      "meta_tag_ids": [],
+      "days_ago": 63,
+      "authorized_days_ago": null
     },
     {
       "transaction_id": "9aAX5N8PmoHkeDjalewVTKxkpqvXBPhdNL6ar",
@@ -1630,8 +1630,6 @@
           "confidence_level": "VERY_HIGH"
         }
       ],
-      "datetime": "2026-05-28T05:00:00.000Z",
-      "authorized_datetime": null,
       "location": {
         "lat": null,
         "lon": null,
@@ -1654,12 +1652,14 @@
       "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
       "account_name": "Chase Total Checking",
       "account_official_name": "Chase Total Checking",
-      "institution_name": "First Platypus Bank",
+      "institution_name": null,
       "account_transfer_group": null,
       "netting_group": null,
       "bucket_1_tag_id": null,
       "bucket_2_tag_id": null,
-      "meta_tag_ids": []
+      "meta_tag_ids": [],
+      "days_ago": 64,
+      "authorized_days_ago": null
     },
     {
       "transaction_id": "j9lzkXbG4RTG16VAq1PLhKVWGzJ8Nwhng5eqn",
@@ -1669,8 +1669,6 @@
       "amount": -301.18,
       "iso_currency_code": "USD",
       "counterparties": [],
-      "datetime": "2026-05-23T05:00:00.000Z",
-      "authorized_datetime": null,
       "location": {
         "lat": null,
         "lon": null,
@@ -1693,12 +1691,14 @@
       "account_id": "bGJnwQxLKRIlZzx4PZbncwXGkLGk7WcRE1m4m",
       "account_name": "Chase Freedom Credit Card",
       "account_official_name": "Chase Freedom Visa",
-      "institution_name": "First Platypus Bank",
+      "institution_name": null,
       "account_transfer_group": "030e03a3-9805-4266-9665-22882b296c9b",
       "netting_group": null,
       "bucket_1_tag_id": null,
       "bucket_2_tag_id": null,
-      "meta_tag_ids": []
+      "meta_tag_ids": [],
+      "days_ago": 69,
+      "authorized_days_ago": null
     },
     {
       "transaction_id": "yXe1DzV4E6uG75xjv7qPhLGKVoqjBpCVR9Be9",
@@ -1718,8 +1718,6 @@
           "confidence_level": "VERY_HIGH"
         }
       ],
-      "datetime": "2026-05-22T05:00:00.000Z",
-      "authorized_datetime": null,
       "location": {
         "lat": null,
         "lon": null,
@@ -1742,12 +1740,14 @@
       "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
       "account_name": "Chase Total Checking",
       "account_official_name": "Chase Total Checking",
-      "institution_name": "First Platypus Bank",
+      "institution_name": null,
       "account_transfer_group": "030e03a3-9805-4266-9665-22882b296c9b",
       "netting_group": null,
       "bucket_1_tag_id": null,
       "bucket_2_tag_id": null,
-      "meta_tag_ids": []
+      "meta_tag_ids": [],
+      "days_ago": 70,
+      "authorized_days_ago": null
     },
     {
       "transaction_id": "AZRX4bnLzouy5bqZd546TpeyQgVdxatqN7mAr",
@@ -1767,8 +1767,6 @@
           "confidence_level": "VERY_HIGH"
         }
       ],
-      "datetime": "2026-05-20T05:00:00.000Z",
-      "authorized_datetime": null,
       "location": {
         "lat": null,
         "lon": null,
@@ -1791,12 +1789,14 @@
       "account_id": "mGkxaZ5mj6INZ7QqzZXdCPkygqygE8iG9ngv4",
       "account_name": "SoFi High Yield Savings",
       "account_official_name": "SoFi Bank High Yield Savings",
-      "institution_name": "First Platypus Bank",
+      "institution_name": null,
       "account_transfer_group": "e594264c-0443-481a-b916-1043e076f084",
       "netting_group": null,
       "bucket_1_tag_id": null,
       "bucket_2_tag_id": null,
-      "meta_tag_ids": []
+      "meta_tag_ids": [],
+      "days_ago": 72,
+      "authorized_days_ago": null
     },
     {
       "transaction_id": "mGkxaZ5mj6INZ7QqzZXdCPkWG8xJwKFBZbazv",
@@ -1816,8 +1816,6 @@
           "confidence_level": "VERY_HIGH"
         }
       ],
-      "datetime": "2026-05-20T05:00:00.000Z",
-      "authorized_datetime": null,
       "location": {
         "lat": null,
         "lon": null,
@@ -1840,12 +1838,14 @@
       "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
       "account_name": "Chase Total Checking",
       "account_official_name": "Chase Total Checking",
-      "institution_name": "First Platypus Bank",
+      "institution_name": null,
       "account_transfer_group": "e594264c-0443-481a-b916-1043e076f084",
       "netting_group": null,
       "bucket_1_tag_id": null,
       "bucket_2_tag_id": null,
-      "meta_tag_ids": []
+      "meta_tag_ids": [],
+      "days_ago": 72,
+      "authorized_days_ago": null
     },
     {
       "transaction_id": "Px5VjXbK1LuopAN5gpVzh39PvWLrKNsqlDRZp",
@@ -1865,8 +1865,6 @@
           "confidence_level": "VERY_HIGH"
         }
       ],
-      "datetime": "2026-05-17T05:00:00.000Z",
-      "authorized_datetime": null,
       "location": {
         "lat": null,
         "lon": null,
@@ -1889,12 +1887,14 @@
       "account_id": "bGJnwQxLKRIlZzx4PZbncwXGkLGk7WcRE1m4m",
       "account_name": "Chase Freedom Credit Card",
       "account_official_name": "Chase Freedom Visa",
-      "institution_name": "First Platypus Bank",
+      "institution_name": null,
       "account_transfer_group": null,
       "netting_group": null,
       "bucket_1_tag_id": 4,
       "bucket_2_tag_id": null,
-      "meta_tag_ids": []
+      "meta_tag_ids": [],
+      "days_ago": 75,
+      "authorized_days_ago": null
     },
     {
       "transaction_id": "bGJnwQxLKRIlZzx4PZbncwXzlWJMm9IAp5eQw",
@@ -1914,8 +1914,6 @@
           "confidence_level": "VERY_HIGH"
         }
       ],
-      "datetime": "2026-05-15T05:00:00.000Z",
-      "authorized_datetime": null,
       "location": {
         "lat": null,
         "lon": null,
@@ -1938,12 +1936,14 @@
       "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
       "account_name": "Chase Total Checking",
       "account_official_name": "Chase Total Checking",
-      "institution_name": "First Platypus Bank",
+      "institution_name": null,
       "account_transfer_group": null,
       "netting_group": null,
       "bucket_1_tag_id": 6,
       "bucket_2_tag_id": null,
-      "meta_tag_ids": []
+      "meta_tag_ids": [],
+      "days_ago": 77,
+      "authorized_days_ago": null
     },
     {
       "transaction_id": "NB5XMbRlZLueE3N5pE6XIlq4kLVgnyuRJvwml",
@@ -1963,8 +1963,6 @@
           "confidence_level": "VERY_HIGH"
         }
       ],
-      "datetime": "2026-05-10T05:00:00.000Z",
-      "authorized_datetime": null,
       "location": {
         "lat": null,
         "lon": null,
@@ -1987,12 +1985,14 @@
       "account_id": "bGJnwQxLKRIlZzx4PZbncwXGkLGk7WcRE1m4m",
       "account_name": "Chase Freedom Credit Card",
       "account_official_name": "Chase Freedom Visa",
-      "institution_name": "First Platypus Bank",
+      "institution_name": null,
       "account_transfer_group": null,
       "netting_group": null,
       "bucket_1_tag_id": 7,
       "bucket_2_tag_id": null,
-      "meta_tag_ids": []
+      "meta_tag_ids": [],
+      "days_ago": 82,
+      "authorized_days_ago": null
     },
     {
       "transaction_id": "nGzdb15y76IPXE3KkXAgHnlpP9gQz7c1qd4wj",
@@ -2012,8 +2012,6 @@
           "confidence_level": "VERY_HIGH"
         }
       ],
-      "datetime": "2026-05-08T05:00:00.000Z",
-      "authorized_datetime": null,
       "location": {
         "lat": null,
         "lon": null,
@@ -2036,12 +2034,14 @@
       "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
       "account_name": "Chase Total Checking",
       "account_official_name": "Chase Total Checking",
-      "institution_name": "First Platypus Bank",
+      "institution_name": null,
       "account_transfer_group": null,
       "netting_group": null,
       "bucket_1_tag_id": 12,
       "bucket_2_tag_id": null,
-      "meta_tag_ids": []
+      "meta_tag_ids": [],
+      "days_ago": 84,
+      "authorized_days_ago": null
     },
     {
       "transaction_id": "Gg5XRBQW4VcXzwo57zVZTpor3XvknytDgldyg",
@@ -2061,8 +2061,6 @@
           "confidence_level": "VERY_HIGH"
         }
       ],
-      "datetime": "2026-05-05T05:00:00.000Z",
-      "authorized_datetime": null,
       "location": {
         "lat": null,
         "lon": null,
@@ -2085,12 +2083,14 @@
       "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
       "account_name": "Chase Total Checking",
       "account_official_name": "Chase Total Checking",
-      "institution_name": "First Platypus Bank",
+      "institution_name": null,
       "account_transfer_group": null,
       "netting_group": null,
       "bucket_1_tag_id": 5,
       "bucket_2_tag_id": null,
-      "meta_tag_ids": []
+      "meta_tag_ids": [],
+      "days_ago": 87,
+      "authorized_days_ago": null
     },
     {
       "transaction_id": "4zompjrxWAcrdgMEPd94uPgzE8VyKMFGyeP7N",
@@ -2110,8 +2110,6 @@
           "confidence_level": "VERY_HIGH"
         }
       ],
-      "datetime": "2026-05-03T05:00:00.000Z",
-      "authorized_datetime": null,
       "location": {
         "lat": 47.661583,
         "lon": -122.333359,
@@ -2134,12 +2132,14 @@
       "account_id": "bGJnwQxLKRIlZzx4PZbncwXGkLGk7WcRE1m4m",
       "account_name": "Chase Freedom Credit Card",
       "account_official_name": "Chase Freedom Visa",
-      "institution_name": "First Platypus Bank",
+      "institution_name": null,
       "account_transfer_group": null,
       "netting_group": null,
       "bucket_1_tag_id": null,
       "bucket_2_tag_id": null,
-      "meta_tag_ids": []
+      "meta_tag_ids": [],
+      "days_ago": 89,
+      "authorized_days_ago": null
     },
     {
       "transaction_id": "AZRX4bnLzouy5bqZd546TpeyQgVdxatqN7mEr",
@@ -2159,8 +2159,6 @@
           "confidence_level": "VERY_HIGH"
         }
       ],
-      "datetime": "2026-05-01T05:00:00.000Z",
-      "authorized_datetime": null,
       "location": {
         "lat": null,
         "lon": null,
@@ -2183,12 +2181,14 @@
       "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
       "account_name": "Chase Total Checking",
       "account_official_name": "Chase Total Checking",
-      "institution_name": "First Platypus Bank",
+      "institution_name": null,
       "account_transfer_group": null,
       "netting_group": null,
       "bucket_1_tag_id": 3,
       "bucket_2_tag_id": null,
-      "meta_tag_ids": []
+      "meta_tag_ids": [],
+      "days_ago": 91,
+      "authorized_days_ago": null
     },
     {
       "transaction_id": "W75npgRaWBIB87r5L8vRsq71KXleJwUezrV1y",
@@ -2208,8 +2208,6 @@
           "confidence_level": "VERY_HIGH"
         }
       ],
-      "datetime": "2026-04-30T05:00:00.000Z",
-      "authorized_datetime": null,
       "location": {
         "lat": null,
         "lon": null,
@@ -2232,12 +2230,14 @@
       "account_id": "mGkxaZ5mj6INZ7QqzZXdCPkygqygE8iG9ngv4",
       "account_name": "SoFi High Yield Savings",
       "account_official_name": "SoFi Bank High Yield Savings",
-      "institution_name": "First Platypus Bank",
+      "institution_name": null,
       "account_transfer_group": null,
       "netting_group": null,
       "bucket_1_tag_id": 2,
       "bucket_2_tag_id": null,
-      "meta_tag_ids": []
+      "meta_tag_ids": [],
+      "days_ago": 92,
+      "authorized_days_ago": null
     },
     {
       "transaction_id": "a85DPye1qRuQpkyvLp41U9BWdvRaPNFymqMLG",
@@ -2257,8 +2257,6 @@
           "confidence_level": "VERY_HIGH"
         }
       ],
-      "datetime": "2026-04-27T05:00:00.000Z",
-      "authorized_datetime": null,
       "location": {
         "lat": null,
         "lon": null,
@@ -2281,12 +2279,14 @@
       "account_id": "bGJnwQxLKRIlZzx4PZbncwXGkLGk7WcRE1m4m",
       "account_name": "Chase Freedom Credit Card",
       "account_official_name": "Chase Freedom Visa",
-      "institution_name": "First Platypus Bank",
+      "institution_name": null,
       "account_transfer_group": null,
       "netting_group": null,
       "bucket_1_tag_id": 6,
       "bucket_2_tag_id": null,
-      "meta_tag_ids": []
+      "meta_tag_ids": [],
+      "days_ago": 95,
+      "authorized_days_ago": null
     },
     {
       "transaction_id": "dk5bNawozRHGKMDWrKe1h3jPG6zpqgsV1wper",
@@ -2296,8 +2296,6 @@
       "amount": -268.44,
       "iso_currency_code": "USD",
       "counterparties": [],
-      "datetime": "2026-04-24T05:00:00.000Z",
-      "authorized_datetime": null,
       "location": {
         "lat": null,
         "lon": null,
@@ -2320,12 +2318,14 @@
       "account_id": "bGJnwQxLKRIlZzx4PZbncwXGkLGk7WcRE1m4m",
       "account_name": "Chase Freedom Credit Card",
       "account_official_name": "Chase Freedom Visa",
-      "institution_name": "First Platypus Bank",
+      "institution_name": null,
       "account_transfer_group": "6e7cbeea-2757-4520-9f31-fd2bd864291a",
       "netting_group": null,
       "bucket_1_tag_id": null,
       "bucket_2_tag_id": null,
-      "meta_tag_ids": []
+      "meta_tag_ids": [],
+      "days_ago": 98,
+      "authorized_days_ago": null
     },
     {
       "transaction_id": "W75npgRaWBIB87r5L8vRsq71KXleJwUezrVKy",
@@ -2345,8 +2345,6 @@
           "confidence_level": "VERY_HIGH"
         }
       ],
-      "datetime": "2026-04-23T05:00:00.000Z",
-      "authorized_datetime": null,
       "location": {
         "lat": null,
         "lon": null,
@@ -2369,12 +2367,14 @@
       "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
       "account_name": "Chase Total Checking",
       "account_official_name": "Chase Total Checking",
-      "institution_name": "First Platypus Bank",
+      "institution_name": null,
       "account_transfer_group": "6e7cbeea-2757-4520-9f31-fd2bd864291a",
       "netting_group": null,
       "bucket_1_tag_id": null,
       "bucket_2_tag_id": null,
-      "meta_tag_ids": []
+      "meta_tag_ids": [],
+      "days_ago": 99,
+      "authorized_days_ago": null
     },
     {
       "transaction_id": "Ep5XnE98dLub7vz5P7VyHz1qajEQ4giWnwNJ8",
@@ -2394,8 +2394,6 @@
           "confidence_level": "VERY_HIGH"
         }
       ],
-      "datetime": "2026-04-22T05:00:00.000Z",
-      "authorized_datetime": null,
       "location": {
         "lat": null,
         "lon": null,
@@ -2418,12 +2416,14 @@
       "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
       "account_name": "Chase Total Checking",
       "account_official_name": "Chase Total Checking",
-      "institution_name": "First Platypus Bank",
+      "institution_name": null,
       "account_transfer_group": "4d0fdbda-a92b-4c0a-930a-220f5f47a922",
       "netting_group": null,
       "bucket_1_tag_id": null,
       "bucket_2_tag_id": null,
-      "meta_tag_ids": []
+      "meta_tag_ids": [],
+      "days_ago": 100,
+      "authorized_days_ago": null
     },
     {
       "transaction_id": "Ep5XnE98dLub7vz5P7VyHz1qajEQ4giWnwNk8",
@@ -2443,8 +2443,6 @@
           "confidence_level": "VERY_HIGH"
         }
       ],
-      "datetime": "2026-04-22T05:00:00.000Z",
-      "authorized_datetime": null,
       "location": {
         "lat": null,
         "lon": null,
@@ -2467,12 +2465,14 @@
       "account_id": "mGkxaZ5mj6INZ7QqzZXdCPkygqygE8iG9ngv4",
       "account_name": "SoFi High Yield Savings",
       "account_official_name": "SoFi Bank High Yield Savings",
-      "institution_name": "First Platypus Bank",
+      "institution_name": null,
       "account_transfer_group": "4d0fdbda-a92b-4c0a-930a-220f5f47a922",
       "netting_group": null,
       "bucket_1_tag_id": null,
       "bucket_2_tag_id": null,
-      "meta_tag_ids": []
+      "meta_tag_ids": [],
+      "days_ago": 100,
+      "authorized_days_ago": null
     },
     {
       "transaction_id": "8dkXvVpNbofvLEmdXLn4co9vbXpNgKCDoABjJ",
@@ -2492,8 +2492,6 @@
           "confidence_level": "VERY_HIGH"
         }
       ],
-      "datetime": "2026-04-18T05:00:00.000Z",
-      "authorized_datetime": null,
       "location": {
         "lat": null,
         "lon": null,
@@ -2516,12 +2514,14 @@
       "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
       "account_name": "Chase Total Checking",
       "account_official_name": "Chase Total Checking",
-      "institution_name": "First Platypus Bank",
+      "institution_name": null,
       "account_transfer_group": null,
       "netting_group": null,
       "bucket_1_tag_id": null,
       "bucket_2_tag_id": null,
-      "meta_tag_ids": []
+      "meta_tag_ids": [],
+      "days_ago": 104,
+      "authorized_days_ago": null
     },
     {
       "transaction_id": "xG7MRwra86IoGg3PeGyNh1eDnEGpyXCraobvg",
@@ -2541,8 +2541,6 @@
           "confidence_level": "VERY_HIGH"
         }
       ],
-      "datetime": "2026-04-15T05:00:00.000Z",
-      "authorized_datetime": null,
       "location": {
         "lat": 42.054928,
         "lon": -80.095047,
@@ -2565,12 +2563,14 @@
       "account_id": "bGJnwQxLKRIlZzx4PZbncwXGkLGk7WcRE1m4m",
       "account_name": "Chase Freedom Credit Card",
       "account_official_name": "Chase Freedom Visa",
-      "institution_name": "First Platypus Bank",
+      "institution_name": null,
       "account_transfer_group": null,
       "netting_group": null,
       "bucket_1_tag_id": 5,
       "bucket_2_tag_id": null,
-      "meta_tag_ids": []
+      "meta_tag_ids": [],
+      "days_ago": 107,
+      "authorized_days_ago": null
     },
     {
       "transaction_id": "DL5X4j8gkECDV185NVBZu7VlLX9da1tjqgMxJ",
@@ -2590,8 +2590,6 @@
           "confidence_level": "VERY_HIGH"
         }
       ],
-      "datetime": "2026-04-12T05:00:00.000Z",
-      "authorized_datetime": null,
       "location": {
         "lat": null,
         "lon": null,
@@ -2614,12 +2612,14 @@
       "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
       "account_name": "Chase Total Checking",
       "account_official_name": "Chase Total Checking",
-      "institution_name": "First Platypus Bank",
+      "institution_name": null,
       "account_transfer_group": null,
       "netting_group": null,
       "bucket_1_tag_id": 6,
       "bucket_2_tag_id": null,
-      "meta_tag_ids": []
+      "meta_tag_ids": [],
+      "days_ago": 110,
+      "authorized_days_ago": null
     },
     {
       "transaction_id": "Xe5JQE84A3uj8wXlB8nNcoQwvL9KVACoA4aqE",
@@ -2629,8 +2629,6 @@
       "amount": 124.18,
       "iso_currency_code": "USD",
       "counterparties": [],
-      "datetime": "2026-04-09T05:00:00.000Z",
-      "authorized_datetime": null,
       "location": {
         "lat": null,
         "lon": null,
@@ -2653,12 +2651,14 @@
       "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
       "account_name": "Chase Total Checking",
       "account_official_name": "Chase Total Checking",
-      "institution_name": "First Platypus Bank",
+      "institution_name": null,
       "account_transfer_group": null,
       "netting_group": null,
       "bucket_1_tag_id": 10,
       "bucket_2_tag_id": null,
-      "meta_tag_ids": []
+      "meta_tag_ids": [],
+      "days_ago": 113,
+      "authorized_days_ago": null
     },
     {
       "transaction_id": "3rp5LwK3EZiwD9yRxDjLh8wEJoDy6nF4ypx3W",
@@ -2678,8 +2678,6 @@
           "confidence_level": "VERY_HIGH"
         }
       ],
-      "datetime": "2026-04-08T05:00:00.000Z",
-      "authorized_datetime": null,
       "location": {
         "lat": null,
         "lon": null,
@@ -2702,12 +2700,14 @@
       "account_id": "bGJnwQxLKRIlZzx4PZbncwXGkLGk7WcRE1m4m",
       "account_name": "Chase Freedom Credit Card",
       "account_official_name": "Chase Freedom Visa",
-      "institution_name": "First Platypus Bank",
+      "institution_name": null,
       "account_transfer_group": null,
       "netting_group": null,
       "bucket_1_tag_id": 11,
       "bucket_2_tag_id": null,
-      "meta_tag_ids": []
+      "meta_tag_ids": [],
+      "days_ago": 114,
+      "authorized_days_ago": null
     },
     {
       "transaction_id": "638DLNgaGkCel4j35lrLI4newkmQoziv7W5LX",
@@ -2727,8 +2727,6 @@
           "confidence_level": "VERY_HIGH"
         }
       ],
-      "datetime": "2026-04-06T05:00:00.000Z",
-      "authorized_datetime": null,
       "location": {
         "lat": 34.012989,
         "lon": -84.183563,
@@ -2751,12 +2749,14 @@
       "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
       "account_name": "Chase Total Checking",
       "account_official_name": "Chase Total Checking",
-      "institution_name": "First Platypus Bank",
+      "institution_name": null,
       "account_transfer_group": null,
       "netting_group": null,
       "bucket_1_tag_id": 5,
       "bucket_2_tag_id": null,
-      "meta_tag_ids": []
+      "meta_tag_ids": [],
+      "days_ago": 116,
+      "authorized_days_ago": null
     },
     {
       "transaction_id": "BM6XvdRpBouWdRlEadwpUpNMb4oW9atmoPlnX",
@@ -2776,8 +2776,6 @@
           "confidence_level": "VERY_HIGH"
         }
       ],
-      "datetime": "2026-04-04T05:00:00.000Z",
-      "authorized_datetime": null,
       "location": {
         "lat": null,
         "lon": null,
@@ -2800,12 +2798,14 @@
       "account_id": "bGJnwQxLKRIlZzx4PZbncwXGkLGk7WcRE1m4m",
       "account_name": "Chase Freedom Credit Card",
       "account_official_name": "Chase Freedom Visa",
-      "institution_name": "First Platypus Bank",
+      "institution_name": null,
       "account_transfer_group": null,
       "netting_group": null,
       "bucket_1_tag_id": 4,
       "bucket_2_tag_id": null,
-      "meta_tag_ids": []
+      "meta_tag_ids": [],
+      "days_ago": 118,
+      "authorized_days_ago": null
     },
     {
       "transaction_id": "Ra5nZX8zplHBpDb5Jpa3srd74bAG8kfeVKE33",
@@ -2825,8 +2825,6 @@
           "confidence_level": "VERY_HIGH"
         }
       ],
-      "datetime": "2026-04-02T05:00:00.000Z",
-      "authorized_datetime": null,
       "location": {
         "lat": null,
         "lon": null,
@@ -2849,12 +2847,14 @@
       "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
       "account_name": "Chase Total Checking",
       "account_official_name": "Chase Total Checking",
-      "institution_name": "First Platypus Bank",
+      "institution_name": null,
       "account_transfer_group": null,
       "netting_group": null,
       "bucket_1_tag_id": 3,
       "bucket_2_tag_id": null,
-      "meta_tag_ids": []
+      "meta_tag_ids": [],
+      "days_ago": 120,
+      "authorized_days_ago": null
     }
   ]
 }

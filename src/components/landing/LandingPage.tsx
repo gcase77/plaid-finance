@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import LandingTransactionsDemo from "./LandingTransactionsDemo";
 
 export function LandingPage() {
   return (
@@ -13,9 +14,19 @@ export function LandingPage() {
       </nav>
       <section className="landing-intro">
         <h1>Funds Up</h1>
-        <a className="btn primary" href="#features">View features</a>
+        <a className="landing-cta" href="#find-transactions">
+          View features
+          <span className="landing-cta-arrow landing-cta-arrow-down" aria-hidden>↓</span>
+        </a>
       </section>
-      <section id="features" className="landing-features" aria-label="Features" />
+      <section id="find-transactions" className="landing-features" aria-label="Find transactions">
+        <LandingTransactionsDemo />
+      </section>
+      <section id="visualize-trends" className="landing-features landing-features-end" aria-label="Visualize trends">
+        <header className="page-header">
+          <h1>Visualize trends</h1>
+        </header>
+      </section>
     </div>
   );
 }
