@@ -1,0 +1,238 @@
+import { useMemo, useState } from "react";
+import type { Tag, Txn } from "../types";
+import { getTxnDateOnly, TAG_COLOR_PALETTE } from "../../utils/transactionUtils";
+import { expandNettingGroupsForDisplay } from "../../utils/nettingUtils";
+import { buildTrendPieSlices, type TrendPieGrouping } from "../tools/visualizeTrendsUtils";
+import LandingVizTxnPanel from "./LandingVizTxnPanel";
+
+type Side = "spending" | "income";
+type Series = { key: string; label: string; color: string; values: number[]; periodTxns: Txn[][]; total: number };
+type Period = { key: string; label: string; txns: Txn[] };
+type Segment = { series: Series; period: Period; periodIndex: number; y0: number; y1: number };
+type Selection = { seriesKey: string; periodKey: string | null };
+type RibbonGrouping = Extract<TrendPieGrouping, "detected" | "buckets">;
+
+const fmt = (n: number) => `$${n.toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
+const monthLabel = (s: string) => { const [y, m] = s.split("-"); return new Date(Number(y), Number(m) - 1, 1).toLocaleDateString("en-US", { month: "short", year: "2-digit" }); };
+
+function Seg<T extends string>({ value, onChange, options }: { value: T; onChange: (v: T) => void; options: Array<{ value: T; label: string }> }) {
+  return (
+    <div className="segmented" role="group">
+      {options.map((o) => (
+        <button key={o.value} type="button" className={value === o.value ? "active" : ""} onClick={() => onChange(o.value)}>{o.label}</button>
+      ))}
+    </div>
+  );
+}
+
+function buildPeriods(txns: Txn[]) {
+  const map = new Map<string, Period>();
+  for (const t of txns) {
+    const d = getTxnDateOnly(t);
+    if (!d) continue;
+    const key = d.slice(0, 7);
+    const row = map.get(key) ?? { key, label: monthLabel(key), txns: [] };
+    row.txns.push(t);
+    map.set(key, row);
+  }
+  return [...map.values()].sort((a, b) => a.key.localeCompare(b.key));
+}
+
+function buildSeries(periods: Period[], side: Side, grouping: RibbonGrouping, tagMap: Map<number, Tag>): Series[] {
+  const labels = new Map<string, string>();
+  const totals = new Map<string, number>();
+  const periodSlices = periods.map((p) => buildTrendPieSlices(p.txns, side, grouping, tagMap));
+  for (const slices of periodSlices) for (const s of slices) {
+    labels.set(s.key, s.label);
+    totals.set(s.key, (totals.get(s.key) ?? 0) + s.amount);
+  }
+  const keys = [...totals.entries()].sort((a, b) => b[1] - a[1]).slice(0, 16).map(([key]) => key);
+  const otherTotal = [...totals.entries()].filter(([k]) => !keys.includes(k)).reduce((sum, [, v]) => sum + v, 0);
+  if (otherTotal > 0) keys.push("__other__");
+  return keys.map((key, i) => ({
+    key,
+    label: key === "__other__" ? "Other" : labels.get(key) ?? key,
+    color: TAG_COLOR_PALETTE[i % TAG_COLOR_PALETTE.length],
+    values: periodSlices.map((slices) => key === "__other__"
+      ? slices.filter((s) => !keys.includes(s.key)).reduce((sum, s) => sum + s.amount, 0)
+      : slices.find((s) => s.key === key)?.amount ?? 0),
+    periodTxns: periodSlices.map((slices) => key === "__other__"
+      ? slices.filter((s) => !keys.includes(s.key)).flatMap((s) => s.transactions)
+      : slices.find((s) => s.key === key)?.transactions ?? []),
+    total: key === "__other__" ? otherTotal : totals.get(key) ?? 0,
+  })).filter((s) => s.total > 0);
+}
+
+function buildSegments(periods: Period[], series: Series[]): Segment[][] {
+  return periods.map((period, periodIndex) => {
+    const T = series.reduce((sum, s) => sum + s.values[periodIndex], 0);
+    let acc = T;
+    return [...series]
+      .sort((a, b) => b.values[periodIndex] - a.values[periodIndex] || b.total - a.total)
+      .map((s) => {
+        const v = s.values[periodIndex];
+        const y1 = acc;
+        const y0 = acc - v;
+        acc = y0;
+        return { series: s, period, periodIndex, y0, y1 };
+      });
+  });
+}
+
+function ribbonPath(a: Segment, b: Segment, x0: number, x1: number, barW: number, y: (v: number) => number) {
+  const r0 = x0 + barW / 2, l1 = x1 - barW / 2, c = (r0 + l1) / 2;
+  return `M ${r0} ${y(a.y1)} C ${c} ${y(a.y1)} ${c} ${y(b.y1)} ${l1} ${y(b.y1)} L ${l1} ${y(b.y0)} C ${c} ${y(b.y0)} ${c} ${y(a.y0)} ${r0} ${y(a.y0)} Z`;
+}
+
+function RibbonSvg({ periods, series, selected, hoverKey, onHover, onSelect }: {
+  periods: Period[]; series: Series[]; selected: Selection | null; hoverKey: string | null;
+  onHover: (key: string | null) => void; onSelect: (seriesKey: string, periodKey: string) => void;
+}) {
+  const width = 1200, height = 420, padL = 72, padR = 22, padY = 34, plotInset = 36, barW = 44, hitW = 56;
+  const max = Math.max(...periods.map((_, i) => series.reduce((sum, s) => sum + s.values[i], 0)), 1);
+  const segments = useMemo(() => buildSegments(periods, series), [periods, series]);
+  const x = (i: number) => {
+    const left = padL + plotInset;
+    const span = Math.max(width - padL - padR - plotInset * 2, 1);
+    return periods.length <= 1 ? left + span / 2 : left + (i * span) / (periods.length - 1);
+  };
+  const y = (v: number) => padY + (height - padY * 2) - (v / max) * (height - padY * 2);
+  const ticks = [0, 0.25, 0.5, 0.75, 1].map((p) => Math.round(max * p));
+  const xSkip = Math.max(1, Math.ceil(periods.length / 12));
+  const focusKey = hoverKey ?? selected?.seriesKey ?? null;
+  return (
+    <svg viewBox={`0 0 ${width} ${height}`} style={{ width: "100%", minWidth: 720, maxHeight: height }}>
+      {ticks.map((t, i) => (
+        <g key={`${t}-${i}`}>
+          <line x1={padL - 8} x2={width - padR} y1={y(t)} y2={y(t)} stroke="var(--line)" strokeOpacity={0.7} />
+          <text x={padL - 12} y={y(t) + 4} textAnchor="end" fontSize="10" fill="var(--ink-muted)">{fmt(t)}</text>
+        </g>
+      ))}
+      {periods.slice(0, -1).flatMap((_, i) => segments[i].map((seg) => {
+        const next = segments[i + 1].find((s) => s.series.key === seg.series.key);
+        if (!next || (seg.y1 === seg.y0 && next.y1 === next.y0)) return null;
+        const active = focusKey === seg.series.key;
+        const dim = focusKey && !active;
+        return <path key={`${seg.series.key}-${seg.period.key}`} d={ribbonPath(seg, next, x(i), x(i + 1), barW, y)} fill={seg.series.color} opacity={active ? 0.95 : dim ? 0.14 : 0.58} />;
+      }))}
+      {segments.flatMap((periodSegments, i) => periodSegments.map((seg) => {
+        if (seg.y1 === seg.y0) return null;
+        const active = selected?.seriesKey === seg.series.key && (selected.periodKey == null || selected.periodKey === seg.period.key);
+        const hovered = hoverKey === seg.series.key;
+        const dim = focusKey && focusKey !== seg.series.key;
+        return (
+          <g key={`${seg.period.key}-${seg.series.key}`} className="landing-viz-hit" style={{ cursor: "pointer" }}
+            onMouseDown={(e) => e.preventDefault()}
+            onMouseEnter={() => onHover(seg.series.key)} onMouseLeave={() => onHover(null)}
+            onClick={() => onSelect(seg.series.key, seg.period.key)}
+          >
+            <rect x={x(i) - hitW / 2} y={y(seg.y1) - 2} width={hitW} height={Math.max(1, y(seg.y0) - y(seg.y1)) + 4} fill="transparent" />
+            <rect
+              x={x(i) - barW / 2} y={y(seg.y1)} width={barW} height={Math.max(1, y(seg.y0) - y(seg.y1))} rx={2}
+              fill={seg.series.color} opacity={active || hovered ? 1 : dim ? 0.3 : 0.9}
+              stroke={active || hovered ? "var(--ink)" : "var(--surface)"} strokeWidth={active || hovered ? 1.75 : 0.75}
+            />
+          </g>
+        );
+      }))}
+      {periods.map((p, i) => {
+        const total = series.reduce((sum, s) => sum + s.values[i], 0);
+        if (total <= 0) return null;
+        return <text key={`total-${p.key}`} x={x(i)} y={y(total) - 5} textAnchor="middle" fontSize="10" fill="var(--ink-muted)">{fmt(total)}</text>;
+      })}
+      {periods.map((p, i) => {
+        if (i % xSkip !== 0 && i !== periods.length - 1) return null;
+        return <text key={p.key} x={x(i)} y={height - 8} textAnchor="middle" fontSize="10" fill="var(--ink-muted)">{p.label}</text>;
+      })}
+    </svg>
+  );
+}
+
+function RibbonCard({ side, transactions, allTransactions, tags, grouping, tagMap }: {
+  side: Side; transactions: Txn[]; allTransactions: Txn[]; tags: Tag[]; grouping: RibbonGrouping; tagMap: Map<number, Tag>;
+}) {
+  const [selected, setSelected] = useState<Selection | null>(null);
+  const [hoverKey, setHoverKey] = useState<string | null>(null);
+  const periods = useMemo(() => buildPeriods(transactions), [transactions]);
+  const series = useMemo(() => buildSeries(periods, side, grouping, tagMap), [periods, side, grouping, tagMap]);
+  const selectedSeries = selected ? series.find((s) => s.key === selected.seriesKey) : null;
+  const legendSel = selected?.periodKey === null;
+  const selectedPeriodIndex = selected?.periodKey != null ? periods.findIndex((p) => p.key === selected.periodKey) : -1;
+  const selectedPeriod = selectedPeriodIndex >= 0 ? periods[selectedPeriodIndex] : null;
+  const expandedSelectedTxns = useMemo(() => {
+    if (!selectedSeries) return [];
+    const raw = selected?.periodKey === null
+      ? selectedSeries.periodTxns.flat()
+      : selectedPeriodIndex >= 0 ? selectedSeries.periodTxns[selectedPeriodIndex] ?? [] : [];
+    return expandNettingGroupsForDisplay(raw, allTransactions);
+  }, [selected, selectedSeries, selectedPeriodIndex, allTransactions]);
+  const selectBar = (seriesKey: string, periodKey: string) => setSelected((s) => (s?.seriesKey === seriesKey && s.periodKey === periodKey ? null : { seriesKey, periodKey }));
+  const selectLegend = (seriesKey: string) => setSelected((s) => (s?.seriesKey === seriesKey ? null : { seriesKey, periodKey: null }));
+  if (!periods.length || !series.length) return <div className="card"><p className="muted small">No data in this range.</p></div>;
+  return (
+    <div className="card">
+      <div className="viz-wrap" style={{ overflowX: "auto" }}>
+        <RibbonSvg periods={periods} series={series} selected={selected} hoverKey={hoverKey} onHover={setHoverKey} onSelect={selectBar} />
+      </div>
+      <ul className="viz-pie-legend" style={{ listStyle: "none", padding: 0, margin: "8px 0 0" }}>
+        {series.map((s) => (
+          <li key={s.key} style={{ breakInside: "avoid", marginBottom: 4 }}>
+            <button
+              type="button"
+              className="btn link btn-sm viz-pie-legend-row"
+              style={{ fontWeight: selected?.seriesKey === s.key ? 700 : 500, color: "inherit" }}
+              onClick={() => selectLegend(s.key)}
+            >
+              <span className="viz-pie-legend-swatch" style={{ background: s.color, borderRadius: 2 }} aria-hidden />
+              <span className="viz-pie-legend-label">{s.label}</span>
+              <span className="viz-pie-legend-pct muted">{fmt(s.total)}</span>
+            </button>
+          </li>
+        ))}
+      </ul>
+      {selectedSeries && (legendSel || selectedPeriod) && (
+        <LandingVizTxnPanel
+          title={
+            legendSel
+              ? <>{selectedSeries.label} <span className="muted small">(all periods)</span></>
+              : <>{selectedPeriod?.label} — {selectedSeries.label}</>
+          }
+          transactions={expandedSelectedTxns}
+          tags={tags}
+          onClear={() => setSelected(null)}
+          keyPrefix={`landing-viz-ribbon-${side}`}
+        />
+      )}
+    </div>
+  );
+}
+
+export default function LandingRibbonChart({
+  transactions, allTransactions, tags, grouping, onGroupingChange,
+}: {
+  transactions: Txn[];
+  allTransactions: Txn[];
+  tags: Tag[];
+  grouping: RibbonGrouping;
+  onGroupingChange: (g: RibbonGrouping) => void;
+}) {
+  const tagMap = useMemo(() => new Map(tags.map((t) => [t.id, t])), [tags]);
+  return (
+    <>
+      <div className="row-flex gap-3 mb-3" style={{ justifyContent: "flex-end" }}>
+        <span className="small muted">Group by</span>
+        <Seg
+          value={grouping}
+          onChange={onGroupingChange}
+          options={[
+            { value: "buckets", label: "My Tags" },
+            { value: "detected", label: "Detected Category" },
+          ]}
+        />
+      </div>
+      <div className="gap-4" style={{ display: "flex", flexDirection: "column" }}>
+        <RibbonCard side="spending" transactions={transactions} allTransactions={allTransactions} tags={tags} grouping={grouping} tagMap={tagMap} />
+      </div>
+    </>
+  );
+}

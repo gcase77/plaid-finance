@@ -1,5 +1,7 @@
 import { Link } from "react-router-dom";
+import LandingBudgetsDemo from "./LandingBudgetsDemo";
 import LandingTransactionsDemo from "./LandingTransactionsDemo";
+import LandingVisualizeDemo from "./LandingVisualizeDemo";
 
 export function LandingPage() {
   return (
@@ -23,9 +25,10 @@ export function LandingPage() {
         <LandingTransactionsDemo />
       </section>
       <section id="visualize-trends" className="landing-features landing-features-end" aria-label="Visualize trends">
-        <header className="page-header">
-          <h1>Visualize trends</h1>
-        </header>
+        <LandingVisualizeDemo />
+      </section>
+      <section id="budgets" className="landing-features" aria-label="Keep your budgets in check">
+        <LandingBudgetsDemo />
       </section>
     </div>
   );

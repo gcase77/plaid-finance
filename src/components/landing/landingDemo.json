@@ -1421,7 +1421,7 @@
       "name": "ACME CORP PAYROLL PPD",
       "original_description": "ACME CORP PAYROLL PPD",
       "merchant_name": "Acme Markets",
-      "amount": -2849.77,
+      "amount": -3166.09,
       "iso_currency_code": "USD",
       "counterparties": [
         {
@@ -1901,7 +1901,7 @@
       "name": "Delta Air Lines",
       "original_description": "DELTA AIR LINES ECOM",
       "merchant_name": "Delta Air Lines",
-      "amount": 312.76,
+      "amount": 439.99,
       "iso_currency_code": "USD",
       "counterparties": [
         {
@@ -2146,7 +2146,7 @@
       "name": "ACME CORP PAYROLL PPD",
       "original_description": "ACME CORP PAYROLL PPD",
       "merchant_name": "Acme Markets",
-      "amount": -2861.9,
+      "amount": -2661.9,
       "iso_currency_code": "USD",
       "counterparties": [
         {
