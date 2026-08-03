@@ -1,5 +1,4 @@
-/* Funds Up — design system. See DESIGN.md for tokens. */
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Oswald:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&display=swap");
+/* Funds Up — design system. See DESIGN.md for tokens. Fonts are loaded via index.html <link> for earlier discovery. */
 
 :root {
   color-scheme: light;
@@ -492,6 +491,12 @@ hr { border: 0; border-top: 1px solid var(--line); margin: var(--s4) 0; }
 .landing-nav a { color: var(--ink-muted); font-weight: 550; }
 .landing-nav a:hover { color: var(--brand); text-decoration: none; }
 .landing-logo img { height: 36px; }
+.landing-nav .btn.primary {
+  background: #1a3a82; border-color: #1a3a82; color: #fff;
+}
+.landing-nav .btn.primary:hover:not(:disabled) {
+  background: #0f2258; border-color: #0f2258;
+}
 .landing-intro {
   min-height: calc(100vh - 72px); display: flex; flex-direction: column;
   align-items: center; justify-content: center; gap: var(--s5); padding: 0 var(--s4) 18vh; text-align: center;
@@ -500,25 +505,28 @@ hr { border: 0; border-top: 1px solid var(--line); margin: var(--s4) 0; }
   position: relative; display: grid; place-items: center;
   isolation: isolate; overflow: visible;
   font-size: clamp(3rem, 10vw, 6.5rem);
-  padding-bottom: 0.5em;
+  padding-bottom: 0.65em;
   --glow-x: 72%; --glow-y: 28%;
 }
 .landing-hero-mark {
   position: absolute; z-index: 0; pointer-events: none;
-  left: 50%; bottom: 0; width: 80%;
+  left: 50%; bottom: 0; width: 100%;
   aspect-ratio: 355 / 275; overflow: visible;
   transform: translateX(-50%);
   color: #9aa3b2; opacity: 0.42;
 }
 .landing-hero-mark-glow {
-  color: #f5cc1f; opacity: 0;
-  filter: drop-shadow(0 0 8px rgba(245, 204, 31, 0.65));
+  color: #e8b400; opacity: 0;
+  filter:
+    drop-shadow(0 0 4px rgba(232, 180, 0, 0.95))
+    drop-shadow(0 0 14px rgba(245, 180, 0, 0.85))
+    drop-shadow(0 0 28px rgba(245, 160, 0, 0.55));
   -webkit-mask-image: radial-gradient(ellipse 22% 28% at var(--glow-x) var(--glow-y), #000 0%, rgba(0,0,0,0.85) 30%, rgba(0,0,0,0.45) 55%, rgba(0,0,0,0.12) 78%, transparent 100%);
   mask-image: radial-gradient(ellipse 22% 28% at var(--glow-x) var(--glow-y), #000 0%, rgba(0,0,0,0.85) 30%, rgba(0,0,0,0.45) 55%, rgba(0,0,0,0.12) 78%, transparent 100%);
   transition: opacity 0.45s ease;
 }
 .landing-hero-title--shooting .landing-hero-mark-glow,
-.landing-hero-title--ready .landing-hero-mark-glow { opacity: 0.8; }
+.landing-hero-title--ready .landing-hero-mark-glow { opacity: 1; }
 .landing-intro h1 {
   position: relative; z-index: 1; margin: 0;
   font-family: "Oswald", sans-serif; font-style: italic;
@@ -530,7 +538,7 @@ hr { border: 0; border-top: 1px solid var(--line); margin: var(--s4) 0; }
   font-size: clamp(2.25rem, 4.5vw, 3.4rem);
   letter-spacing: -0.01em; font-weight: 600;
 }
-.landing-intro .landing-cta { position: relative; z-index: 1; margin-top: var(--s7); }
+.landing-intro .landing-cta { position: relative; z-index: 1; margin-top: var(--s4); }
 .landing-features {
   min-height: 100vh; width: 100%; max-width: 1400px; margin: 0 auto;
   padding: var(--s6) clamp(var(--s3), 2vw, var(--s4)) var(--s7); box-sizing: border-box;
@@ -748,6 +756,12 @@ input[type="range"] { width: 100%; accent-color: var(--brand); }
     radial-gradient(circle at 10% 0%, rgba(109, 140, 255, 0.14), transparent 28rem),
     linear-gradient(180deg, var(--surface) 0%, var(--bg) 55%, var(--surface) 100%);
 }
+:root[data-theme="dark"] .landing-hero-mark-glow {
+  color: #f5cc1f;
+  filter: drop-shadow(0 0 8px rgba(245, 204, 31, 0.65));
+}
+:root[data-theme="dark"] .landing-hero-title--shooting .landing-hero-mark-glow,
+:root[data-theme="dark"] .landing-hero-title--ready .landing-hero-mark-glow { opacity: 0.8; }
 :root[data-theme="dark"] .btn.danger:hover:not(:disabled) { background: #ef4444; border-color: #ef4444; }
 
 .sankey-link-layer path { mix-blend-mode: multiply; }
