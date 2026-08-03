@@ -81,7 +81,7 @@ export function LandingPage() {
   return (
     <div className="landing">
       <nav className="landing-nav">
-        <Link to="/" className="landing-logo" aria-label="Funds Up"><img src="/funds-up-logo.svg" alt="Funds Up" /></Link>
+        <Link to="/" className="landing-logo" aria-label="Funds Up"><img src="/funds-up-logo-landing.svg" alt="Funds Up" /></Link>
         <div className="row-flex gap-3">
           <Link to="/privacy">Privacy</Link>
           <Link to="/terms">Terms</Link>
