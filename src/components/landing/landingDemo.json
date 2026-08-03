@@ -1,0 +1,2867 @@
+{
+  "tags": [
+    {
+      "id": 2,
+      "name": "interest",
+      "type": "income_bucket_1",
+      "user_id": "demo",
+      "color": "#198754"
+    },
+    {
+      "id": 3,
+      "name": "salary",
+      "type": "income_bucket_1",
+      "user_id": "demo",
+      "color": "#198754"
+    },
+    {
+      "id": 4,
+      "name": "restaurant",
+      "type": "spending_bucket_1",
+      "user_id": "demo",
+      "color": "#e63946"
+    },
+    {
+      "id": 5,
+      "name": "groceries",
+      "type": "spending_bucket_1",
+      "user_id": "demo",
+      "color": "#e63946"
+    },
+    {
+      "id": 6,
+      "name": "travel",
+      "type": "spending_bucket_1",
+      "user_id": "demo",
+      "color": "#e63946"
+    },
+    {
+      "id": 7,
+      "name": "hotel",
+      "type": "spending_bucket_1",
+      "user_id": "demo",
+      "color": "#e63946"
+    },
+    {
+      "id": 8,
+      "name": "hardware",
+      "type": "spending_bucket_1",
+      "user_id": "demo",
+      "color": "#e63946"
+    },
+    {
+      "id": 9,
+      "name": "remodel project",
+      "type": "meta",
+      "user_id": "demo",
+      "color": "#7209b7"
+    },
+    {
+      "id": 10,
+      "name": "utilities",
+      "type": "spending_bucket_1",
+      "user_id": "demo",
+      "color": "#e63946"
+    },
+    {
+      "id": 11,
+      "name": "car gas",
+      "type": "spending_bucket_1",
+      "user_id": "demo",
+      "color": "#e63946"
+    },
+    {
+      "id": 12,
+      "name": "entertainment",
+      "type": "spending_bucket_1",
+      "user_id": "demo",
+      "color": "#e63946"
+    }
+  ],
+  "items": [
+    {
+      "id": "item-boa-demo",
+      "institution_name": "Bank of America",
+      "inst_url": "https://www.bankofamerica.com",
+      "inst_logo": "iVBORw0KGgoAAAANSUhEUgAAAJgAAACYCAMAAAAvHNATAAAA6lBMVEUAAAD////////////////////////////////////////////////////////////////////////////////qUmn74ubnNVD4xc398fLlJkT1qLTf4+zpRFzrYHb509rvfY7xjJuAkLTzmqfxi5vzmai/x9lBWY7v8fXtb4LjGDftboIhPXwBIWkRL3P3t8D2t8HsYHbvfo7P1ePzmqigrMeQnr3oRF1RZphhdaGQnb0xS4Wfq8dgdKHuboL609lwgqtgdaFwgqqvutCfrMevudCQnr5BWY/pQ11RZpeQnb70qLRRZ5f98fO30r7oAAAAFHRSTlMA3yDvv0AQn2DPcFCAoJAwf4+vXxXsOc8AAAYDSURBVHhe7ZwHcus4EESZo5L9h1nROfvnvDmn+19nvevvoqimQAKgRFTtvguwa7pnIEIgNFmM0DtwLV/X6V903bLcQWCPtR4ZB65v0jZ8N7B7EGUHFmhCTCvYZ+kc+8Ck1uhuqO0FUNWM6e7cVGdikhC6Z+yyWK5J4ri7kmZbJIllKyILsbo21ABZShjqTKhDJo7WEaFOnaJ73ZTrkAAV/AxNAhQomnNAO+JAKmmGTjtDl7DzmUk7xBS2c0I7ZiIWL5d2jiuiy6c94BuqxB5bQBVdqEwVXahMFV2oTA1diN52EfBpz/jtlLm0d1zhea/AGuBRLzxrDL5JvWA2tKYDDalIax5QbxwoEjAkVGOyIqajxgRDDhUxEgmbOlKxzpxQ7wxqk08KYKiRfMRSpGCIDcIsIiVLZpMkWfEyn13eZ9Il67Rg6Sq6+kJ0+o1cybpM2PN5frVG8jKVKVm3LZku31W0XQprcztvybiIqnWL5ddyT6hIUXSabnbAfF1bVMSS418nXrLVY6zyFxsPz6p1E7DUlJgVacQqTFwk65Zyl80WjX4cXW0yO61qS6/XhXMOkJH2hMmf88cBAXWDsuWXRSYc/5BESK+TTW0v7quGz09SEsEGJ6W1JZcxyTPi6smLn89qtZWeNvVhlhYxT1+OW8k6uru9vfvzzZSAItrshJiQ7DTK/5Edt/cyoEam390+8Qtqo3jd0vwE0x6Xi3wraQH8sNgmq+T8jOp4Gl3RaVZTq2oOV3G7nxhms4koC3kePchKGbMYpbFDZgvKQtK0duFC8uWC2IybIrYu6+anqr93H6ZtFi5UBfqRgD3Fzm5KWXdHNbH7UDqLyXpXp+pF2nrv098q6/y25Oii4m9ZxjeEoIfYGWz8B2HbwlVpxSnErpT2QztZaCE7/ePmzN9UDPvx0d/S4ovtsmC6AenxtldyuzlcF+Avr6worVf18sHwpCCEwrqmnJ5vdfHb2wrvp+KystVTd/waE+BpA9C13cWPpb8w1kAWe1FPK298uEyNtCG6WPL9ulGvNlx8C8sSyMJH1q/76KdbrpTo1aczcBE14zhFWWg3klT9tDaEfYKKQCHBYngPwGyhLCSKq4NMpwqfz1uE/u4InyYpa3NF0PGVcvoVs1yl5pI0QWeYspqHnK4RMj16zyrXW3QRn8QpC9GITXO5XqM5y4xTFrcwbMbNci2iduEqEoYsAWGvNprxFVVZoTHHzC0FlCUk7CN7di1mOLkyAuI5pywUhh3Kml0rVi9iuDCILJredqe/QeqhGZnPSpPmcYrgHEM+30Dq65txtmBuDGF/sIX51MjRDaQ+wwc+ji5Uj+QFMYC1ksH09wv0p7lc6azWRch8vbAh8bPEdBGQLTnCBbjaiHjB3CQpM/TYts0M+Des0xybkV0udLGZQAtlbczv25YrWvBsKhpCNmJmsFy4VnEw5twZjq9hSLQs1zwjHvhPixVJQ5aXQqHHLQKYFxxFizL0esaxLrI3VQLi5fhLXx4zRj13uXAbakzcxEm9O9lcoly4O2wSPyfQjZB6KBcHpvi/zjEBK9FmRCz2djrvhEPyP0iIQPYAAdtGsJtnvAqFrKWNxySIrj0yIkmyOhuTheSxWHkvF3U2fp3JnyNz5Lx8ncuu2DgsuvAylbcRnezEyyKRtxHHfhd9GSdS3Yg9WTIgOU5gDZLA00qE44/7wrO40+OAQwLE7Fxm3Z7tt0mWv67hdVwMAw+2SQctv+/+LKBN8jyPSR5b3cOTWDJFTugqWTJX4SPNyIB6Z6D0sXkkpJ7xtC0cKpV85lquyueMoSJGIiPqjZHSn5ip/1Ee4ikSMGSgyMhHhrR3hkp87I/4GsBozf8/FNcN9T/5V/+SBPWvlUAMv5eP/RWZZ0NHE2HQ47xn4/V8PY76Fwohzoh2xMjR5PD0ndgYatIYO+jOQyiXEkXTQ60jnE4HxwDK1Z+f6t8LaNn/mQse0VC1bhI1RDvUhMh3jj00uVWNbG0vhEOdS5Wj7Y9xy6t9e7p3eOhv1+S7Qb9XNdvBwLWs8vpo33JHXig9Rv8G+MxS+LqktYUAAAAASUVORK5CYII=",
+      "inst_color": "#e31837"
+    },
+    {
+      "id": "item-sofi-demo",
+      "institution_name": "SoFi",
+      "inst_url": "https://www.sofi.com/",
+      "inst_logo": "iVBORw0KGgoAAAANSUhEUgAAAJgAAACYCAMAAAAvHNATAAAAWlBMVEUAAAAerc4nsNBixt0ytNJ3zeFyzOB7z+JOvthcxNttyt9GvNZVwdpoyN4Aosf////A6PEPqMug3Orw+vxgxdzg9PhAudUwtNKA0eNQv9lwy+CQ1+ew4u7Q7vXk9H1cAAAADnRSTlMA/vac7zxXH8+vcNzAh7f3afIAAAVCSURBVHjazNXLbsMgEIXhYQBjY3wqcpMs5f2fs7G8aBSV4prrt2XzS8AMJdJ2ckox3rBSbrKamtFyVPiDGmX9OiNngQPELA1VoyfGP/CkqQITqIq0GSrLzjhptlSOZCRgSWVIgUTildZhVpG0RSATsVA+WiEjpSkP45CZM5SBFchOWEo2ooiR0gyMQnigBNKjGC+7u8bd+es0CoUpQydoRnGsTzx7jwr80GfXVtZn11bWZ9dW1mfXVtZn1/Ey7VGZ13SAYVTHhuIUGlDN92PISBESjci+PuSPyNdkNMMdPrDdSEEWTVkKMAJNidA0c2jMBVYRmtP9jPx3gQWwIO72vH693C8PfFgv9/1kxYfHfnJ93hC3/BImELN+k2Ouu23DMBSGkhVd1oHUXfIl7/+aa224tGyqlIa0KNDv70HiI5ISRQV8R6fi4zslFKaT3ikDSKj/6EXGYsFI0lQqEyljqVgDAtfugJk7HrCbZD9WwhSViePy+7vkTHUHzOIJX8SLiZnHV/J7JTjyXOfaGbABz7jlRxEZljpTDtGlQ9AHKWSdAQtIlCnTnKK3IMeiHBxi6AvZRTonkEUBJF5JAIpyuo+7dGpcurr3jCwjVdiBad2RBkruiHNPL38BAYcsM2XynMuZMTEiOhB4IV/PIIE8uqrgYjnDgbgoAnTJuH2OMWYLmhZjNyr9zzHGFLpqMXYR7zuysWr1uf5UEk+USYmALPaj4reIdzgwIQYQubWPRhZZPMDIK+N69qnzAm3zwPQMMpHPlwFQyKLWc15DQV56gcxz8/DNZyxXg2k3GyPsSGuOZa7y6Ur/eSaYrVXz7d2E0ll0S68ihDNWgQxbS6naR/1uNVrBgpmQfAqonuHIMl9f8YJyz37IM6W4gaee9x3vijwmUoZCcQMpKRSKh0auXe8VytInsqnNA7ZUsiNFQSu/O8dJNc76FevNUTHefqzMo4K+ARO+Jd/iYYDjqe/pKU0aEZ0+p0Vl7d6UfFbGNwX1lKCDP9TBZaLGSiGnnaJVZcOgjtDMrePtacLa1vdYsFccO6PL/G3elPwBS4qzPkZvFyOWd0yKzK9mYxOeGHZf3841k8kzNyVPzcYujfVVufUAKCzn7eS2e5hxtRld5tJ2jEmTeIIdiSZxhgBtNBobkMWsActQkNeQGWQZHmqsfrXOW0oJ4xavHlnsA40Jw4hllqGriwkPNCaMbx4O+G18Y/kKY2FRIreF68bU10Ss39jPSOU/as0uh0EYhsEqaOIZsZXyd/9r7rEafqidgeblBJFaJY792X5+23FhO2B/sJLuWeLz10vcV/bYCsWwtF4C0rrw0vqaYyRdf4z4nm+2B6+tReBrqtjaULbGnWZ17mV5loO0OuMD9iGaw9tY5xZlDkOR5rBmp0/5o0/GToei7XTyk6G4WZkAAooNIKTIpkCr7cgmqHsGPuRChZeIkCsorTslFkQldbRjQSwuFlSCVHyC0g5SsbggVYqeEwzcRvQcbqzTwnpYgkukMS2sH2JPeVdjgwSE4Mze20AIFgOESAgNBu8jgdBgMQiNBB3hCb0R0BEUAx2JmNbZosgcpqWPsV4E204c3zxRYJtuXaQIClglYCFRQH0h9TF48ljzmPL24uHJWhw8+T+4qS2g64s020LgDmbBu5o7pgEAAEAAdNm/sincMAjkCxq4NIPFLC7/ccGUS8xYlOcyRhd+ulSWxcUux3YBu0v+3STBbSXciMOtS9zsxe1x4FDILZjctApuvtwYza3k4HwP7grh4BEuMeFEFG5X4ahWrn3lDHnfRxfiRv5kjQrswwAAAABJRU5ErkJggg==",
+      "inst_color": "#00a9ce"
+    }
+  ],
+  "accounts": [
+    {
+      "id": "bGJnwQxLKRIlZzx4PZbncwXGkLGk7WcRE1m4m",
+      "item_id": "item-boa-demo",
+      "name": "Bank of America Credit Card",
+      "official_name": "Bank of America Customized Cash Rewards Visa",
+      "type": "credit",
+      "subtype": "credit card",
+      "mask": "8841",
+      "balances": {
+        "limit": 8000,
+        "current": 1420.63,
+        "available": 6579.37,
+        "iso_currency_code": "USD",
+        "unofficial_currency_code": null
+      },
+      "holder_category": "personal"
+    },
+    {
+      "id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
+      "item_id": "item-boa-demo",
+      "name": "Bank of America Advantage Banking",
+      "official_name": "Bank of America Advantage Banking",
+      "type": "depository",
+      "subtype": "checking",
+      "mask": "1024",
+      "balances": {
+        "limit": null,
+        "current": 4825.14,
+        "available": 4512.79,
+        "iso_currency_code": "USD",
+        "unofficial_currency_code": null
+      },
+      "holder_category": "personal"
+    },
+    {
+      "id": "mGkxaZ5mj6INZ7QqzZXdCPkygqygE8iG9ngv4",
+      "item_id": "item-sofi-demo",
+      "name": "SoFi High Yield Savings",
+      "official_name": "SoFi Bank High Yield Savings",
+      "type": "depository",
+      "subtype": "savings",
+      "mask": "7719",
+      "balances": {
+        "limit": null,
+        "current": 12350.42,
+        "available": 12350.42,
+        "iso_currency_code": "USD",
+        "unofficial_currency_code": null
+      },
+      "holder_category": "personal"
+    }
+  ],
+  "transactions": [
+    {
+      "transaction_id": "9aAX5N8PmoHkeDjalewVTKxBldq73jI7RaM8d",
+      "name": "SOFI INTEREST PAYMENT",
+      "original_description": "SOFI INTEREST PAYMENT",
+      "merchant_name": "SoFi",
+      "amount": -12.73,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "SoFi",
+          "type": "financial_institution",
+          "website": "sofi.com",
+          "logo_url": "https://plaid-counterparty-logos.plaid.com/sofi_44.png",
+          "entity_id": "Jwmzr8p2YvO541zgm66Bm339mWgm56gYLJ4Ak",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "INCOME",
+        "version": "v2",
+        "detailed": "INCOME_INTEREST_EARNED",
+        "confidence_level": "HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_INCOME.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "mGkxaZ5mj6INZ7QqzZXdCPkygqygE8iG9ngv4",
+      "account_name": "SoFi High Yield Savings",
+      "account_official_name": "SoFi Bank High Yield Savings",
+      "institution_name": null,
+      "account_transfer_group": null,
+      "netting_group": null,
+      "bucket_1_tag_id": 2,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": [],
+      "days_ago": 0,
+      "authorized_days_ago": null
+    },
+    {
+      "transaction_id": "AZRX4bnLzouy5bqZd546TpexBEg5krCb1E3wM",
+      "name": "REFUND MARKET",
+      "original_description": "PAYPAL *REFUND MARKET",
+      "merchant_name": null,
+      "amount": -63.75,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "PayPal",
+          "type": "payment_app",
+          "website": "paypal.com",
+          "logo_url": "https://plaid-counterparty-logos.plaid.com/paypal_76.png",
+          "entity_id": "zwkjrQbbDQqZJRk3egOAo0XB7jnygNDJk9Vjz",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "GENERAL_MERCHANDISE",
+        "version": "v2",
+        "detailed": "GENERAL_MERCHANDISE_OTHER_GENERAL_MERCHANDISE",
+        "confidence_level": "LOW"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_GENERAL_MERCHANDISE.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
+      "account_name": "Bank of America Advantage Banking",
+      "account_official_name": "Bank of America Advantage Banking",
+      "institution_name": null,
+      "account_transfer_group": null,
+      "netting_group": null,
+      "bucket_1_tag_id": null,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": [],
+      "days_ago": 2,
+      "authorized_days_ago": null
+    },
+    {
+      "transaction_id": "mGkxaZ5mj6INZ7QqzZXdCPkw9V8BQEiGLz8jG",
+      "name": "Walgreens",
+      "original_description": "WALGREENS #06312",
+      "merchant_name": "Walgreens",
+      "amount": 58.56,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "Walgreens",
+          "type": "merchant",
+          "website": "walgreens.com",
+          "logo_url": "https://plaid-merchant-logos.plaid.com/walgreens_1099.png",
+          "entity_id": "1dOLXDKNJJMY67wMwVgo5K32Z7E9QRnqYV2Ba",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": "06312"
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "MEDICAL",
+        "version": "v2",
+        "detailed": "MEDICAL_PHARMACIES_AND_SUPPLEMENTS",
+        "confidence_level": "VERY_HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_MEDICAL.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "bGJnwQxLKRIlZzx4PZbncwXGkLGk7WcRE1m4m",
+      "account_name": "Bank of America Credit Card",
+      "account_official_name": "Bank of America Customized Cash Rewards Visa",
+      "institution_name": null,
+      "account_transfer_group": null,
+      "netting_group": null,
+      "bucket_1_tag_id": 5,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": [],
+      "days_ago": 4,
+      "authorized_days_ago": null
+    },
+    {
+      "transaction_id": "W75npgRaWBIB87r5L8vRsq7JEdXgQnCdlKqMB",
+      "name": "Nordstrom",
+      "original_description": "NORDSTROM 0342",
+      "merchant_name": "Nordstrom",
+      "amount": 89.14,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "Nordstrom",
+          "type": "merchant",
+          "website": "nordstrom.com",
+          "logo_url": "https://plaid-merchant-logos.plaid.com/nordstrom_684.png",
+          "entity_id": "bN0wJ6wvppDz375EzNJNQv9bBODam4qWOrE3k",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": "Torrance",
+        "region": "CA",
+        "address": "21500 Hawthorne Blvd",
+        "country": null,
+        "postal_code": "90503",
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "GENERAL_MERCHANDISE",
+        "version": "v2",
+        "detailed": "GENERAL_MERCHANDISE_DEPARTMENT_STORES",
+        "confidence_level": "HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_GENERAL_MERCHANDISE.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
+      "account_name": "Bank of America Advantage Banking",
+      "account_official_name": "Bank of America Advantage Banking",
+      "institution_name": null,
+      "account_transfer_group": null,
+      "netting_group": null,
+      "bucket_1_tag_id": null,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": [],
+      "days_ago": 7,
+      "authorized_days_ago": null
+    },
+    {
+      "transaction_id": "bGJnwQxLKRIlZzx4PZbncwXmnVWgv7IRVQrLy",
+      "name": "ONLINE PAYMENT THANK YOU",
+      "original_description": "ONLINE PAYMENT THANK YOU",
+      "merchant_name": null,
+      "amount": -329.57,
+      "iso_currency_code": "USD",
+      "counterparties": [],
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "LOAN_PAYMENTS",
+        "version": "v2",
+        "detailed": "LOAN_PAYMENTS_CREDIT_CARD_PAYMENT",
+        "confidence_level": "VERY_HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_LOAN_PAYMENTS.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "bGJnwQxLKRIlZzx4PZbncwXGkLGk7WcRE1m4m",
+      "account_name": "Bank of America Credit Card",
+      "account_official_name": "Bank of America Customized Cash Rewards Visa",
+      "institution_name": null,
+      "account_transfer_group": "5c887c47-9018-4007-a5b3-10a67cb4efd6",
+      "netting_group": null,
+      "bucket_1_tag_id": null,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": [],
+      "days_ago": 10,
+      "authorized_days_ago": null
+    },
+    {
+      "transaction_id": "Ep5XnE98dLub7vz5P7VyHz14Jwj9MktaXJ3Qr",
+      "name": "BANK OF AMERICA CARD ONLINE PMT 8841",
+      "original_description": "BANK OF AMERICA CARD ONLINE PMT 8841",
+      "merchant_name": null,
+      "amount": 329.57,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "Bank of America",
+          "type": "financial_institution",
+          "website": "bankofamerica.com",
+          "logo_url": null,
+          "entity_id": "o2Ry34bq605MvmEed3yjqjkYWwqRQYpnkjd0O",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "LOAN_PAYMENTS",
+        "version": "v2",
+        "detailed": "LOAN_PAYMENTS_CREDIT_CARD_PAYMENT",
+        "confidence_level": "HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_LOAN_PAYMENTS.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
+      "account_name": "Bank of America Advantage Banking",
+      "account_official_name": "Bank of America Advantage Banking",
+      "institution_name": null,
+      "account_transfer_group": "5c887c47-9018-4007-a5b3-10a67cb4efd6",
+      "netting_group": null,
+      "bucket_1_tag_id": null,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": [],
+      "days_ago": 11,
+      "authorized_days_ago": null
+    },
+    {
+      "transaction_id": "yXe1DzV4E6uG75xjv7qPhLGBlWo59ZuJyepd7",
+      "name": "TRANSFER FROM BANK OF AMERICA CHECKING",
+      "original_description": "TRANSFER FROM BANK OF AMERICA CHECKING",
+      "merchant_name": null,
+      "amount": -475,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "Bank of America",
+          "type": "financial_institution",
+          "website": "bankofamerica.com",
+          "logo_url": null,
+          "entity_id": "o2Ry34bq605MvmEed3yjqjkYWwqRQYpnkjd0O",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "TRANSFER_IN",
+        "version": "v2",
+        "detailed": "TRANSFER_IN_ACCOUNT_TRANSFER",
+        "confidence_level": "HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_TRANSFER_IN.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "mGkxaZ5mj6INZ7QqzZXdCPkygqygE8iG9ngv4",
+      "account_name": "SoFi High Yield Savings",
+      "account_official_name": "SoFi Bank High Yield Savings",
+      "institution_name": null,
+      "account_transfer_group": "126baad1-8ef1-420d-8ad0-02a968d6c14a",
+      "netting_group": null,
+      "bucket_1_tag_id": null,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": [],
+      "days_ago": 11,
+      "authorized_days_ago": null
+    },
+    {
+      "transaction_id": "8dkXvVpNbofvLEmdXLn4co9greXG3MHPwjeaz",
+      "name": "ONLINE TRANSFER TO SOFI SAVINGS",
+      "original_description": "ONLINE TRANSFER TO SOFI SAVINGS",
+      "merchant_name": "SoFi",
+      "amount": 475,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "SoFi",
+          "type": "financial_institution",
+          "website": "sofi.com",
+          "logo_url": "https://plaid-counterparty-logos.plaid.com/sofi_44.png",
+          "entity_id": "Jwmzr8p2YvO541zgm66Bm339mWgm56gYLJ4Ak",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "TRANSFER_OUT",
+        "version": "v2",
+        "detailed": "TRANSFER_OUT_SAVINGS",
+        "confidence_level": "HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_TRANSFER_OUT.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
+      "account_name": "Bank of America Advantage Banking",
+      "account_official_name": "Bank of America Advantage Banking",
+      "institution_name": null,
+      "account_transfer_group": "126baad1-8ef1-420d-8ad0-02a968d6c14a",
+      "netting_group": null,
+      "bucket_1_tag_id": null,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": [],
+      "days_ago": 12,
+      "authorized_days_ago": null
+    },
+    {
+      "transaction_id": "gG5qNZbExDIBympe9ybvsXvMAbedKWFegqdDM",
+      "name": "Amtrak",
+      "original_description": "AMTRAK GUEST REWARDS",
+      "merchant_name": "Amtrak",
+      "amount": 196.34,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "Amtrak",
+          "type": "merchant",
+          "website": "amtrak.com",
+          "logo_url": "https://plaid-merchant-logos.plaid.com/amtrak_59.png",
+          "entity_id": "gRgAY6y3Qaab2kNnXVL8YeKEQR1orKDreka2E",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "TRANSPORTATION",
+        "version": "v2",
+        "detailed": "TRANSPORTATION_PUBLIC_TRANSIT",
+        "confidence_level": "HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_TRANSPORTATION.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
+      "account_name": "Bank of America Advantage Banking",
+      "account_official_name": "Bank of America Advantage Banking",
+      "institution_name": null,
+      "account_transfer_group": null,
+      "netting_group": null,
+      "bucket_1_tag_id": 6,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": [],
+      "days_ago": 17,
+      "authorized_days_ago": null
+    },
+    {
+      "transaction_id": "nGzdb15y76IPXE3KkXAgHnlzmD9Mrbta6wgkm",
+      "name": "Best Buy",
+      "original_description": "BEST BUY 00041234",
+      "merchant_name": "Best Buy",
+      "amount": 91.44,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "Best Buy",
+          "type": "merchant",
+          "website": "bestbuy.com",
+          "logo_url": "https://plaid-merchant-logos.plaid.com/best_buy_103.png",
+          "entity_id": "q63vdERovbmjyQoYA6k7m6je8EzOv6ywA7Ea2",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "GENERAL_MERCHANDISE",
+        "version": "v2",
+        "detailed": "GENERAL_MERCHANDISE_ELECTRONICS",
+        "confidence_level": "LOW"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_GENERAL_MERCHANDISE.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "bGJnwQxLKRIlZzx4PZbncwXGkLGk7WcRE1m4m",
+      "account_name": "Bank of America Credit Card",
+      "account_official_name": "Bank of America Customized Cash Rewards Visa",
+      "institution_name": null,
+      "account_transfer_group": null,
+      "netting_group": null,
+      "bucket_1_tag_id": null,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": [],
+      "days_ago": 18,
+      "authorized_days_ago": null
+    },
+    {
+      "transaction_id": "oGBaWN5le6Ij9aVr391lcQ8qXr9p73UJR8G9k",
+      "name": "TST*LUNA CANTINA",
+      "original_description": "TST*LUNA CANTINA",
+      "merchant_name": null,
+      "amount": 48.92,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "Toast",
+          "type": "payment_terminal",
+          "website": "pos.toasttab.com",
+          "logo_url": "https://plaid-counterparty-logos.plaid.com/toast_182.png",
+          "entity_id": "VmnapWdRwMn50bwvEaKZRKNkQXW1LvNrwdLeW",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "FOOD_AND_DRINK",
+        "version": "v2",
+        "detailed": "FOOD_AND_DRINK_RESTAURANT",
+        "confidence_level": "MEDIUM"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_FOOD_AND_DRINK.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
+      "account_name": "Bank of America Advantage Banking",
+      "account_official_name": "Bank of America Advantage Banking",
+      "institution_name": null,
+      "account_transfer_group": null,
+      "netting_group": null,
+      "bucket_1_tag_id": 4,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": [],
+      "days_ago": 21,
+      "authorized_days_ago": null
+    },
+    {
+      "transaction_id": "Gg5XRBQW4VcXzwo57zVZTpongqXZL7CV1yR9R",
+      "name": "DIN TAI FUNG SEATTLE",
+      "original_description": "DIN TAI FUNG SEATTLE",
+      "merchant_name": null,
+      "amount": 67.22,
+      "iso_currency_code": "USD",
+      "counterparties": [],
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "FOOD_AND_DRINK",
+        "version": "v2",
+        "detailed": "FOOD_AND_DRINK_RESTAURANT",
+        "confidence_level": "HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_FOOD_AND_DRINK.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "bGJnwQxLKRIlZzx4PZbncwXGkLGk7WcRE1m4m",
+      "account_name": "Bank of America Credit Card",
+      "account_official_name": "Bank of America Customized Cash Rewards Visa",
+      "institution_name": null,
+      "account_transfer_group": null,
+      "netting_group": null,
+      "bucket_1_tag_id": 4,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": [],
+      "days_ago": 23,
+      "authorized_days_ago": null
+    },
+    {
+      "transaction_id": "py34lp5qQ6CGgvQzxgDqhwl8pzXd3GI7L38gJ",
+      "name": "CITY OF SEATTLE UTILITIES",
+      "original_description": "CITY OF SEATTLE UTILITIES",
+      "merchant_name": null,
+      "amount": 133.27,
+      "iso_currency_code": "USD",
+      "counterparties": [],
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "RENT_AND_UTILITIES",
+        "version": "v2",
+        "detailed": "RENT_AND_UTILITIES_OTHER_UTILITIES",
+        "confidence_level": "LOW"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_RENT_AND_UTILITIES.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
+      "account_name": "Bank of America Advantage Banking",
+      "account_official_name": "Bank of America Advantage Banking",
+      "institution_name": null,
+      "account_transfer_group": null,
+      "netting_group": null,
+      "bucket_1_tag_id": 10,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": [],
+      "days_ago": 25,
+      "authorized_days_ago": null
+    },
+    {
+      "transaction_id": "Lr5XQyVmeAiyXAP51X9lToGZrMEpm7HAPGd8k",
+      "name": "ACME CORP PAYROLL PPD",
+      "original_description": "ACME CORP PAYROLL PPD",
+      "merchant_name": "Acme Markets",
+      "amount": -2868.45,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "Acme Markets",
+          "type": "merchant",
+          "website": "acmemarkets.com",
+          "logo_url": "https://plaid-merchant-logos.plaid.com/acme_markets_12.png",
+          "entity_id": "5VDpAWnN4X9VYR437da5D71Bva4o7RLQ2V3NY",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "INCOME",
+        "version": "v2",
+        "detailed": "INCOME_SALARY",
+        "confidence_level": "VERY_HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_INCOME.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
+      "account_name": "Bank of America Advantage Banking",
+      "account_official_name": "Bank of America Advantage Banking",
+      "institution_name": null,
+      "account_transfer_group": null,
+      "netting_group": null,
+      "bucket_1_tag_id": 3,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": [],
+      "days_ago": 28,
+      "authorized_days_ago": null
+    },
+    {
+      "transaction_id": "Lr5XQyVmeAiyXAP51X9lToGdaElRZNCZnb5pG",
+      "name": "HOTELTONIGHT *BOOKING",
+      "original_description": "HOTELTONIGHT *BOOKING",
+      "merchant_name": null,
+      "amount": 112.35,
+      "iso_currency_code": "USD",
+      "counterparties": [],
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "TRAVEL",
+        "version": "v2",
+        "detailed": "TRAVEL_LODGING",
+        "confidence_level": "HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_TRAVEL.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "bGJnwQxLKRIlZzx4PZbncwXGkLGk7WcRE1m4m",
+      "account_name": "Bank of America Credit Card",
+      "account_official_name": "Bank of America Customized Cash Rewards Visa",
+      "institution_name": null,
+      "account_transfer_group": null,
+      "netting_group": null,
+      "bucket_1_tag_id": 7,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": [],
+      "days_ago": 29,
+      "authorized_days_ago": null
+    },
+    {
+      "transaction_id": "bGJnwQxLKRIlZzx4PZbncwXzlWJMm9IAp5eZw",
+      "name": "SOFI INTEREST PAYMENT",
+      "original_description": "SOFI INTEREST PAYMENT",
+      "merchant_name": "SoFi",
+      "amount": -12.41,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "SoFi",
+          "type": "financial_institution",
+          "website": "sofi.com",
+          "logo_url": "https://plaid-counterparty-logos.plaid.com/sofi_44.png",
+          "entity_id": "Jwmzr8p2YvO541zgm66Bm339mWgm56gYLJ4Ak",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "INCOME",
+        "version": "v2",
+        "detailed": "INCOME_INTEREST_EARNED",
+        "confidence_level": "HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_INCOME.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "mGkxaZ5mj6INZ7QqzZXdCPkygqygE8iG9ngv4",
+      "account_name": "SoFi High Yield Savings",
+      "account_official_name": "SoFi Bank High Yield Savings",
+      "institution_name": null,
+      "account_transfer_group": null,
+      "netting_group": null,
+      "bucket_1_tag_id": 2,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": [],
+      "days_ago": 31,
+      "authorized_days_ago": null
+    },
+    {
+      "transaction_id": "wGjZx9Kdk6IpZzWV7ZmLcNZnpv8oGyCnXv8jy",
+      "name": "ZELLE FROM M TORRES",
+      "original_description": "ZELLE FROM M TORRES",
+      "merchant_name": null,
+      "amount": -118.2,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "Zelle",
+          "type": "payment_app",
+          "website": "zellepay.com",
+          "logo_url": "https://plaid-counterparty-logos.plaid.com/zelle_73.png",
+          "entity_id": "zQ64DmD0mdD4r6QrYndzZWLwJn7DyJEYdwLYp",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "TRANSFER_IN",
+        "version": "v2",
+        "detailed": "TRANSFER_IN_TRANSFER_IN_FROM_APPS",
+        "confidence_level": "HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_TRANSFER_IN.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
+      "account_name": "Bank of America Advantage Banking",
+      "account_official_name": "Bank of America Advantage Banking",
+      "institution_name": null,
+      "account_transfer_group": null,
+      "netting_group": null,
+      "bucket_1_tag_id": null,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": [],
+      "days_ago": 35,
+      "authorized_days_ago": null
+    },
+    {
+      "transaction_id": "1q18L3lzgASr6VBqD6kpuoQrAaREvpC6dg1eG",
+      "name": "AMC LOEWS PACIFIC PL",
+      "original_description": "AMC LOEWS PACIFIC PL",
+      "merchant_name": "AMC Theatres",
+      "amount": 46.81,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "AMC Theatres",
+          "type": "merchant",
+          "website": "amctheatres.com",
+          "logo_url": "https://plaid-merchant-logos.plaid.com/amc_theatres_49.png",
+          "entity_id": "nADWWmL6e6BBZZLzvkvQn3evqKj61KrZanN1O",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "ENTERTAINMENT",
+        "version": "v2",
+        "detailed": "ENTERTAINMENT_TV_AND_MOVIES",
+        "confidence_level": "VERY_HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_ENTERTAINMENT.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "bGJnwQxLKRIlZzx4PZbncwXGkLGk7WcRE1m4m",
+      "account_name": "Bank of America Credit Card",
+      "account_official_name": "Bank of America Customized Cash Rewards Visa",
+      "institution_name": null,
+      "account_transfer_group": null,
+      "netting_group": null,
+      "bucket_1_tag_id": 12,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": [],
+      "days_ago": 36,
+      "authorized_days_ago": null
+    },
+    {
+      "transaction_id": "Mz5XRG7yQnc7zKP5LzDqhW1aymQjVqtagBrPE",
+      "name": "ONLINE PAYMENT THANK YOU",
+      "original_description": "ONLINE PAYMENT THANK YOU",
+      "merchant_name": null,
+      "amount": -287.96,
+      "iso_currency_code": "USD",
+      "counterparties": [],
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "LOAN_PAYMENTS",
+        "version": "v2",
+        "detailed": "LOAN_PAYMENTS_CREDIT_CARD_PAYMENT",
+        "confidence_level": "VERY_HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_LOAN_PAYMENTS.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "bGJnwQxLKRIlZzx4PZbncwXGkLGk7WcRE1m4m",
+      "account_name": "Bank of America Credit Card",
+      "account_official_name": "Bank of America Customized Cash Rewards Visa",
+      "institution_name": null,
+      "account_transfer_group": "56439f8a-cdbf-43ed-9942-4f6e66e56d01",
+      "netting_group": null,
+      "bucket_1_tag_id": null,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": [],
+      "days_ago": 37,
+      "authorized_days_ago": null
+    },
+    {
+      "transaction_id": "Vj5JwGWdEzfLgBK5XgxGcaLMKWgNwzfGM4rev",
+      "name": "BANK OF AMERICA CARD ONLINE PMT 8841",
+      "original_description": "BANK OF AMERICA CARD ONLINE PMT 8841",
+      "merchant_name": null,
+      "amount": 287.96,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "Bank of America",
+          "type": "financial_institution",
+          "website": "bankofamerica.com",
+          "logo_url": null,
+          "entity_id": "o2Ry34bq605MvmEed3yjqjkYWwqRQYpnkjd0O",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "LOAN_PAYMENTS",
+        "version": "v2",
+        "detailed": "LOAN_PAYMENTS_CREDIT_CARD_PAYMENT",
+        "confidence_level": "HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_LOAN_PAYMENTS.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
+      "account_name": "Bank of America Advantage Banking",
+      "account_official_name": "Bank of America Advantage Banking",
+      "institution_name": null,
+      "account_transfer_group": "56439f8a-cdbf-43ed-9942-4f6e66e56d01",
+      "netting_group": null,
+      "bucket_1_tag_id": null,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": [],
+      "days_ago": 38,
+      "authorized_days_ago": null
+    },
+    {
+      "transaction_id": "DL5X4j8gkECDV185NVBZu7VlLX9da1tjqgMxM",
+      "name": "ONLINE TRANSFER TO SOFI SAVINGS",
+      "original_description": "ONLINE TRANSFER TO SOFI SAVINGS",
+      "merchant_name": "SoFi",
+      "amount": 450,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "SoFi",
+          "type": "financial_institution",
+          "website": "sofi.com",
+          "logo_url": "https://plaid-counterparty-logos.plaid.com/sofi_44.png",
+          "entity_id": "Jwmzr8p2YvO541zgm66Bm339mWgm56gYLJ4Ak",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "TRANSFER_OUT",
+        "version": "v2",
+        "detailed": "TRANSFER_OUT_SAVINGS",
+        "confidence_level": "HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_TRANSFER_OUT.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
+      "account_name": "Bank of America Advantage Banking",
+      "account_official_name": "Bank of America Advantage Banking",
+      "institution_name": null,
+      "account_transfer_group": "d43f7ba2-4ad7-4c9e-8623-5084a0de0d0a",
+      "netting_group": null,
+      "bucket_1_tag_id": null,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": [],
+      "days_ago": 40,
+      "authorized_days_ago": null
+    },
+    {
+      "transaction_id": "nGzdb15y76IPXE3KkXAgHnlpP9gQz7c1qd4Wj",
+      "name": "TRANSFER FROM BANK OF AMERICA CHECKING",
+      "original_description": "TRANSFER FROM BANK OF AMERICA CHECKING",
+      "merchant_name": null,
+      "amount": -450,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "Bank of America",
+          "type": "financial_institution",
+          "website": "bankofamerica.com",
+          "logo_url": null,
+          "entity_id": "o2Ry34bq605MvmEed3yjqjkYWwqRQYpnkjd0O",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "TRANSFER_IN",
+        "version": "v2",
+        "detailed": "TRANSFER_IN_ACCOUNT_TRANSFER",
+        "confidence_level": "HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_TRANSFER_IN.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "mGkxaZ5mj6INZ7QqzZXdCPkygqygE8iG9ngv4",
+      "account_name": "SoFi High Yield Savings",
+      "account_official_name": "SoFi Bank High Yield Savings",
+      "institution_name": null,
+      "account_transfer_group": "d43f7ba2-4ad7-4c9e-8623-5084a0de0d0a",
+      "netting_group": null,
+      "bucket_1_tag_id": null,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": [],
+      "days_ago": 40,
+      "authorized_days_ago": null
+    },
+    {
+      "transaction_id": "Xe5JQE84A3uj8wXlB8nNcoQwvL9KVACoA4aqZ",
+      "name": "Spotify",
+      "original_description": "SPOTIFY P0A6B3 PREMIUM",
+      "merchant_name": "Spotify",
+      "amount": 64.8,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "Spotify",
+          "type": "merchant",
+          "website": "spotify.com",
+          "logo_url": "https://plaid-merchant-logos.plaid.com/spotify_947.png",
+          "entity_id": "2373QOZJ18DqqK0KWvgpng3nmVDLMvDvy05RN",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "ENTERTAINMENT",
+        "version": "v2",
+        "detailed": "ENTERTAINMENT_MUSIC_AND_AUDIO",
+        "confidence_level": "VERY_HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_ENTERTAINMENT.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
+      "account_name": "Bank of America Advantage Banking",
+      "account_official_name": "Bank of America Advantage Banking",
+      "institution_name": null,
+      "account_transfer_group": null,
+      "netting_group": null,
+      "bucket_1_tag_id": 12,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": [],
+      "days_ago": 45,
+      "authorized_days_ago": null
+    },
+    {
+      "transaction_id": "ZZ5RpDqPnkuzpg3KbpPmUjBgdWw1PKcZy5BX4",
+      "name": "H MART 00027 BELLEVUE",
+      "original_description": "H MART 00027 BELLEVUE",
+      "merchant_name": "H Mart",
+      "amount": 84.17,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "H Mart",
+          "type": "merchant",
+          "website": "hmart.com",
+          "logo_url": "https://plaid-merchant-logos.plaid.com/h_mart_465.png",
+          "entity_id": "prWLmpV8OY0qpzd66VQ29O7AawOaQoBBy2jr8",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": "Bellevue",
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "FOOD_AND_DRINK",
+        "version": "v2",
+        "detailed": "FOOD_AND_DRINK_GROCERIES",
+        "confidence_level": "HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_FOOD_AND_DRINK.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "bGJnwQxLKRIlZzx4PZbncwXGkLGk7WcRE1m4m",
+      "account_name": "Bank of America Credit Card",
+      "account_official_name": "Bank of America Customized Cash Rewards Visa",
+      "institution_name": null,
+      "account_transfer_group": null,
+      "netting_group": null,
+      "bucket_1_tag_id": 5,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": [],
+      "days_ago": 48,
+      "authorized_days_ago": null
+    },
+    {
+      "transaction_id": "638DLNgaGkCel4j35lrLI4newkmQoziv7W5LJ",
+      "name": "Home Depot",
+      "original_description": "THE HOME DEPOT #721",
+      "merchant_name": "The Home Depot",
+      "amount": 214.09,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "The Home Depot",
+          "type": "merchant",
+          "website": "homedepot.com",
+          "logo_url": "https://plaid-merchant-logos.plaid.com/home_depot_491.png",
+          "entity_id": "kVawvV6p0R25gKw3qbp4Kq7kEzDdY5RnjV7RK",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "location": {
+        "lat": 36.046387,
+        "lon": -86.666306,
+        "city": "Antioch",
+        "region": "TN",
+        "address": "1155 Bell Rd",
+        "country": null,
+        "postal_code": "37013",
+        "store_number": "721"
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "HOME_IMPROVEMENT",
+        "version": "v2",
+        "detailed": "HOME_IMPROVEMENT_HARDWARE",
+        "confidence_level": "VERY_HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_HOME_IMPROVEMENT.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
+      "account_name": "Bank of America Advantage Banking",
+      "account_official_name": "Bank of America Advantage Banking",
+      "institution_name": null,
+      "account_transfer_group": null,
+      "netting_group": null,
+      "bucket_1_tag_id": 8,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": [
+        9
+      ],
+      "days_ago": 50,
+      "authorized_days_ago": null
+    },
+    {
+      "transaction_id": "Ra5nZX8zplHBpDb5Jpa3srd74bAG8kfeVKE3l",
+      "name": "Safeway",
+      "original_description": "SAFEWAY STORE 2741",
+      "merchant_name": "Safeway",
+      "amount": 93.51,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "Safeway",
+          "type": "merchant",
+          "website": "safeway.com",
+          "logo_url": "https://plaid-merchant-logos.plaid.com/safeway_853.png",
+          "entity_id": "DgqEw70j77DbJqybaK2rmMq6Zzwjg68J7B7zo",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "FOOD_AND_DRINK",
+        "version": "v2",
+        "detailed": "FOOD_AND_DRINK_GROCERIES",
+        "confidence_level": "VERY_HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_FOOD_AND_DRINK.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
+      "account_name": "Bank of America Advantage Banking",
+      "account_official_name": "Bank of America Advantage Banking",
+      "institution_name": null,
+      "account_transfer_group": null,
+      "netting_group": null,
+      "bucket_1_tag_id": 5,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": [],
+      "days_ago": 53,
+      "authorized_days_ago": null
+    },
+    {
+      "transaction_id": "Qd5y7gJrLRf7rkN5Wrlohe5j3J64rPsbQxV79",
+      "name": "Lyft",
+      "original_description": "LYFT *RIDE SUN 8PM",
+      "merchant_name": "Lyft",
+      "amount": 38.92,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "Lyft",
+          "type": "merchant",
+          "website": "lyft.com",
+          "logo_url": "https://plaid-merchant-logos.plaid.com/lyft_597.png",
+          "entity_id": "zBbZNQaVrRoDBEEv6ngwJ6wBk74Wd1venVVDa",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "TRANSPORTATION",
+        "version": "v2",
+        "detailed": "TRANSPORTATION_TAXIS_AND_RIDE_SHARES",
+        "confidence_level": "VERY_HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_TRANSPORTATION.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "bGJnwQxLKRIlZzx4PZbncwXGkLGk7WcRE1m4m",
+      "account_name": "Bank of America Credit Card",
+      "account_official_name": "Bank of America Customized Cash Rewards Visa",
+      "institution_name": null,
+      "account_transfer_group": null,
+      "netting_group": null,
+      "bucket_1_tag_id": 6,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": [],
+      "days_ago": 54,
+      "authorized_days_ago": null
+    },
+    {
+      "transaction_id": "vwPQ39qxo6umyqz4jykNULEWwdv8y4CyQjdAK",
+      "name": "ACME CORP PAYROLL PPD",
+      "original_description": "ACME CORP PAYROLL PPD",
+      "merchant_name": "Acme Markets",
+      "amount": -3166.09,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "Acme Markets",
+          "type": "merchant",
+          "website": "acmemarkets.com",
+          "logo_url": "https://plaid-merchant-logos.plaid.com/acme_markets_12.png",
+          "entity_id": "5VDpAWnN4X9VYR437da5D71Bva4o7RLQ2V3NY",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "INCOME",
+        "version": "v2",
+        "detailed": "INCOME_SALARY",
+        "confidence_level": "VERY_HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_INCOME.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
+      "account_name": "Bank of America Advantage Banking",
+      "account_official_name": "Bank of America Advantage Banking",
+      "institution_name": null,
+      "account_transfer_group": null,
+      "netting_group": null,
+      "bucket_1_tag_id": 3,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": [],
+      "days_ago": 58,
+      "authorized_days_ago": null
+    },
+    {
+      "transaction_id": "eG5nyQvgBRIrlX1jWlazuw4XrWV6kKIAZNG5W",
+      "name": "United Airlines",
+      "original_description": "UNITED AIRLINES 0162419",
+      "merchant_name": "United Airlines",
+      "amount": 118.44,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "United Airlines",
+          "type": "merchant",
+          "website": "united.com",
+          "logo_url": "https://plaid-merchant-logos.plaid.com/united_airlines_1065.png",
+          "entity_id": "NKDjqyAdQQzpyeD8qpLnX0D6yvLe2KYKYYzQ4",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "TRAVEL",
+        "version": "v2",
+        "detailed": "TRAVEL_FLIGHTS",
+        "confidence_level": "VERY_HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_TRAVEL.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "bGJnwQxLKRIlZzx4PZbncwXGkLGk7WcRE1m4m",
+      "account_name": "Bank of America Credit Card",
+      "account_official_name": "Bank of America Customized Cash Rewards Visa",
+      "institution_name": null,
+      "account_transfer_group": null,
+      "netting_group": null,
+      "bucket_1_tag_id": 6,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": [],
+      "days_ago": 59,
+      "authorized_days_ago": null
+    },
+    {
+      "transaction_id": "Gg5XRBQW4VcXzwo57zVZTpor3XvknytDgldPg",
+      "name": "SOFI INTEREST PAYMENT",
+      "original_description": "SOFI INTEREST PAYMENT",
+      "merchant_name": "SoFi",
+      "amount": -12.16,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "SoFi",
+          "type": "financial_institution",
+          "website": "sofi.com",
+          "logo_url": "https://plaid-counterparty-logos.plaid.com/sofi_44.png",
+          "entity_id": "Jwmzr8p2YvO541zgm66Bm339mWgm56gYLJ4Ak",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "INCOME",
+        "version": "v2",
+        "detailed": "INCOME_INTEREST_EARNED",
+        "confidence_level": "HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_INCOME.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "mGkxaZ5mj6INZ7QqzZXdCPkygqygE8iG9ngv4",
+      "account_name": "SoFi High Yield Savings",
+      "account_official_name": "SoFi Bank High Yield Savings",
+      "institution_name": null,
+      "account_transfer_group": null,
+      "netting_group": null,
+      "bucket_1_tag_id": 2,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": [],
+      "days_ago": 61,
+      "authorized_days_ago": null
+    },
+    {
+      "transaction_id": "7xEkL3p4nguloeGEqodVcQJxae3k47cDkWqLv",
+      "name": "REI 018 SEATTLE FLAGSHIP",
+      "original_description": "REI 018 SEATTLE FLAGSHIP",
+      "merchant_name": "REI",
+      "amount": 75.88,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "REI",
+          "type": "merchant",
+          "website": "rei.com",
+          "logo_url": "https://plaid-merchant-logos.plaid.com/rei_1251.png",
+          "entity_id": "pN33gK131BWXzv6yqJ1qyRb8J24wDkbyBdrrY",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "location": {
+        "lat": 39.755329,
+        "lon": -105.009445,
+        "city": "Denver",
+        "region": "CO",
+        "address": "1416 Platte St",
+        "country": null,
+        "postal_code": "80202",
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "GENERAL_MERCHANDISE",
+        "version": "v2",
+        "detailed": "GENERAL_MERCHANDISE_SPORTING_GOODS",
+        "confidence_level": "HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_GENERAL_MERCHANDISE.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "bGJnwQxLKRIlZzx4PZbncwXGkLGk7WcRE1m4m",
+      "account_name": "Bank of America Credit Card",
+      "account_official_name": "Bank of America Customized Cash Rewards Visa",
+      "institution_name": null,
+      "account_transfer_group": null,
+      "netting_group": null,
+      "bucket_1_tag_id": null,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": [],
+      "days_ago": 63,
+      "authorized_days_ago": null
+    },
+    {
+      "transaction_id": "9aAX5N8PmoHkeDjalewVTKxkpqvXBPhdNL6ar",
+      "name": "LUNCH REFUND",
+      "original_description": "SQ *LUNCH REFUND",
+      "merchant_name": null,
+      "amount": -27.84,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "Square",
+          "type": "payment_terminal",
+          "website": "squareup.com",
+          "logo_url": "https://plaid-counterparty-logos.plaid.com/square_154.png",
+          "entity_id": "kYyzLr7JDEvmN43YaaWagRKZKpnwrN2Mkpy2g",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "FOOD_AND_DRINK",
+        "version": "v2",
+        "detailed": "FOOD_AND_DRINK_RESTAURANT",
+        "confidence_level": "LOW"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_FOOD_AND_DRINK.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
+      "account_name": "Bank of America Advantage Banking",
+      "account_official_name": "Bank of America Advantage Banking",
+      "institution_name": null,
+      "account_transfer_group": null,
+      "netting_group": null,
+      "bucket_1_tag_id": null,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": [],
+      "days_ago": 64,
+      "authorized_days_ago": null
+    },
+    {
+      "transaction_id": "j9lzkXbG4RTG16VAq1PLhKVWGzJ8Nwhng5eqn",
+      "name": "ONLINE PAYMENT THANK YOU",
+      "original_description": "ONLINE PAYMENT THANK YOU",
+      "merchant_name": null,
+      "amount": -301.18,
+      "iso_currency_code": "USD",
+      "counterparties": [],
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "LOAN_PAYMENTS",
+        "version": "v2",
+        "detailed": "LOAN_PAYMENTS_CREDIT_CARD_PAYMENT",
+        "confidence_level": "VERY_HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_LOAN_PAYMENTS.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "bGJnwQxLKRIlZzx4PZbncwXGkLGk7WcRE1m4m",
+      "account_name": "Bank of America Credit Card",
+      "account_official_name": "Bank of America Customized Cash Rewards Visa",
+      "institution_name": null,
+      "account_transfer_group": "030e03a3-9805-4266-9665-22882b296c9b",
+      "netting_group": null,
+      "bucket_1_tag_id": null,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": [],
+      "days_ago": 69,
+      "authorized_days_ago": null
+    },
+    {
+      "transaction_id": "yXe1DzV4E6uG75xjv7qPhLGKVoqjBpCVR9Be9",
+      "name": "BANK OF AMERICA CARD ONLINE PMT 8841",
+      "original_description": "BANK OF AMERICA CARD ONLINE PMT 8841",
+      "merchant_name": null,
+      "amount": 301.18,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "Bank of America",
+          "type": "financial_institution",
+          "website": "bankofamerica.com",
+          "logo_url": null,
+          "entity_id": "o2Ry34bq605MvmEed3yjqjkYWwqRQYpnkjd0O",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "LOAN_PAYMENTS",
+        "version": "v2",
+        "detailed": "LOAN_PAYMENTS_CREDIT_CARD_PAYMENT",
+        "confidence_level": "HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_LOAN_PAYMENTS.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
+      "account_name": "Bank of America Advantage Banking",
+      "account_official_name": "Bank of America Advantage Banking",
+      "institution_name": null,
+      "account_transfer_group": "030e03a3-9805-4266-9665-22882b296c9b",
+      "netting_group": null,
+      "bucket_1_tag_id": null,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": [],
+      "days_ago": 70,
+      "authorized_days_ago": null
+    },
+    {
+      "transaction_id": "AZRX4bnLzouy5bqZd546TpeyQgVdxatqN7mAr",
+      "name": "TRANSFER FROM BANK OF AMERICA CHECKING",
+      "original_description": "TRANSFER FROM BANK OF AMERICA CHECKING",
+      "merchant_name": null,
+      "amount": -430,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "Bank of America",
+          "type": "financial_institution",
+          "website": "bankofamerica.com",
+          "logo_url": null,
+          "entity_id": "o2Ry34bq605MvmEed3yjqjkYWwqRQYpnkjd0O",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "TRANSFER_IN",
+        "version": "v2",
+        "detailed": "TRANSFER_IN_ACCOUNT_TRANSFER",
+        "confidence_level": "HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_TRANSFER_IN.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "mGkxaZ5mj6INZ7QqzZXdCPkygqygE8iG9ngv4",
+      "account_name": "SoFi High Yield Savings",
+      "account_official_name": "SoFi Bank High Yield Savings",
+      "institution_name": null,
+      "account_transfer_group": "e594264c-0443-481a-b916-1043e076f084",
+      "netting_group": null,
+      "bucket_1_tag_id": null,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": [],
+      "days_ago": 72,
+      "authorized_days_ago": null
+    },
+    {
+      "transaction_id": "mGkxaZ5mj6INZ7QqzZXdCPkWG8xJwKFBZbazv",
+      "name": "ONLINE TRANSFER TO SOFI SAVINGS",
+      "original_description": "ONLINE TRANSFER TO SOFI SAVINGS",
+      "merchant_name": "SoFi",
+      "amount": 430,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "SoFi",
+          "type": "financial_institution",
+          "website": "sofi.com",
+          "logo_url": "https://plaid-counterparty-logos.plaid.com/sofi_44.png",
+          "entity_id": "Jwmzr8p2YvO541zgm66Bm339mWgm56gYLJ4Ak",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "TRANSFER_OUT",
+        "version": "v2",
+        "detailed": "TRANSFER_OUT_SAVINGS",
+        "confidence_level": "HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_TRANSFER_OUT.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
+      "account_name": "Bank of America Advantage Banking",
+      "account_official_name": "Bank of America Advantage Banking",
+      "institution_name": null,
+      "account_transfer_group": "e594264c-0443-481a-b916-1043e076f084",
+      "netting_group": null,
+      "bucket_1_tag_id": null,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": [],
+      "days_ago": 72,
+      "authorized_days_ago": null
+    },
+    {
+      "transaction_id": "Px5VjXbK1LuopAN5gpVzh39PvWLrKNsqlDRZp",
+      "name": "Panda Express",
+      "original_description": "PANDA EXPRESS #2241",
+      "merchant_name": "Panda Express",
+      "amount": 52.63,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "Panda Express",
+          "type": "merchant",
+          "website": "pandaexpress.com",
+          "logo_url": "https://plaid-merchant-logos.plaid.com/panda_express_714.png",
+          "entity_id": "Ew00y0rDXn7nvvXkrWe3RQ9Y8e1Bw6pq3pwYJ",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": "2241"
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "FOOD_AND_DRINK",
+        "version": "v2",
+        "detailed": "FOOD_AND_DRINK_FAST_FOOD",
+        "confidence_level": "VERY_HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_FOOD_AND_DRINK.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "bGJnwQxLKRIlZzx4PZbncwXGkLGk7WcRE1m4m",
+      "account_name": "Bank of America Credit Card",
+      "account_official_name": "Bank of America Customized Cash Rewards Visa",
+      "institution_name": null,
+      "account_transfer_group": null,
+      "netting_group": null,
+      "bucket_1_tag_id": 4,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": [],
+      "days_ago": 75,
+      "authorized_days_ago": null
+    },
+    {
+      "transaction_id": "bGJnwQxLKRIlZzx4PZbncwXzlWJMm9IAp5eQw",
+      "name": "Delta Air Lines",
+      "original_description": "DELTA AIR LINES ECOM",
+      "merchant_name": "Delta Air Lines",
+      "amount": 439.99,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "Delta Air Lines",
+          "type": "merchant",
+          "website": "delta.com",
+          "logo_url": "https://plaid-merchant-logos.plaid.com/delta_air_lines_273.png",
+          "entity_id": "Q83YAmrM5QR8LRr3Zaq012Ez9yd81pdD9yzKm",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "TRAVEL",
+        "version": "v2",
+        "detailed": "TRAVEL_FLIGHTS",
+        "confidence_level": "VERY_HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_TRAVEL.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
+      "account_name": "Bank of America Advantage Banking",
+      "account_official_name": "Bank of America Advantage Banking",
+      "institution_name": null,
+      "account_transfer_group": null,
+      "netting_group": null,
+      "bucket_1_tag_id": 6,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": [],
+      "days_ago": 77,
+      "authorized_days_ago": null
+    },
+    {
+      "transaction_id": "NB5XMbRlZLueE3N5pE6XIlq4kLVgnyuRJvwml",
+      "name": "AIRBNB HMPN4J3R2",
+      "original_description": "AIRBNB HMPN4J3R2",
+      "merchant_name": "Airbnb",
+      "amount": 129.74,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "Airbnb",
+          "type": "merchant",
+          "website": "airbnb.com",
+          "logo_url": "https://plaid-merchant-logos.plaid.com/airbnb_29.png",
+          "entity_id": "b5JD7jwmQYwpb9raKaZbLjV8903dVXaJXm5ap",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "TRAVEL",
+        "version": "v2",
+        "detailed": "TRAVEL_LODGING",
+        "confidence_level": "VERY_HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_TRAVEL.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "bGJnwQxLKRIlZzx4PZbncwXGkLGk7WcRE1m4m",
+      "account_name": "Bank of America Credit Card",
+      "account_official_name": "Bank of America Customized Cash Rewards Visa",
+      "institution_name": null,
+      "account_transfer_group": null,
+      "netting_group": null,
+      "bucket_1_tag_id": 7,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": [],
+      "days_ago": 82,
+      "authorized_days_ago": null
+    },
+    {
+      "transaction_id": "nGzdb15y76IPXE3KkXAgHnlpP9gQz7c1qd4wj",
+      "name": "Verizon Wireless",
+      "original_description": "VERIZON WIRELESS WEB",
+      "merchant_name": "Verizon",
+      "amount": 141.63,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "Verizon",
+          "type": "merchant",
+          "website": "verizon.com",
+          "logo_url": "https://plaid-merchant-logos.plaid.com/verizon_1086.png",
+          "entity_id": "JYOeW20DZobYLQyVM2aJO5aN6RRz6oLaLvaJV",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "RENT_AND_UTILITIES",
+        "version": "v2",
+        "detailed": "RENT_AND_UTILITIES_TELEPHONE",
+        "confidence_level": "VERY_HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_RENT_AND_UTILITIES.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
+      "account_name": "Bank of America Advantage Banking",
+      "account_official_name": "Bank of America Advantage Banking",
+      "institution_name": null,
+      "account_transfer_group": null,
+      "netting_group": null,
+      "bucket_1_tag_id": 12,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": [],
+      "days_ago": 84,
+      "authorized_days_ago": null
+    },
+    {
+      "transaction_id": "Gg5XRBQW4VcXzwo57zVZTpor3XvknytDgldyg",
+      "name": "Trader Joe's",
+      "original_description": "TRADER JOES #445 QPS",
+      "merchant_name": "Trader Joe's",
+      "amount": 72.11,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "Trader Joe's",
+          "type": "merchant",
+          "website": "traderjoes.com",
+          "logo_url": "https://plaid-merchant-logos.plaid.com/trader_joes_1041.png",
+          "entity_id": "7mk1K28bOEO76459EoRBN498DgKgdnY73qbgn",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": "445"
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "FOOD_AND_DRINK",
+        "version": "v2",
+        "detailed": "FOOD_AND_DRINK_GROCERIES",
+        "confidence_level": "VERY_HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_FOOD_AND_DRINK.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
+      "account_name": "Bank of America Advantage Banking",
+      "account_official_name": "Bank of America Advantage Banking",
+      "institution_name": null,
+      "account_transfer_group": null,
+      "netting_group": null,
+      "bucket_1_tag_id": 5,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": [],
+      "days_ago": 87,
+      "authorized_days_ago": null
+    },
+    {
+      "transaction_id": "4zompjrxWAcrdgMEPd94uPgzE8VyKMFGyeP7N",
+      "name": "CVS",
+      "original_description": "CVS/PHARMACY #10387",
+      "merchant_name": "CVS",
+      "amount": 44.19,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "CVS",
+          "type": "merchant",
+          "website": "cvs.com",
+          "logo_url": "https://plaid-merchant-logos.plaid.com/cvs_264.png",
+          "entity_id": "qkd60geNmo8qMV0wAXbL3yYbqdnoY4ezwbe1R",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "location": {
+        "lat": 47.661583,
+        "lon": -122.333359,
+        "city": "Seattle",
+        "region": "WA",
+        "address": "2100 N 45th St",
+        "country": null,
+        "postal_code": "98103",
+        "store_number": "10387"
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "MEDICAL",
+        "version": "v2",
+        "detailed": "MEDICAL_PHARMACIES_AND_SUPPLEMENTS",
+        "confidence_level": "VERY_HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_MEDICAL.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "bGJnwQxLKRIlZzx4PZbncwXGkLGk7WcRE1m4m",
+      "account_name": "Bank of America Credit Card",
+      "account_official_name": "Bank of America Customized Cash Rewards Visa",
+      "institution_name": null,
+      "account_transfer_group": null,
+      "netting_group": null,
+      "bucket_1_tag_id": null,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": [],
+      "days_ago": 89,
+      "authorized_days_ago": null
+    },
+    {
+      "transaction_id": "AZRX4bnLzouy5bqZd546TpeyQgVdxatqN7mEr",
+      "name": "ACME CORP PAYROLL PPD",
+      "original_description": "ACME CORP PAYROLL PPD",
+      "merchant_name": "Acme Markets",
+      "amount": -2661.9,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "Acme Markets",
+          "type": "merchant",
+          "website": "acmemarkets.com",
+          "logo_url": "https://plaid-merchant-logos.plaid.com/acme_markets_12.png",
+          "entity_id": "5VDpAWnN4X9VYR437da5D71Bva4o7RLQ2V3NY",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "INCOME",
+        "version": "v2",
+        "detailed": "INCOME_SALARY",
+        "confidence_level": "VERY_HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_INCOME.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
+      "account_name": "Bank of America Advantage Banking",
+      "account_official_name": "Bank of America Advantage Banking",
+      "institution_name": null,
+      "account_transfer_group": null,
+      "netting_group": null,
+      "bucket_1_tag_id": 3,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": [],
+      "days_ago": 91,
+      "authorized_days_ago": null
+    },
+    {
+      "transaction_id": "W75npgRaWBIB87r5L8vRsq71KXleJwUezrV1y",
+      "name": "SOFI INTEREST PAYMENT",
+      "original_description": "SOFI INTEREST PAYMENT",
+      "merchant_name": "SoFi",
+      "amount": -11.84,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "SoFi",
+          "type": "financial_institution",
+          "website": "sofi.com",
+          "logo_url": "https://plaid-counterparty-logos.plaid.com/sofi_44.png",
+          "entity_id": "Jwmzr8p2YvO541zgm66Bm339mWgm56gYLJ4Ak",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "INCOME",
+        "version": "v2",
+        "detailed": "INCOME_INTEREST_EARNED",
+        "confidence_level": "HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_INCOME.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "mGkxaZ5mj6INZ7QqzZXdCPkygqygE8iG9ngv4",
+      "account_name": "SoFi High Yield Savings",
+      "account_official_name": "SoFi Bank High Yield Savings",
+      "institution_name": null,
+      "account_transfer_group": null,
+      "netting_group": null,
+      "bucket_1_tag_id": 2,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": [],
+      "days_ago": 92,
+      "authorized_days_ago": null
+    },
+    {
+      "transaction_id": "a85DPye1qRuQpkyvLp41U9BWdvRaPNFymqMLG",
+      "name": "Alaska Airlines",
+      "original_description": "ALASKA AIR WIFI",
+      "merchant_name": "Alaska Airlines",
+      "amount": 87.31,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "Alaska Airlines",
+          "type": "merchant",
+          "website": "alaskaair.com",
+          "logo_url": "https://plaid-merchant-logos.plaid.com/alaska_airlines_32.png",
+          "entity_id": "WV2QADWmjE39QLEwDbAD01wyW3D1n1pbXewqW",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "TRAVEL",
+        "version": "v2",
+        "detailed": "TRAVEL_FLIGHTS",
+        "confidence_level": "HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_TRAVEL.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "bGJnwQxLKRIlZzx4PZbncwXGkLGk7WcRE1m4m",
+      "account_name": "Bank of America Credit Card",
+      "account_official_name": "Bank of America Customized Cash Rewards Visa",
+      "institution_name": null,
+      "account_transfer_group": null,
+      "netting_group": null,
+      "bucket_1_tag_id": 6,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": [],
+      "days_ago": 95,
+      "authorized_days_ago": null
+    },
+    {
+      "transaction_id": "dk5bNawozRHGKMDWrKe1h3jPG6zpqgsV1wper",
+      "name": "ONLINE PAYMENT THANK YOU",
+      "original_description": "ONLINE PAYMENT THANK YOU",
+      "merchant_name": null,
+      "amount": -268.44,
+      "iso_currency_code": "USD",
+      "counterparties": [],
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "LOAN_PAYMENTS",
+        "version": "v2",
+        "detailed": "LOAN_PAYMENTS_CREDIT_CARD_PAYMENT",
+        "confidence_level": "VERY_HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_LOAN_PAYMENTS.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "bGJnwQxLKRIlZzx4PZbncwXGkLGk7WcRE1m4m",
+      "account_name": "Bank of America Credit Card",
+      "account_official_name": "Bank of America Customized Cash Rewards Visa",
+      "institution_name": null,
+      "account_transfer_group": "6e7cbeea-2757-4520-9f31-fd2bd864291a",
+      "netting_group": null,
+      "bucket_1_tag_id": null,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": [],
+      "days_ago": 98,
+      "authorized_days_ago": null
+    },
+    {
+      "transaction_id": "W75npgRaWBIB87r5L8vRsq71KXleJwUezrVKy",
+      "name": "BANK OF AMERICA CARD ONLINE PMT 8841",
+      "original_description": "BANK OF AMERICA CARD ONLINE PMT 8841",
+      "merchant_name": null,
+      "amount": 268.44,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "Bank of America",
+          "type": "financial_institution",
+          "website": "bankofamerica.com",
+          "logo_url": null,
+          "entity_id": "o2Ry34bq605MvmEed3yjqjkYWwqRQYpnkjd0O",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "LOAN_PAYMENTS",
+        "version": "v2",
+        "detailed": "LOAN_PAYMENTS_CREDIT_CARD_PAYMENT",
+        "confidence_level": "HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_LOAN_PAYMENTS.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
+      "account_name": "Bank of America Advantage Banking",
+      "account_official_name": "Bank of America Advantage Banking",
+      "institution_name": null,
+      "account_transfer_group": "6e7cbeea-2757-4520-9f31-fd2bd864291a",
+      "netting_group": null,
+      "bucket_1_tag_id": null,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": [],
+      "days_ago": 99,
+      "authorized_days_ago": null
+    },
+    {
+      "transaction_id": "Ep5XnE98dLub7vz5P7VyHz1qajEQ4giWnwNJ8",
+      "name": "ONLINE TRANSFER TO SOFI SAVINGS",
+      "original_description": "ONLINE TRANSFER TO SOFI SAVINGS",
+      "merchant_name": "SoFi",
+      "amount": 415,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "SoFi",
+          "type": "financial_institution",
+          "website": "sofi.com",
+          "logo_url": "https://plaid-counterparty-logos.plaid.com/sofi_44.png",
+          "entity_id": "Jwmzr8p2YvO541zgm66Bm339mWgm56gYLJ4Ak",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "TRANSFER_OUT",
+        "version": "v2",
+        "detailed": "TRANSFER_OUT_SAVINGS",
+        "confidence_level": "HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_TRANSFER_OUT.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
+      "account_name": "Bank of America Advantage Banking",
+      "account_official_name": "Bank of America Advantage Banking",
+      "institution_name": null,
+      "account_transfer_group": "4d0fdbda-a92b-4c0a-930a-220f5f47a922",
+      "netting_group": null,
+      "bucket_1_tag_id": null,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": [],
+      "days_ago": 100,
+      "authorized_days_ago": null
+    },
+    {
+      "transaction_id": "Ep5XnE98dLub7vz5P7VyHz1qajEQ4giWnwNk8",
+      "name": "TRANSFER FROM BANK OF AMERICA CHECKING",
+      "original_description": "TRANSFER FROM BANK OF AMERICA CHECKING",
+      "merchant_name": null,
+      "amount": -415,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "Bank of America",
+          "type": "financial_institution",
+          "website": "bankofamerica.com",
+          "logo_url": null,
+          "entity_id": "o2Ry34bq605MvmEed3yjqjkYWwqRQYpnkjd0O",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "TRANSFER_IN",
+        "version": "v2",
+        "detailed": "TRANSFER_IN_ACCOUNT_TRANSFER",
+        "confidence_level": "HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_TRANSFER_IN.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "mGkxaZ5mj6INZ7QqzZXdCPkygqygE8iG9ngv4",
+      "account_name": "SoFi High Yield Savings",
+      "account_official_name": "SoFi Bank High Yield Savings",
+      "institution_name": null,
+      "account_transfer_group": "4d0fdbda-a92b-4c0a-930a-220f5f47a922",
+      "netting_group": null,
+      "bucket_1_tag_id": null,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": [],
+      "days_ago": 100,
+      "authorized_days_ago": null
+    },
+    {
+      "transaction_id": "8dkXvVpNbofvLEmdXLn4co9vbXpNgKCDoABjJ",
+      "name": "Venmo",
+      "original_description": "VENMO CASHOUT J LIU",
+      "merchant_name": null,
+      "amount": -42.5,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "Venmo",
+          "type": "payment_app",
+          "website": "venmo.com",
+          "logo_url": "https://plaid-counterparty-logos.plaid.com/venmo_74.png",
+          "entity_id": "8VRm0p98Ydk05nn1kVd1o4Zgop4n1V9DdveE6",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "TRANSFER_IN",
+        "version": "v2",
+        "detailed": "TRANSFER_IN_TRANSFER_IN_FROM_APPS",
+        "confidence_level": "HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_TRANSFER_IN.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
+      "account_name": "Bank of America Advantage Banking",
+      "account_official_name": "Bank of America Advantage Banking",
+      "institution_name": null,
+      "account_transfer_group": null,
+      "netting_group": null,
+      "bucket_1_tag_id": null,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": [],
+      "days_ago": 104,
+      "authorized_days_ago": null
+    },
+    {
+      "transaction_id": "xG7MRwra86IoGg3PeGyNh1eDnEGpyXCraobvg",
+      "name": "Target",
+      "original_description": "TARGET T-1287 SEATTLE WA",
+      "merchant_name": "Target",
+      "amount": 96.8,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "Target",
+          "type": "merchant",
+          "website": "target.com",
+          "logo_url": "https://plaid-merchant-logos.plaid.com/target_997.png",
+          "entity_id": "Eaq3KXm0jJ61KrmMrV0aw9VaY2grqv517d3ep",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "location": {
+        "lat": 42.054928,
+        "lon": -80.095047,
+        "city": "Erie",
+        "region": "PA",
+        "address": "6700 Peach St",
+        "country": null,
+        "postal_code": "16509",
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "GENERAL_MERCHANDISE",
+        "version": "v2",
+        "detailed": "GENERAL_MERCHANDISE_SUPERSTORES",
+        "confidence_level": "VERY_HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_GENERAL_MERCHANDISE.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "bGJnwQxLKRIlZzx4PZbncwXGkLGk7WcRE1m4m",
+      "account_name": "Bank of America Credit Card",
+      "account_official_name": "Bank of America Customized Cash Rewards Visa",
+      "institution_name": null,
+      "account_transfer_group": null,
+      "netting_group": null,
+      "bucket_1_tag_id": 5,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": [],
+      "days_ago": 107,
+      "authorized_days_ago": null
+    },
+    {
+      "transaction_id": "DL5X4j8gkECDV185NVBZu7VlLX9da1tjqgMxJ",
+      "name": "Uber",
+      "original_description": "UBER *TRIP HELP.UBER.COM",
+      "merchant_name": "Uber",
+      "amount": 58.27,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "Uber",
+          "type": "merchant",
+          "website": "uber.com",
+          "logo_url": "https://plaid-merchant-logos.plaid.com/uber_1060.png",
+          "entity_id": "eyg8o776k0QmNgVpAmaQj4WgzW9Qzo6O51gdd",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "TRANSPORTATION",
+        "version": "v2",
+        "detailed": "TRANSPORTATION_TAXIS_AND_RIDE_SHARES",
+        "confidence_level": "HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_TRANSPORTATION.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
+      "account_name": "Bank of America Advantage Banking",
+      "account_official_name": "Bank of America Advantage Banking",
+      "institution_name": null,
+      "account_transfer_group": null,
+      "netting_group": null,
+      "bucket_1_tag_id": 6,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": [],
+      "days_ago": 110,
+      "authorized_days_ago": null
+    },
+    {
+      "transaction_id": "Xe5JQE84A3uj8wXlB8nNcoQwvL9KVACoA4aqE",
+      "name": "CONED BILLPAY",
+      "original_description": "CONED BILLPAY",
+      "merchant_name": null,
+      "amount": 124.18,
+      "iso_currency_code": "USD",
+      "counterparties": [],
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "RENT_AND_UTILITIES",
+        "version": "v2",
+        "detailed": "RENT_AND_UTILITIES_GAS_AND_ELECTRICITY",
+        "confidence_level": "HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_RENT_AND_UTILITIES.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
+      "account_name": "Bank of America Advantage Banking",
+      "account_official_name": "Bank of America Advantage Banking",
+      "institution_name": null,
+      "account_transfer_group": null,
+      "netting_group": null,
+      "bucket_1_tag_id": 10,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": [],
+      "days_ago": 113,
+      "authorized_days_ago": null
+    },
+    {
+      "transaction_id": "3rp5LwK3EZiwD9yRxDjLh8wEJoDy6nF4ypx3W",
+      "name": "Shell",
+      "original_description": "SHELL OIL 575241983QPS",
+      "merchant_name": "Shell",
+      "amount": 61.27,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "Shell",
+          "type": "merchant",
+          "website": "shell.com",
+          "logo_url": "https://plaid-merchant-logos.plaid.com/shell_891.png",
+          "entity_id": "8y7851JXryBnkOWOjW163yqzAB01oa8k6e1g9",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "TRANSPORTATION",
+        "version": "v2",
+        "detailed": "TRANSPORTATION_GAS",
+        "confidence_level": "VERY_HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_TRANSPORTATION.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "bGJnwQxLKRIlZzx4PZbncwXGkLGk7WcRE1m4m",
+      "account_name": "Bank of America Credit Card",
+      "account_official_name": "Bank of America Customized Cash Rewards Visa",
+      "institution_name": null,
+      "account_transfer_group": null,
+      "netting_group": null,
+      "bucket_1_tag_id": 11,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": [],
+      "days_ago": 114,
+      "authorized_days_ago": null
+    },
+    {
+      "transaction_id": "638DLNgaGkCel4j35lrLI4newkmQoziv7W5LX",
+      "name": "Whole Foods",
+      "original_description": "WHOLE FOODS MARKET 10215",
+      "merchant_name": "Whole Foods",
+      "amount": 86.42,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "Whole Foods",
+          "type": "merchant",
+          "website": "wholefoods.com",
+          "logo_url": "https://plaid-merchant-logos.plaid.com/whole_foods_1122.png",
+          "entity_id": "Y0BVyRYwZgNLpDw6Lrvy7yJX38YQWEXBEEoAW",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "location": {
+        "lat": 34.012989,
+        "lon": -84.183563,
+        "city": "Duluth",
+        "region": "GA",
+        "address": "5945 State Bridge Rd",
+        "country": null,
+        "postal_code": "30097",
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "FOOD_AND_DRINK",
+        "version": "v2",
+        "detailed": "FOOD_AND_DRINK_GROCERIES",
+        "confidence_level": "VERY_HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_FOOD_AND_DRINK.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
+      "account_name": "Bank of America Advantage Banking",
+      "account_official_name": "Bank of America Advantage Banking",
+      "institution_name": null,
+      "account_transfer_group": null,
+      "netting_group": null,
+      "bucket_1_tag_id": 5,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": [],
+      "days_ago": 116,
+      "authorized_days_ago": null
+    },
+    {
+      "transaction_id": "BM6XvdRpBouWdRlEadwpUpNMb4oW9atmoPlnX",
+      "name": "Starbucks",
+      "original_description": "STARBUCKS STORE 19124",
+      "merchant_name": "Starbucks",
+      "amount": 23.48,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "Starbucks",
+          "type": "merchant",
+          "website": "starbucks.com",
+          "logo_url": "https://plaid-merchant-logos.plaid.com/starbucks_956.png",
+          "entity_id": "NZAJQ5wYdo1W1p39X5q5gpb15OMe39pj4pJBb",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "FOOD_AND_DRINK",
+        "version": "v2",
+        "detailed": "FOOD_AND_DRINK_COFFEE",
+        "confidence_level": "VERY_HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_FOOD_AND_DRINK.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "bGJnwQxLKRIlZzx4PZbncwXGkLGk7WcRE1m4m",
+      "account_name": "Bank of America Credit Card",
+      "account_official_name": "Bank of America Customized Cash Rewards Visa",
+      "institution_name": null,
+      "account_transfer_group": null,
+      "netting_group": null,
+      "bucket_1_tag_id": 4,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": [],
+      "days_ago": 118,
+      "authorized_days_ago": null
+    },
+    {
+      "transaction_id": "Ra5nZX8zplHBpDb5Jpa3srd74bAG8kfeVKE33",
+      "name": "ACME CORP PAYROLL PPD",
+      "original_description": "ACME CORP PAYROLL PPD",
+      "merchant_name": "Acme Markets",
+      "amount": -2847.33,
+      "iso_currency_code": "USD",
+      "counterparties": [
+        {
+          "name": "Acme Markets",
+          "type": "merchant",
+          "website": "acmemarkets.com",
+          "logo_url": "https://plaid-merchant-logos.plaid.com/acme_markets_12.png",
+          "entity_id": "5VDpAWnN4X9VYR437da5D71Bva4o7RLQ2V3NY",
+          "phone_number": null,
+          "confidence_level": "VERY_HIGH"
+        }
+      ],
+      "location": {
+        "lat": null,
+        "lon": null,
+        "city": null,
+        "region": null,
+        "address": null,
+        "country": null,
+        "postal_code": null,
+        "store_number": null
+      },
+      "pending": false,
+      "personal_finance_category": {
+        "primary": "INCOME",
+        "version": "v2",
+        "detailed": "INCOME_SALARY",
+        "confidence_level": "VERY_HIGH"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_INCOME.png",
+      "item_id": "3rp5LwK3EZiwD9yRxDjLh8wGW7j3xEcw5aAdM",
+      "account_id": "nGzdb15y76IPXE3KkXAgHnlWL8WLb9CaZNAy6",
+      "account_name": "Bank of America Advantage Banking",
+      "account_official_name": "Bank of America Advantage Banking",
+      "institution_name": null,
+      "account_transfer_group": null,
+      "netting_group": null,
+      "bucket_1_tag_id": 3,
+      "bucket_2_tag_id": null,
+      "meta_tag_ids": [],
+      "days_ago": 120,
+      "authorized_days_ago": null
+    }
+  ]
+}

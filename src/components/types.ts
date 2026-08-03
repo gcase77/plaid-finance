@@ -21,12 +21,14 @@ export type AccountBalances = {
 };
 export type Account = {
   id: string;
+  item_id?: string | null;
   name?: string | null;
   official_name?: string | null;
   mask?: string | null;
   type?: string | null;
   subtype?: string | null;
   balances?: AccountBalances | null;
+  holder_category?: string | null;
 };
 
 export type TransactionBaseRow = {

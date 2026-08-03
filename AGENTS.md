@@ -5,6 +5,7 @@ The frontend is contained in `/src`, the backend is contained in `/server`, and 
 - Not every software component needs to be in /models and not everything in /models is used.
 - Endpoints listed in the readme must be up to date with the endpoints the server exposes. 
 - UI components should start as stand alone features but must be refactored into `components/shared` if a similar component is needed multiple times.
+- **Exception — landing page:** Demo UI under `src/components/landing/` must not import feature components from `components/shared` (filters, tables, applied-filters bars, etc.). Keep landing-local copies instead so the marketing demo can diverge without touching the live app. Shared hooks/utils and global CSS are fine.
 
 
 ## Cursor Cloud specific instructions

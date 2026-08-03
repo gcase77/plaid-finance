@@ -88,7 +88,12 @@ function buildNodesFromLinks(links: FlowSankeyLink[], colOf: Map<string, number>
     .sort((a, b) => a.column - b.column || b.value - a.value);
 }
 
-export function buildFlowOfFundsModel(txns: Txn[], grouping: FlowGrouping, tagMap: Map<number, Tag>): FlowSankeyModel | null {
+export function buildFlowOfFundsModel(
+  txns: Txn[],
+  grouping: FlowGrouping,
+  tagMap: Map<number, Tag>,
+  { omitMeta = false }: { omitMeta?: boolean } = {}
+): FlowSankeyModel | null {
   const incomeT = txns.filter((t) => (t.amount ?? 0) < 0);
   const spendT = txns.filter((t) => (t.amount ?? 0) > 0);
   const totalIncome = incomeT.reduce((s, t) => s + Math.abs(t.amount ?? 0), 0);
@@ -127,7 +132,32 @@ export function buildFlowOfFundsModel(txns: Txn[], grouping: FlowGrouping, tagMa
     return { nodes, links, colors: nodeColors(nodes), layerColumns: 3, totalIncome, totalSpending };
   }
 
-  /* 5-layer: income meta → income buckets → bridge → spending buckets → spending meta */
+  /* 5-layer: income meta → income buckets → bridge → spending buckets → spending meta
+     or 3-layer buckets only when omitMeta */
+  if (omitMeta) {
+    col.set(BRIDGE, 1);
+    for (const t of incomeT) {
+      const b = txnIncomeBucketFlowGroup(t, tagMap);
+      if (!b) continue;
+      const bid = `b:i:${b.key}`;
+      lab.set(bid, b.label);
+      col.set(bid, 0);
+      pushLm(lm, links, bid, BRIDGE, Math.abs(t.amount ?? 0), [t]);
+    }
+    for (const t of spendT) {
+      const b = txnSpendingBucketFlowGroup(t, tagMap);
+      if (!b) continue;
+      const bid = `b:s:${b.key}`;
+      lab.set(bid, b.label);
+      col.set(bid, 2);
+      pushLm(lm, links, BRIDGE, bid, t.amount ?? 0, [t]);
+    }
+    const nodes = buildNodesFromLinks(links, col, lab);
+    const bn = nodes.find((n) => n.id === BRIDGE);
+    if (bn) bn.value = bridgeValue;
+    return { nodes, links, colors: nodeColors(nodes), layerColumns: 3, totalIncome, totalSpending };
+  }
+
   col.set(BRIDGE, 2);
 
   for (const t of incomeT) {
