@@ -6,6 +6,7 @@ import AppLayout from "./components/AppLayout";
 import AuthPage from "./components/auth/AuthPage";
 import RequireAuth from "./components/auth/RequireAuth";
 import SecurityPage from "./components/auth/SecurityPage";
+import FontPickerPage from "./components/landing/FontPickerPage";
 import { PrivacyPolicyPage, TermsPage } from "./components/legal/LegalDocumentPage";
 import MainPage from "./components/main/MainPage";
 import NotFoundPage from "./components/NotFoundPage";
@@ -30,6 +31,7 @@ createRoot(document.getElementById("root")!).render(
         <Routes>
           <Route path="/privacy" element={<PrivacyPolicyPage />} />
           <Route path="/terms" element={<TermsPage />} />
+          <Route path="/font-picker" element={<FontPickerPage />} />
           <Route path="/auth" element={<AuthPage mode="signIn" />} />
           <Route path="/auth/sign-up" element={<AuthPage mode="signUp" />} />
           <Route path="/auth/forgot-password" element={<AuthPage mode="forgotPassword" />} />

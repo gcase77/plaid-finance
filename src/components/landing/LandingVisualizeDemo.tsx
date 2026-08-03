@@ -68,7 +68,7 @@ export default function LandingVisualizeDemo() {
     detected: buildFlowOfFundsModel(baseTxns, "detected", tagMap, { omitMeta: true }),
   }), [baseTxns, tagMap]);
   const flowModel = flowModels[flowGrouping];
-  const flowHeight = Math.max(448, Math.min(232 + Math.max(flowModels.tags?.nodes.length ?? 0, flowModels.detected?.nodes.length ?? 0) * 18, 820));
+  const flowHeight = Math.max(380, Math.min(190 + Math.max(flowModels.tags?.nodes.length ?? 0, flowModels.detected?.nodes.length ?? 0) * 16, 700));
   const flowDetail = useMemo(() => flowModel?.nodes.find((n) => n.id === flowNodeId), [flowModel, flowNodeId]);
   const flowDetailTxns = useMemo(
     () => expandNettingGroupsForDisplay(flowDetail?.transactions ?? [], transactions),
