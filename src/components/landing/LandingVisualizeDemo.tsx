@@ -135,11 +135,11 @@ export default function LandingVisualizeDemo() {
   return (
     <>
       <header className="page-header landing-viz-header">
+        <h1>Visualize trends</h1>
         <Link to="/auth" className="landing-cta">
           Connect My Bank
           <span className="landing-cta-arrow" aria-hidden>→</span>
         </Link>
-        <h1>Visualize trends</h1>
       </header>
       <div className="landing-viz-layout">
         <div className="tabs landing-viz-tabs">
